@@ -17,7 +17,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -64,7 +63,6 @@ internal fun ReactionsCard(
     onAutoConnectConditionChange: (AutoConnectCondition) -> Unit = {},
     onShowPopUpOnCaseOpenChange: (Boolean) -> Unit = {},
     onShowPopUpOnConnectionChange: (Boolean) -> Unit = {},
-    onOpenIssueTracker: () -> Unit = {},
 ) {
     val reactions = device.reactions
     val enabled = device.isAapReady
@@ -195,11 +193,6 @@ internal fun ReactionsCard(
                         title = stringResource(R.string.device_settings_experimental_title),
                         text = stringResource(R.string.device_settings_experimental_description),
                         type = InfoBoxType.WARNING,
-                        action = {
-                            TextButton(onClick = onOpenIssueTracker) {
-                                Text(stringResource(R.string.device_settings_experimental_action))
-                            }
-                        },
                     )
                 }
             }

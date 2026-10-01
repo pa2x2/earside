@@ -188,8 +188,6 @@ fun DeviceSettingsScreenHost(
         onNotifyWhenChargedChange = { vm.setNotifyWhenCharged(it) },
         onChargedThresholdChange = { vm.setChargedThreshold(it) },
         onChargedSlotScopeChange = { vm.setChargedSlotScope(it) },
-        onOpenIssueTracker = { vm.openIssueTracker() },
-        onOpenAapTracker = { vm.openAapCompatibilityTracker() },
         onBatteryEstimateEnabledChange = { vm.setBatteryEstimateEnabled(it) },
         onResetBatteryEstimate = { vm.resetBatteryEstimate() },
     )
@@ -233,8 +231,6 @@ fun DeviceSettingsScreen(
     onNotifyWhenChargedChange: (Boolean) -> Unit = {},
     onChargedThresholdChange: (Int) -> Unit = {},
     onChargedSlotScopeChange: (ChargedSlotScope) -> Unit = {},
-    onOpenIssueTracker: () -> Unit = {},
-    onOpenAapTracker: () -> Unit = {},
     onBatteryEstimateEnabledChange: (Boolean) -> Unit = {},
     onResetBatteryEstimate: () -> Unit = {},
 ) {
@@ -428,7 +424,6 @@ fun DeviceSettingsScreen(
                         onAutoConnectConditionChange = onAutoConnectConditionChange,
                         onShowPopUpOnCaseOpenChange = onShowPopUpOnCaseOpenChange,
                         onShowPopUpOnConnectionChange = onShowPopUpOnConnectionChange,
-                        onOpenIssueTracker = onOpenIssueTracker,
                     )
                 }
             }
@@ -495,7 +490,6 @@ fun DeviceSettingsScreen(
                             onToneVolumeChange = onToneVolumeChange,
                             onMicrophoneModeChange = onMicrophoneModeChange,
                             onUpgrade = onUpgrade,
-                            onOpenIssueTracker = onOpenIssueTracker,
                         )
                     }
                 }
@@ -562,7 +556,7 @@ fun DeviceSettingsScreen(
                 state.isClassicallyConnected
             ) {
                 item("aap_unavailable_info") {
-                    AapUnavailableCard(onOpenTracker = onOpenAapTracker)
+                    AapUnavailableCard()
                 }
             }
 

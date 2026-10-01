@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.VolumeUp
 import androidx.compose.material.icons.twotone.Mic
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -36,7 +35,6 @@ internal fun SoundCard(
     onToneVolumeChange: (Int) -> Unit = {},
     onMicrophoneModeChange: (AapSetting.MicrophoneMode.Mode) -> Unit = {},
     onUpgrade: () -> Unit = {},
-    onOpenIssueTracker: () -> Unit = {},
 ) {
     val personalizedVol = device.personalizedVolume
     val toneVol = device.toneVolume
@@ -56,11 +54,6 @@ internal fun SoundCard(
                     title = stringResource(R.string.device_settings_experimental_title),
                     text = stringResource(R.string.device_settings_experimental_description),
                     type = InfoBoxType.WARNING,
-                    action = {
-                        TextButton(onClick = onOpenIssueTracker) {
-                            Text(stringResource(R.string.device_settings_experimental_action))
-                        }
-                    },
                 )
             }
         }

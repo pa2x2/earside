@@ -3,7 +3,6 @@ package eu.darken.capod.main.ui.devicesettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import eu.darken.capod.common.SystemTimeSource
 import eu.darken.capod.common.TimeSource
-import eu.darken.capod.common.WebpageTool
 import eu.darken.capod.common.bluetooth.BluetoothManager2
 import eu.darken.capod.common.bluetooth.NudgeAttemptResult
 import eu.darken.capod.common.bluetooth.NudgeAvailability
@@ -64,7 +63,6 @@ class DeviceSettingsViewModel @Inject constructor(
     private val monitorModeResolver: MonitorModeResolver,
     private val nudgeCapabilityStore: NudgeCapabilityStore,
     private val timeSource: TimeSource,
-    private val webpageTool: WebpageTool,
 ) : ViewModel4(dispatcherProvider) {
 
     private val targetProfileId = MutableStateFlow<ProfileId?>(null)
@@ -549,14 +547,6 @@ class DeviceSettingsViewModel @Inject constructor(
     fun launchUpgrade() {
         log(TAG, INFO) { "launchUpgrade()" }
         navTo(Nav.Main.Upgrade())
-    }
-
-    fun openIssueTracker() {
-        webpageTool.open("https://github.com/d4rken-org/capod/issues")
-    }
-
-    fun openAapCompatibilityTracker() {
-        webpageTool.open("https://github.com/d4rken-org/capod/issues/538")
     }
 
     companion object {

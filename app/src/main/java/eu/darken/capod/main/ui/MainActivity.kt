@@ -87,10 +87,10 @@ class MainActivity : Activity2() {
 
             LaunchedEffect(Unit) {
                 // Cold-start intent (the activity's launching intent).
-                consumeUpgradeExtra(intent)
+                consumeNavigationExtras(intent)
                 // Warm-start intents delivered via onNewIntent. Consuming them here (instead of
                 // directly from onNewIntent) guarantees navCtrl.setup() has run.
-                warmIntents.collect { newIntent -> consumeUpgradeExtra(newIntent) }
+                warmIntents.collect { newIntent -> consumeNavigationExtras(newIntent) }
             }
 
             CapodTheme(state = themeState) {
@@ -155,11 +155,18 @@ class MainActivity : Activity2() {
         warmIntents.tryEmit(intent)
     }
 
-    private fun consumeUpgradeExtra(intent: Intent?) {
+    private fun consumeNavigationExtras(intent: Intent?) {
         if (intent?.getBooleanExtra(EXTRA_NAVIGATE_TO_UPGRADE, false) == true) {
             intent.removeExtra(EXTRA_NAVIGATE_TO_UPGRADE)
             if (generalSettings.isOnboardingDone.valueBlocking) {
                 navCtrl.goTo(Nav.Main.Upgrade())
+            }
+        }
+        intent?.getStringExtra(EXTRA_DEVICE_SETTINGS_PROFILE_ID)?.let { profileId ->
+            intent.removeExtra(EXTRA_DEVICE_SETTINGS_PROFILE_ID)
+            if (generalSettings.isOnboardingDone.valueBlocking) {
+                // Pop back to Overview so repeated notification taps don't stack settings screens.
+                navCtrl.goTo(Nav.Main.DeviceSettings(profileId), popUpTo = Nav.Main.Overview)
             }
         }
     }
@@ -167,6 +174,7 @@ class MainActivity : Activity2() {
     companion object {
         const val EXTRA_NAVIGATE_TO_UPGRADE = "navigate_to_upgrade"
         const val EXTRA_UPGRADE_FOR_RESULT = "upgrade_for_result"
+        const val EXTRA_DEVICE_SETTINGS_PROFILE_ID = "device_settings_profile_id"
         private val TAG = logTag("MainActivity")
     }
 }

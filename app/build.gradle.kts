@@ -37,7 +37,7 @@ android {
     }
 
     signingConfigs {
-        val basePath = File(System.getProperty("user.home"), ".config/projects/${projectConfig.packageName}")
+        val basePath = File(System.getProperty("user.home"), ".config/projects/${projectConfig.applicationId}")
         create("releaseFoss") {
             setupCredentials(File(basePath, "signing-foss.properties"))
         }

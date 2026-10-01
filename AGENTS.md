@@ -19,6 +19,11 @@ merged regularly with the `merge-upstream` skill, so keep the fork's divergence 
   `.github/actions/`, the workflows `code-checks.yml`, `emulator.yml`, `pages.yml`,
   `release-prepare.yml`, `release-tag.yml` and `thumbnail-images.yml`, `version.properties`, `VERSION`,
   and the support contact form (`main/ui/settings/support/contactform/`, `SupportLinks.kt`).
+- The launcher icon, monochrome icon, splash screen and in-app logo are Earside's own
+  (`drawable/ic_launcher_*.xml`, `drawable/splash_graphic2.xml`, `values*/earside_colors.xml`,
+  `.github/assets/earside.svg`). Keep them when upstream changes its artwork, and don't bring back
+  `mipmap-*dpi/ic_launcher*.png` or `drawable/splash_graphic.xml`.
+- The theme style defaults to Material You, so the app follows the device's wallpaper colors.
 - CAPod's icons, logos, mascots, marketing assets, animations, documentation, store texts and
   translations are not under the GPL. Don't copy them into the fork.
 

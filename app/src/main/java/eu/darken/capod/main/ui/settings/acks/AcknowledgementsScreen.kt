@@ -63,9 +63,9 @@ fun AcknowledgementsScreen(
             }
             item {
                 SettingsBaseItem(
-                    title = stringResource(R.string.translators_thanks_title),
-                    subtitle = stringResource(R.string.translators_thanks_description),
-                    onClick = { onOpenUrl("https://crowdin.com/project/capod/activity-stream") },
+                    title = "CAPod",
+                    subtitle = "Earside is a fork of CAPod by Matthias Urhahn (d4rken) and its contributors.",
+                    onClick = { onOpenUrl("https://github.com/d4rken-org/capod") },
                 )
             }
             item {
@@ -108,13 +108,6 @@ fun AcknowledgementsScreen(
                     title = "apple-wireshark",
                     subtitle = "Thanks to Pablo Aul for the Wireshark dissector catalog of the AAP/AACP protocol.",
                     onClick = { onOpenUrl("https://github.com/pabloaul/apple-wireshark") },
-                )
-            }
-            item {
-                SettingsBaseItem(
-                    title = "crowdin.com",
-                    subtitle = "For supporting translation of open-source projects",
-                    onClick = { onOpenUrl("https://crowdin.com/") },
                 )
             }
             item {

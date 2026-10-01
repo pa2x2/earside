@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.ArrowBack
-import androidx.compose.material.icons.automirrored.twotone.MenuBook
 import androidx.compose.material.icons.twotone.BugReport
 import androidx.compose.material.icons.twotone.Cancel
 import androidx.compose.material.icons.twotone.CheckCircle
@@ -180,10 +179,6 @@ fun SupportScreenHost(vm: SupportViewModel = hiltViewModel()) {
         SupportScreen(
             state = it,
             onNavigateUp = { vm.navUp() },
-            onContactDeveloper = { vm.goToContactSupport() },
-            onDiscord = { vm.openUrl("https://discord.gg/rrxxng35jq") },
-            onIssueTracker = { vm.openUrl("https://github.com/d4rken-org/capod/issues") },
-            onWiki = { vm.openUrl("https://github.com/d4rken-org/capod/wiki") },
             onTroubleShooter = { vm.goToTroubleShooter() },
             onDebugLogToggle = { vm.onDebugLogToggle() },
             onOpenSession = { vm.openSession(it) },
@@ -198,10 +193,6 @@ fun SupportScreenHost(vm: SupportViewModel = hiltViewModel()) {
 fun SupportScreen(
     state: SupportViewModel.State,
     onNavigateUp: () -> Unit,
-    onContactDeveloper: () -> Unit,
-    onDiscord: () -> Unit,
-    onIssueTracker: () -> Unit,
-    onWiki: () -> Unit,
     onTroubleShooter: () -> Unit,
     onDebugLogToggle: () -> Unit,
     onOpenSession: (String) -> Unit,
@@ -239,41 +230,6 @@ fun SupportScreen(
                     subtitle = stringResource(R.string.troubleshooter_summary),
                     icon = Icons.TwoTone.Settings,
                     onClick = onTroubleShooter,
-                )
-            }
-            item {
-                SettingsCategoryHeader(text = stringResource(R.string.settings_category_gethelp_label))
-            }
-            item {
-                SettingsBaseItem(
-                    title = stringResource(R.string.settings_wiki_label),
-                    subtitle = stringResource(R.string.settings_wiki_description),
-                    icon = Icons.AutoMirrored.TwoTone.MenuBook,
-                    onClick = onWiki,
-                )
-            }
-            item {
-                SettingsBaseItem(
-                    title = stringResource(R.string.issue_tracker_label),
-                    subtitle = stringResource(R.string.issue_tracker_description),
-                    iconPainter = painterResource(R.drawable.ic_github_onsurface),
-                    onClick = onIssueTracker,
-                )
-            }
-            item {
-                SettingsBaseItem(
-                    title = stringResource(R.string.discord_label),
-                    subtitle = stringResource(R.string.discord_description),
-                    iconPainter = painterResource(R.drawable.ic_discord_onsurface),
-                    onClick = onDiscord,
-                )
-            }
-            item {
-                SettingsBaseItem(
-                    title = stringResource(R.string.support_contact_label),
-                    subtitle = stringResource(R.string.support_contact_desc),
-                    iconPainter = painterResource(R.drawable.ic_contact_support_24),
-                    onClick = onContactDeveloper,
                 )
             }
             item {
@@ -523,10 +479,6 @@ private fun SupportScreenPreview() = PreviewWrapper {
     SupportScreen(
         state = SupportViewModel.State(),
         onNavigateUp = {},
-        onContactDeveloper = {},
-        onDiscord = {},
-        onIssueTracker = {},
-        onWiki = {},
         onTroubleShooter = {},
         onDebugLogToggle = {},
         onOpenSession = {},

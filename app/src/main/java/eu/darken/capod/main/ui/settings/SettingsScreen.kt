@@ -4,21 +4,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.ArrowBack
-import androidx.compose.material.icons.twotone.Book
-import androidx.compose.material.icons.automirrored.twotone.MenuBook
 import androidx.compose.material.icons.twotone.DevicesOther
 import androidx.compose.material.icons.twotone.Favorite
 import androidx.compose.material.icons.twotone.Settings
-import androidx.compose.material.icons.twotone.Stars
 import androidx.compose.material.icons.twotone.SupportAgent
-import androidx.compose.material.icons.twotone.Translate
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -27,53 +22,35 @@ import eu.darken.capod.R
 import eu.darken.capod.common.compose.Preview2
 import eu.darken.capod.common.compose.PreviewWrapper
 import eu.darken.capod.common.BuildConfigWrap
-import eu.darken.capod.common.PrivacyPolicy
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.darken.capod.common.error.ErrorEventHandler
 import eu.darken.capod.common.navigation.Nav
 import eu.darken.capod.common.navigation.NavigationEventHandler
 import eu.darken.capod.common.settings.SettingsBaseItem
 import eu.darken.capod.common.settings.SettingsCategoryHeader
-import eu.darken.capod.common.upgrade.ui.settingsUpgradeStatusTitle
 
 @Composable
 fun SettingsScreenHost(vm: SettingsViewModel = hiltViewModel()) {
     ErrorEventHandler(vm)
     NavigationEventHandler(vm)
 
-    val state by vm.state.collectAsStateWithLifecycle(initialValue = null)
-    state?.let {
-        SettingsScreen(
-            state = it,
-            onNavigateUp = { vm.navUp() },
-            onGeneralSettings = { vm.navTo(Nav.Settings.General) },
-            onDeviceManager = { vm.navTo(Nav.Main.DeviceManager) },
-            onUpgradeStatus = { vm.navTo(Nav.Main.Upgrade(manage = true)) },
-            onSupport = { vm.navTo(Nav.Settings.Support) },
-            onWiki = { vm.openUrl("https://github.com/d4rken-org/capod/wiki") },
-            onChangelog = { vm.openUrl("https://capod.darken.eu/changelog") },
-            onHelpTranslate = { vm.openUrl("https://crowdin.com/project/capod") },
-            onAcknowledgements = { vm.navTo(Nav.Settings.Acknowledgements) },
-            onPrivacyPolicy = { vm.openUrl(PrivacyPolicy.URL) },
-            onSponsor = { url -> vm.openUrl(url) },
-        )
-    }
+    SettingsScreen(
+        onNavigateUp = { vm.navUp() },
+        onGeneralSettings = { vm.navTo(Nav.Settings.General) },
+        onDeviceManager = { vm.navTo(Nav.Main.DeviceManager) },
+        onSupport = { vm.navTo(Nav.Settings.Support) },
+        onChangelog = { vm.openUrl("https://github.com/pa2x2/earside/releases") },
+        onAcknowledgements = { vm.navTo(Nav.Settings.Acknowledgements) },
+    )
 }
 
 @Composable
 fun SettingsScreen(
-    state: SettingsViewModel.State,
     onNavigateUp: () -> Unit,
     onGeneralSettings: () -> Unit,
     onDeviceManager: () -> Unit,
-    onUpgradeStatus: () -> Unit,
     onSupport: () -> Unit,
-    onWiki: () -> Unit,
     onChangelog: () -> Unit,
-    onHelpTranslate: () -> Unit,
     onAcknowledgements: () -> Unit,
-    onPrivacyPolicy: () -> Unit,
-    onSponsor: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -89,17 +66,6 @@ fun SettingsScreen(
                             imageVector = Icons.AutoMirrored.TwoTone.ArrowBack,
                             contentDescription = null,
                         )
-                    }
-                },
-                actions = {
-                    val sponsorUrl = state.sponsorUrl
-                    if (state.isPro && sponsorUrl != null) {
-                        IconButton(onClick = { onSponsor(sponsorUrl) }) {
-                            Icon(
-                                imageVector = Icons.TwoTone.Favorite,
-                                contentDescription = null,
-                            )
-                        }
                     }
                 },
             )
@@ -129,32 +95,11 @@ fun SettingsScreen(
                 SettingsCategoryHeader(text = stringResource(R.string.settings_category_other_label))
             }
             item {
-                // Always visible: owners need a way to check their Pro/supporter status, and
-                // non-owners get another path to the upgrade screen. settingsUpgradeStatusTitle()
-                // has a separate implementation per flavor source set, reading the same resource
-                // its own upgrade screen titles itself with — so this row can't drift from it.
-                // The subtitle resource is flavor-overridden (foss vs gplay values) directly.
-                SettingsBaseItem(
-                    title = settingsUpgradeStatusTitle(),
-                    subtitle = stringResource(R.string.settings_upgrade_status_description),
-                    icon = Icons.TwoTone.Stars,
-                    onClick = onUpgradeStatus,
-                )
-            }
-            item {
                 SettingsBaseItem(
                     title = stringResource(R.string.settings_support_label),
                     subtitle = stringResource(R.string.settings_support_description),
                     icon = Icons.TwoTone.SupportAgent,
                     onClick = onSupport,
-                )
-            }
-            item {
-                SettingsBaseItem(
-                    title = stringResource(R.string.settings_wiki_label),
-                    subtitle = stringResource(R.string.settings_wiki_description),
-                    icon = Icons.AutoMirrored.TwoTone.MenuBook,
-                    onClick = onWiki,
                 )
             }
             item {
@@ -167,26 +112,10 @@ fun SettingsScreen(
             }
             item {
                 SettingsBaseItem(
-                    title = stringResource(R.string.help_translate_label),
-                    subtitle = stringResource(R.string.help_translate_description),
-                    icon = Icons.TwoTone.Translate,
-                    onClick = onHelpTranslate,
-                )
-            }
-            item {
-                SettingsBaseItem(
                     title = stringResource(R.string.settings_acknowledgements_label),
                     subtitle = stringResource(R.string.general_thank_you_label),
                     icon = Icons.TwoTone.Favorite,
                     onClick = onAcknowledgements,
-                )
-            }
-            item {
-                SettingsBaseItem(
-                    title = stringResource(R.string.settings_privacy_policy_label),
-                    subtitle = stringResource(R.string.settings_privacy_policy_desc),
-                    icon = Icons.TwoTone.Book,
-                    onClick = onPrivacyPolicy,
                 )
             }
         }
@@ -197,17 +126,11 @@ fun SettingsScreen(
 @Composable
 private fun SettingsScreenPreview() = PreviewWrapper {
     SettingsScreen(
-        state = SettingsViewModel.State(isPro = true, sponsorUrl = "https://example.com"),
         onNavigateUp = {},
         onGeneralSettings = {},
         onDeviceManager = {},
-        onUpgradeStatus = {},
         onSupport = {},
-        onWiki = {},
         onChangelog = {},
-        onHelpTranslate = {},
         onAcknowledgements = {},
-        onPrivacyPolicy = {},
-        onSponsor = {},
     )
 }

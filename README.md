@@ -13,6 +13,12 @@ How it differs from CAPod:
 * Installs as `app.pa2x2.earside`, separately from CAPod. Don't run both at once: AirPods accept only
   one app connection, and the two would compete for it.
 
+## Privacy
+
+Earside has no internet permission, so it cannot send anything anywhere. It reads what your headphones
+broadcast over Bluetooth and keeps its settings on your phone. A debug log stays on the phone unless
+you share it yourself.
+
 ## Building
 
 ```bash

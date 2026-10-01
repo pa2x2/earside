@@ -1,7 +1,6 @@
 package eu.darken.capod.main.ui.settings.support
 
 import dagger.hilt.android.lifecycle.HiltViewModel
-import eu.darken.capod.common.WebpageTool
 import eu.darken.capod.common.coroutine.DispatcherProvider
 import eu.darken.capod.common.debug.logging.log
 import eu.darken.capod.common.debug.logging.logTag
@@ -21,7 +20,6 @@ import javax.inject.Inject
 @HiltViewModel
 class SupportViewModel @Inject constructor(
     dispatcherProvider: DispatcherProvider,
-    private val webpageTool: WebpageTool,
     private val sessionManager: DebugSessionManager,
 ) : ViewModel4(dispatcherProvider) {
 
@@ -63,16 +61,8 @@ class SupportViewModel @Inject constructor(
         }.launchIn(vmScope)
     }
 
-    fun openUrl(url: String) {
-        webpageTool.open(url)
-    }
-
     fun goToTroubleShooter() {
         navTo(Nav.Main.TroubleShooter)
-    }
-
-    fun goToContactSupport() {
-        navTo(Nav.Settings.ContactSupport)
     }
 
     fun onDebugLogToggle() = launch {

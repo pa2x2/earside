@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: [ Foss,Gplay ]
+        flavor: [ Foss ]
         variant: [ Beta,Release ]
         module: [ app ]
     runs-on: ubuntu-22.04
@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: [ Foss,Gplay ]
+        flavor: [ Foss ]
         variant: [ Debug ]
         module: [ app ]
     runs-on: ubuntu-22.04
@@ -59,7 +59,7 @@ jobs:
       fail-fast: false
       matrix:
         variant: [ Debug ]
-        flavor: [ testFoss,testGplay ]
+        flavor: [ testFoss ]
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout source code

@@ -4,18 +4,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [1.0.0] - 2026-10-01
 
+Based on [CAPod v5.4.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.4.0-rc0)
+
+### ✨ Added
+
+- Tapping a device's notification opens the settings for that device.
+
 ### 🔄 Changed
 
-- Earside is a fork of CAPod 5.4.0-rc0 under its own name and app ID, `app.pa2x2.earside`. It installs next to CAPod and does not update it.
+- Earside installs as its own app, `app.pa2x2.earside`, next to CAPod. It doesn't replace or update CAPod.
 - Settings and device profiles don't carry over from CAPod. Set up your devices again, including their identity and encryption keys.
-- Uninstall or disable CAPod after you switch. Your headphones accept advanced settings from only one app at a time, and running both shows every popup and notification twice.
-- Every feature is available without an upgrade.
+- Uninstall or disable CAPod after you switch. Your headphones accept advanced settings from one app at a time, and with both installed every popup and notification shows up twice.
+- Every feature is unlocked. There is nothing to upgrade.
 - The app is in English only.
-- A new icon, splash screen and logo, with a themed icon for launchers that tint icons.
-- The app follows your device's Material You colors by default, with light and dark following the system.
+- New app icon, logo and splash screen. Launchers that tint icons get a themed version.
+- The app uses your device's Material You colors by default.
+- The changelog link in settings opens Earside's releases on GitHub.
 
 ### 🗑️ Removed
 
-- Links to CAPod's support email, Discord, issue tracker, wiki, translation project and sponsor page.
+- CAPod's contact form, Discord, issue tracker, wiki, translation project, privacy policy and sponsor links.
 
 [1.0.0]: https://github.com/pa2x2/earside/releases/tag/v1.0.0

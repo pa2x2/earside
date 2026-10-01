@@ -90,7 +90,7 @@ class GeneralSettings @Inject constructor(
         onErrorFallbackToDefault = BuildConfigWrap.BUILD_TYPE != BuildConfigWrap.BuildType.DEV,
     )
     val themeStyle = dataStore.createValue(
-        "core.ui.theme.style", ThemeStyle.DEFAULT, json,
+        "core.ui.theme.style", ThemeStyle.MATERIAL_YOU, json,
         onErrorFallbackToDefault = BuildConfigWrap.BUILD_TYPE != BuildConfigWrap.BuildType.DEV,
     )
     val themeColor = dataStore.createValue(

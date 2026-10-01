@@ -18,7 +18,8 @@ merged regularly with the `merge-upstream` skill, so keep the fork's divergence 
   `CNAME`, `PRIVACY_POLICY.md`), `.assets/`, `.pi/`, `.github/FUNDING.yml`, `.github/release.yml`,
   `.github/actions/`, the workflows `code-checks.yml`, `emulator.yml`, `pages.yml`,
   `release-prepare.yml`, `release-tag.yml` and `thumbnail-images.yml`, `version.properties`, `VERSION`,
-  and the support contact form (`main/ui/settings/support/contactform/`, `SupportLinks.kt`).
+  CAPod's Play Store icon (`app/src/main/ic_launcher-playstore.png`), and the support contact form
+  (`main/ui/settings/support/contactform/`, `SupportLinks.kt`).
 - The launcher icon, monochrome icon, splash screen and in-app logo are Earside's own
   (`drawable/ic_launcher_*.xml`, `drawable/splash_graphic2.xml`, `values*/earside_colors.xml`,
   `.github/assets/earside.svg`). Keep them when upstream changes its artwork, and don't bring back

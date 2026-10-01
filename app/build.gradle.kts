@@ -20,14 +20,14 @@ android {
         minSdk = projectConfig.minSdk
         targetSdk = projectConfig.targetSdk
 
-        versionCode = projectConfig.version.code.toInt()
-        versionName = projectConfig.version.name
+        versionCode = 1
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "eu.darken.capod.HiltTestRunner"
 
         buildConfigField("String", "PACKAGENAME", "\"${projectConfig.packageName}\"")
-        buildConfigField("String", "VERSION_CODE", "\"${projectConfig.version.code}\"")
-        buildConfigField("String", "VERSION_NAME", "\"${projectConfig.version.name}\"")
+        buildConfigField("String", "VERSION_CODE", "\"$versionCode\"")
+        buildConfigField("String", "VERSION_NAME", "\"$versionName\"")
     }
 
     // Enable automatic per-app language preferences generation

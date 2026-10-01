@@ -29,3 +29,4 @@ _site/
 vendor/bundle/
 /.pi/*
 !/.pi/settings.json
+/.agents-workspaces/

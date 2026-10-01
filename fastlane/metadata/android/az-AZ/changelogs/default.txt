@@ -1,5 +1,0 @@
-Xəta düzəlişləri və kiçik təkmilləşdirmələr, beləliklə AirPods'un telefonunda doğru batareya səviyyələrini göstərməyə davam edir.
-
-Bu versiyada nə dəyişib: capod.darken.eu/changelog
-
-Yenilədikdən sonra nəsə xarab oldu, yaxud qəribə davranır? Parametrlər > Dəstək bölməsi vasitəsilə mənə bildir. Bu tək nəfərlik layihədir, ona görə cavablar bir az vaxt apara bilər, amma hər mesaj oxunur.

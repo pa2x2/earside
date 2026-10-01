@@ -1,5 +1,0 @@
-Ispravci grešaka i manja poboljšanja, kako bi tvoji AirPodsi i dalje prikazivali točnu razinu baterije na telefonu.
-
-Što se promijenilo u ovoj verziji: capod.darken.eu/changelog
-
-Nešto se pokvarilo ili čudno radi nakon ažuriranja? Javi mi putem Postavke > Podrška. To je projekt koji vodim sam, pa odgovori mogu malo potrajati, ali svaku prijavu pročitam.

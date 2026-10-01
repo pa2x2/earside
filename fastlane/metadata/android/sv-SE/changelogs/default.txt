@@ -1,5 +1,0 @@
-Buggfixar och små förbättringar, så att dina AirPods fortsätter visa rätt batterinivåer på din telefon.
-
-Vad som ändrats i den här versionen: capod.darken.eu/changelog
-
-Har något gått sönder eller beter sig konstigt efter uppdateringen? Hör av dig via Inställningar > Support. Det är ett enmansprojekt, så svaren kan dröja lite, men alla rapporter blir lästa.

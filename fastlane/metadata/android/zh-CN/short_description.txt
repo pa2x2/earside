@@ -1,1 +1,0 @@
-CAPod 是在 Android 上为 AirPods 提供配套功能的一个应用。

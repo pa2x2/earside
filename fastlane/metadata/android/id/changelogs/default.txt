@@ -1,5 +1,0 @@
-Perbaikan bug dan sejumlah peningkatan kecil, agar AirPods kamu terus menampilkan level baterai yang tepat di ponsel.
-
-Apa yang berubah di versi ini: capod.darken.eu/changelog
-
-Ada yang rusak atau berjalan aneh setelah update? Beri tahu aku lewat Pengaturan > Dukungan. Ini proyek yang dikerjakan sendirian, jadi balasan mungkin butuh waktu, tapi setiap laporan pasti dibaca.

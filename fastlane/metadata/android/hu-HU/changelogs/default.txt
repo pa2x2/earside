@@ -1,5 +1,0 @@
-Hibajavítások és apró fejlesztések, hogy az AirPods továbbra is a helyes akkumulátorszinteket mutassa a telefonodon.
-
-Mi változott ebben a verzióban: capod.darken.eu/changelog
-
-Valami elromlott vagy furán viselkedik a frissítés után? Jelezd a Beállítások > Támogatás menüben. Ez egy egyszemélyes projekt, ezért a válaszok eltarthatnak egy ideig, de minden visszajelzést elolvasok.

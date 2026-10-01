@@ -1,5 +1,0 @@
-Fehlerbehebungen und kleine Verbesserungen, damit deine AirPods weiterhin den richtigen Akkustand auf deinem Handy anzeigen.
-
-Was sich in dieser Version geändert hat: capod.darken.eu/changelog
-
-Nach dem Update etwas kaputt oder komisch? Schreib mir über Einstellungen > Unterstützung. Es ist ein Ein-Personen-Projekt, daher kann eine Antwort etwas dauern, aber jede Meldung wird gelesen.

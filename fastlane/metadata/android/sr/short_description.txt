@@ -1,1 +1,0 @@
-CAPod је пратећа апликација за AirPods на Android-у.

@@ -1,1 +1,0 @@
-CAPod est una aplicatzione de cumpanha pro AirPods in Android.

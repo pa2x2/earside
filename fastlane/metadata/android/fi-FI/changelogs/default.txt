@@ -1,5 +1,0 @@
-Bugikorjauksia ja pieniä parannuksia, jotta AirPods-kuulokkeesi näyttävät edelleen oikeat akkutasot puhelimessasi.
-
-Tämän version muutokset: capod.darken.eu/changelog
-
-Meniko jokin rikki tai toimiiko jokin kummallisesti päivityksen jälkeen? Kerro minulle Asetukset > Tuki -valikossa. Tämä on yhden hengen projekti, joten vastaaminen voi kestää hetken, mutta jokainen ilmoitus luetaan.

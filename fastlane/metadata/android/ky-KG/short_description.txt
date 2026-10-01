@@ -1,1 +1,0 @@
-CAPod - Android үчүн AirPods жалпы программасы.

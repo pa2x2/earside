@@ -1,5 +1,0 @@
-May mga bug fix at maliliit na pagpapahusay, para patuloy na tama ang battery level ng AirPods mo na ipinapakita sa telepono.
-
-Ang mga pagbabago sa bersyong ito: capod.darken.eu/changelog
-
-May nasira ba o kakaiba ang kilos pagkatapos mag-update? Sabihin mo sa akin sa pamamagitan ng Mga Setting > Suporta. Iisang tao lang ang gumagawa nito, kaya puwedeng medyo matagal ang sagot, pero binabasa ko ang bawat report.

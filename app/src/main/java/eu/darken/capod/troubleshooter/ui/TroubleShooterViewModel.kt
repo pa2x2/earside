@@ -151,7 +151,7 @@ class TroubleShooterViewModel @Inject constructor(
                         }
                     }
 
-                    progress("Found some headphones that are supported by CAPod.\n")
+                    progress("Found some headphones that are supported by Earside.\n")
 
                     run {
                         progress("Checking for your headphones with new BLE settings...")

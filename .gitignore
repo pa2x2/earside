@@ -16,6 +16,4 @@
 app/src/screenshotTest*/reference/
 .codex
 protocol-research/
-/.pi/*
-!/.pi/settings.json
 /.agents-workspaces/

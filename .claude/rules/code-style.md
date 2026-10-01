@@ -3,7 +3,6 @@ description: Kotlin and Compose conventions — logging, ViewModel base classes,
 paths:
   - "app/src/main/**/*.kt"
   - "app/src/foss/**/*.kt"
-  - "app/src/gplay/**/*.kt"
   - "app/src/debug/**/*.kt"
 ---
 

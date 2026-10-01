@@ -1,90 +1,28 @@
----
-layout: plain
-permalink: /changelog
-title: "Changelog"
----
+# Changelog
 
-# Changelog for CAPod
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-{% for release in site.github.releases %}
+## [1.0.0] - 2026-10-01
 
-## {{ release.tag_name }} - {{ release.published_at | date: "%B %d, %Y" }}
+Based on [CAPod v5.4.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.4.0-rc0)
 
-{% assign clean_body = release.body | strip %}
-{% assign no_comments = clean_body | replace: "<!-- Release notes generated using configuration in .github/release.yml", "" %}
-{% assign no_comments = no_comments | split: "-->" %}
-{% if no_comments.size > 1 %}
-  {% assign clean_content = no_comments[1] | strip %}
-{% else %}
-  {% assign clean_content = no_comments[0] | strip %}
-{% endif %}
+### ✨ Added
 
-{% comment %} Make links clickable {% endcomment %}
-{% assign lines = clean_content | split: "
-" %}
-{% assign processed_lines = "" %}
-{% for line in lines %}
-  {% if line contains "**Full Changelog**:" %}
-    {% comment %} Handle Full Changelog links {% endcomment %}
-    {% assign parts = line | split: ": " %}
-    {% if parts.size > 1 %}
-      {% assign url = parts[1] | strip %}
-      {% assign clickable_line = "**[View Changes](" | append: url | append: ")**" %}
-      {% assign processed_lines = processed_lines | append: clickable_line | append: "
-" %}
-    {% else %}
-      {% assign processed_lines = processed_lines | append: line | append: "
-" %}
-    {% endif %}
-  {% elsif line contains " in https://github.com/" and line contains "/pull/" %}
-    {% comment %} Handle pull request links {% endcomment %}
-    {% assign pr_parts = line | split: " in https://github.com/" %}
-    {% if pr_parts.size > 1 %}
-      {% assign before_url = pr_parts[0] %}
-      {% assign after_url = pr_parts[1] %}
-      {% assign url = "https://github.com/" | append: after_url %}
-      {% assign pr_number = after_url | split: "/pull/" %}
-      {% if pr_number.size > 1 %}
-        {% assign pr_num = pr_number[1] | split: " " | first %}
-        {% assign clickable_line = before_url | append: " in [#" | append: pr_num | append: "](" | append: url | append: ")" %}
-        {% assign processed_lines = processed_lines | append: clickable_line | append: "
-" %}
-      {% else %}
-        {% assign processed_lines = processed_lines | append: line | append: "
-" %}
-      {% endif %}
-    {% else %}
-      {% assign processed_lines = processed_lines | append: line | append: "
-" %}
-    {% endif %}
-  {% else %}
-    {% assign processed_lines = processed_lines | append: line | append: "
-" %}
-  {% endif %}
-{% endfor %}
+- Tapping a device's notification opens the settings for that device.
 
-{% comment %} Add proper spacing between sections and bullet points {% endcomment %}
-{% assign final_content = processed_lines | replace: "
-### ", "
+### 🔄 Changed
 
-### " %}
-{% assign final_content = final_content | replace: "
-## ", "
+- Earside installs as its own app, `app.pa2x2.earside`, next to CAPod. It doesn't replace or update CAPod.
+- Settings and device profiles don't carry over from CAPod. Set up your devices again, including their identity and encryption keys.
+- Uninstall or disable CAPod after you switch. Your headphones accept advanced settings from one app at a time, and with both installed every popup and notification shows up twice.
+- Every feature is unlocked. There is nothing to upgrade.
+- The app is in English only.
+- New app icon, logo and splash screen. Launchers that tint icons get a themed version.
+- The app uses your device's Material You colors by default.
+- The changelog link in settings opens Earside's releases on GitHub.
 
-## " %}
-{% assign final_content = final_content | replace: "
-- ", "
+### 🗑️ Removed
 
-- " %}
+- CAPod's contact form, Discord, issue tracker, wiki, translation project, privacy policy and sponsor links.
 
-{% comment %} Check if there are any bullet points (actual release notes) {% endcomment %}
-{% if final_content contains "## " or final_content contains "- " %}
-  {{ final_content | markdownify }}
-{% else %}
-  *No release notes available.*
-  
-  {{ final_content | markdownify }}
-{% endif %}
-
----
-{% endfor %}
+[1.0.0]: https://github.com/pa2x2/earside/releases/tag/v1.0.0

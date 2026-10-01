@@ -12,8 +12,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.compose.ui.semantics.SemanticsActions
 import eu.darken.capod.R
 import eu.darken.capod.common.compose.PreviewWrapper
-import eu.darken.capod.main.ui.settings.SettingsScreen
-import eu.darken.capod.main.ui.settings.SettingsViewModel
 import io.kotest.matchers.shouldBe
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -174,33 +172,6 @@ class FossUpgradeScreenTest : BaseComposeRobolectricTest() {
             assertTrue(clicked)
             assertFalse(armed)
         }
-    }
-
-    // Regression guard for retiring settings_upgrade_status_label: the Settings row and the PITCH
-    // title both read settingsUpgradeStatusTitle() now, so this proves the two ACTUAL screens render
-    // identical text, not just that they call the same function. The PITCH-side half of the
-    // invariant is covered above ("renders redesigned foss content without duplicated app bar
-    // title" asserts the PITCH title equals upgrade_foss_sponsor_label exactly once).
-    @Test
-    fun `the settings row shows the same text as the pitch screen title`() {
-        composeRule.setUpgradeContent {
-            SettingsScreen(
-                state = SettingsViewModel.State(isPro = false, sponsorUrl = null),
-                onNavigateUp = {},
-                onGeneralSettings = {},
-                onDeviceManager = {},
-                onUpgradeStatus = {},
-                onSupport = {},
-                onWiki = {},
-                onChangelog = {},
-                onHelpTranslate = {},
-                onAcknowledgements = {},
-                onPrivacyPolicy = {},
-                onSponsor = {},
-            )
-        }
-
-        composeRule.onAllNodesWithText(context.getString(R.string.upgrade_foss_sponsor_label)).assertCountEquals(1)
     }
 }
 

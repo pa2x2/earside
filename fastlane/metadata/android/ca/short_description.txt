@@ -1,1 +1,0 @@
-El CAPod és una aplicació complementària per als AirPods a l'Android.

@@ -15,18 +15,19 @@ android {
 
     defaultConfig {
         namespace = projectConfig.packageName
+        applicationId = projectConfig.applicationId
 
         minSdk = projectConfig.minSdk
         targetSdk = projectConfig.targetSdk
 
-        versionCode = projectConfig.version.code.toInt()
-        versionName = projectConfig.version.name
+        versionCode = 1
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "eu.darken.capod.HiltTestRunner"
 
         buildConfigField("String", "PACKAGENAME", "\"${projectConfig.packageName}\"")
-        buildConfigField("String", "VERSION_CODE", "\"${projectConfig.version.code}\"")
-        buildConfigField("String", "VERSION_NAME", "\"${projectConfig.version.name}\"")
+        buildConfigField("String", "VERSION_CODE", "\"$versionCode\"")
+        buildConfigField("String", "VERSION_NAME", "\"$versionName\"")
     }
 
     // Enable automatic per-app language preferences generation
@@ -36,12 +37,9 @@ android {
     }
 
     signingConfigs {
-        val basePath = File(System.getProperty("user.home"), ".config/projects/${projectConfig.packageName}")
+        val basePath = File(System.getProperty("user.home"), ".config/projects/${projectConfig.applicationId}")
         create("releaseFoss") {
             setupCredentials(File(basePath, "signing-foss.properties"))
-        }
-        create("releaseGplay") {
-            setupCredentials(File(basePath, "signing-gplay-upload.properties"))
         }
     }
 
@@ -57,11 +55,6 @@ android {
             }
             proguardFiles("proguard-rules-foss.pro")
         }
-        create("gplay") {
-            dimension = "version"
-            signingConfig = signingConfigs["releaseGplay"]
-            proguardFiles("proguard-rules-gplay.pro")
-        }
     }
 
     buildTypes {
@@ -69,6 +62,7 @@ android {
             include("*.pro")
         }
         debug {
+            applicationIdSuffix = ".dev"
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
@@ -148,7 +142,7 @@ androidComponents {
 
         val apkFolder = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK)
         val loader = variant.artifacts.getBuiltArtifactsLoader()
-        val packageName = projectConfig.packageName
+        val packageName = projectConfig.applicationId
 
         val renameTask = tasks.register("rename${variant.name.replaceFirstChar { it.uppercase() }}Apk") {
             inputs.files(apkFolder)
@@ -197,12 +191,6 @@ dependencies {
     addSerialization()
 
     addTesting()
-
-    "gplayImplementation"("com.android.billingclient:billing:8.3.0")
-    "gplayImplementation"("com.android.billingclient:billing-ktx:8.3.0")
-
-    "gplayImplementation"("com.google.android.play:review:2.0.2")
-    "gplayImplementation"("com.google.android.play:review-ktx:2.0.2")
 
     // Robolectric-backed Compose UI tests (run as regular unit tests via the vintage engine).
     testImplementation(platform("androidx.compose:compose-bom:${Versions.Compose.bom}"))

@@ -1,5 +1,0 @@
-Foutregstellings en klein verbeteringe, sodat jou AirPods steeds die korrekte batterypeile op jou foon wys.
-
-Wat verander het in hierdie weergawe: capod.darken.eu/changelog
-
-Het iets gebreek of gedra dit vreemd na die opdatering? Laat weet my via Instellings > Ondersteuning. Ek werk alleen aan hierdie projek, so antwoorde kan 'n rukkie neem, maar elke verslag word gelees.

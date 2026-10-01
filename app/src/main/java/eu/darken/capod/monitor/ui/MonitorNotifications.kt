@@ -19,6 +19,7 @@ import eu.darken.capod.monitor.core.PodDevice
 import eu.darken.capod.monitor.core.battery.BatteryEstimate
 import eu.darken.capod.pods.core.apple.PodModel
 import eu.darken.capod.pods.core.apple.ble.formatBatteryPercent
+import eu.darken.capod.profiles.core.ProfileId
 import javax.inject.Inject
 
 
@@ -28,8 +29,6 @@ class MonitorNotifications @Inject constructor(
     private val notificationViewFactory: MonitorNotificationViewFactory
 ) {
 
-    private val openPi: PendingIntent
-
     init {
         ensureChannel(context)
         NotificationChannel(
@@ -37,18 +36,27 @@ class MonitorNotifications @Inject constructor(
             context.getString(R.string.notification_channel_device_status_connected_label),
             NotificationManager.IMPORTANCE_LOW
         ).run { notificationManager.createNotificationChannel(this) }
+    }
 
-        openPi = PendingIntent.getActivity(
+    // PendingIntent identity ignores extras, so each notification gets its own request code and
+    // FLAG_UPDATE_CURRENT swaps in the current profile. A shared one would let the primary
+    // notification retarget a kept connected notification that still shows a previous device.
+    private fun openIntent(channelId: String, profileId: ProfileId?): PendingIntent {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            if (profileId != null) putExtra(MainActivity.EXTRA_DEVICE_SETTINGS_PROFILE_ID, profileId)
+        }
+        return PendingIntent.getActivity(
             context,
-            PENDING_INTENT_REQUEST_CODE,
-            Intent(context, MainActivity::class.java),
-            PendingIntentCompat.FLAG_IMMUTABLE
+            if (channelId == NOTIFICATION_CHANNEL_ID_CONNECTED) PENDING_INTENT_REQUEST_CODE_CONNECTED
+            else PENDING_INTENT_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntentCompat.FLAG_IMMUTABLE,
         )
     }
 
-    private fun baseBuilder(channelId: String): NotificationCompat.Builder =
+    private fun baseBuilder(channelId: String, profileId: ProfileId? = null): NotificationCompat.Builder =
         NotificationCompat.Builder(context, channelId).apply {
-            setContentIntent(openPi)
+            setContentIntent(openIntent(channelId, profileId))
             priority = NotificationCompat.PRIORITY_LOW
             setSmallIcon(R.drawable.device_earbuds_generic_both)
             setOngoing(true)
@@ -75,7 +83,7 @@ class MonitorNotifications @Inject constructor(
             }
         }
 
-        return baseBuilder(channelId).apply {
+        return baseBuilder(channelId, device.profileId).apply {
 
             val stateText = when {
                 device.isHeadsetBeingCharged == true -> {
@@ -148,6 +156,7 @@ class MonitorNotifications @Inject constructor(
         internal const val NOTIFICATION_ID = 1
         internal const val NOTIFICATION_ID_CONNECTED = 2
         private const val PENDING_INTENT_REQUEST_CODE = 0
+        private const val PENDING_INTENT_REQUEST_CODE_CONNECTED = 1
 
         fun ensureChannel(context: Context) {
             val nm = context.getSystemService(NotificationManager::class.java)

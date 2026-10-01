@@ -1,1 +1,0 @@
-CAPod అనేది Android లో AirPods కోసం ఒక సహచర అనువర్తనం.

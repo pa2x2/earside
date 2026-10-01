@@ -1,5 +1,0 @@
-Pembaikan pepijat dan penambahbaikan kecil, supaya AirPods anda terus menunjukkan tahap bateri yang betul pada telefon anda.
-
-Apa yang berubah dalam versi ini: capod.darken.eu/changelog
-
-Ada sesuatu yang rosak atau berkelakuan pelik selepas kemas kini? Beritahu saya melalui Tetapan > Sokongan. Ini projek seorang diri, jadi balasan mungkin mengambil sedikit masa, tetapi setiap laporan pasti dibaca.

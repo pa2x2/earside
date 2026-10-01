@@ -1,1 +1,0 @@
-CAPod - приложение для AirPods на Android.

@@ -1,0 +1,172 @@
+name: Release
+
+# A push to main releases the app version once CHANGELOG.md has notes for it and no tag holds it
+# yet. The release is a draft, to try the APK before anyone is offered it, and its commit is tagged
+# along with it.
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Decide what to release
+    runs-on: ubuntu-24.04
+    outputs:
+      # Empty when there is nothing to release, which skips the release job.
+      tag: ${{ steps.release.outputs.tag }}
+      notes: ${{ steps.release.outputs.notes }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history and tags, to find this version's tag and compare versionCode with
+          # earlier releases.
+          fetch-depth: 0
+
+      - name: Get tag name and release notes
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(sed -n 's/^ *versionName = "\(.*\)"$/\1/p' app/build.gradle.kts)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::app/build.gradle.kts versionName is not X.Y.Z or X.Y.Z-prerelease, got '$version'"
+            exit 1
+          fi
+          tag="v$version"
+
+          if git rev-parse --quiet --verify "refs/tags/$tag" > /dev/null; then
+            echo "::notice::$tag is already released."
+            exit 0
+          fi
+
+          # The version's section without its heading: the release is already named after it.
+          notes="$(awk -v heading="## [$version]" '
+            /^## \[/ { inside = index($0, heading) == 1; next }
+            /^\[[^]]*\]: / { inside = 0 }
+            inside && (seen || NF) { seen = 1; print }
+          ' CHANGELOG.md)"
+          if [[ -z "$notes" ]]; then
+            echo "::notice::CHANGELOG.md has no notes for $version, so this push releases nothing."
+            exit 0
+          fi
+
+          {
+            echo "tag=$tag"
+            echo "notes<<END_OF_NOTES"
+            echo "$notes"
+            echo "END_OF_NOTES"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check versionCode increased
+        if: steps.release.outputs.tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version_code() {
+            sed -n 's/^ *versionCode = \([0-9][0-9]*\)$/\1/p'
+          }
+
+          current="$(version_code < app/build.gradle.kts)"
+          if [[ ! "$current" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::app/build.gradle.kts versionCode must be a positive integer, got '$current'"
+            exit 1
+          fi
+          for tag in $(git tag --list 'v*'); do
+            previous="$(git show "$tag:app/build.gradle.kts" 2> /dev/null | version_code || true)"
+            if [[ -n "$previous" ]] && (( previous >= current )); then
+              echo "::error::versionCode $current must be greater than $previous from $tag"
+              exit 1
+            fi
+          done
+          echo "versionCode $current"
+
+  release:
+    name: Build and create the draft release
+    runs-on: ubuntu-24.04
+    needs: plan
+    if: needs.plan.outputs.tag != ''
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Decode signing keystore
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          for NAME in SIGNING_KEY KEY_STORE_PASSWORD ALIAS KEY_PASSWORD; do
+            if [ -z "${!NAME}" ]; then
+              echo "::error::Repository secret $NAME is not set"
+              exit 1
+            fi
+          done
+          printf '%s' "$SIGNING_KEY" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+      - name: Test and build
+        env:
+          STORE_PATH: ${{ runner.temp }}/release.jks
+          STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew testFossDebugUnitTest assembleFossRelease
+
+      - name: Rename APK and verify its signature
+        env:
+          TAG: ${{ needs.plan.outputs.tag }}
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/foss/release/app-foss-release.apk
+          APKSIGNER="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner"
+
+          CERTS=$("$APKSIGNER" verify --print-certs "$APK")
+          if echo "$CERTS" | grep -q "CN=Android Debug"; then
+            echo "::error::$APK is signed with the debug key"
+            exit 1
+          fi
+          mv "$APK" "earside-$TAG.apk"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          tag_name: ${{ needs.plan.outputs.tag }}
+          name: ${{ needs.plan.outputs.tag }}
+          # The commit GitHub tags on publishing, when the tag is not there yet.
+          target_commitish: ${{ github.sha }}
+          body: ${{ needs.plan.outputs.notes }}
+          files: earside-${{ needs.plan.outputs.tag }}.apk
+          draft: true
+          prerelease: false
+
+      # GitHub tags a draft only once it is published. The tag goes in now, and last: it is what
+      # tells later pushes to main that this version is released.
+      - name: Tag the draft's commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.plan.outputs.tag }}
+        run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$TAG" -f "sha=$GITHUB_SHA"

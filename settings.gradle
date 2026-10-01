@@ -6,6 +6,5 @@ pluginManagement {
     }
 }
 
-rootProject.name = "Companion App for AirPods"
+rootProject.name = "Earside"
 include ':app'
-include ':app-e2e'

@@ -19,7 +19,7 @@
 
     <string name="general_example_label">E.g.: %s</string>
 
-    <string name="upgrade_capod_label">Upgrade CAPod</string>
+    <string name="upgrade_capod_label">Upgrade Earside</string>
     <string name="upgrade_capod_description">Get additional features and support the developer.</string>
     <string name="upgrade_benefit_themes">Theme customization</string>
     <string name="upgrade_benefit_autoplay">Auto-play &amp; auto-pause</string>
@@ -33,7 +33,7 @@
 
 
     <string name="settings_monitor_connected_notification_label">Extra notification</string>
-    <string name="settings_monitor_connected_notification_description">Shows a second notification that only appears while a device is connected. With this on, you can hide the permanent \"No devices\" notification: turn off the \"Device status\" category in Android\'s notification settings for CAPod.</string>
+    <string name="settings_monitor_connected_notification_description">Shows a second notification that only appears while a device is connected. With this on, you can hide the permanent \"No devices\" notification: turn off the \"Device status\" category in Android\'s notification settings for Earside.</string>
     <string name="settings_keep_notification_after_disconnect_label">Keep notification after disconnect</string>
     <string name="settings_keep_notification_after_disconnect_description">Continue showing the last known battery levels even after your AirPods disconnect</string>
     <string name="settings_autopause_label">Auto pause</string>
@@ -44,7 +44,7 @@
     <string name="settings_start_music_on_wear_description">Always tries to play music when you put your pods on, even after a manual pause.</string>
     <string name="settings_eardetection_info_description">If ear detection only works for one pod, this is an Apple limitation. Only the \"primary pod\" (used for microphone) is detected. Configure on Apple devices: Settings → Bluetooth → AirPods → Microphone.</string>
     <string name="settings_autoconnect_label">Auto connect</string>
-    <string name="settings_autoconnect_description">If Android does not automatically connect, we can ask it too. This keeps CAPod monitoring in the background at all times.</string>
+    <string name="settings_autoconnect_description">If Android does not automatically connect, we can ask it too. This keeps Earside monitoring in the background at all times.</string>
     <string name="settings_autoconnect_info_android12">Auto connect relies on a system feature that Android 12 and newer restricts. It may not work on your device.</string>
     <string name="settings_autoconnect_condition_label">Auto connect condition</string>
     <string name="settings_devices_label">Devices</string>
@@ -74,8 +74,7 @@
     <string name="settings_charged_scope_both_label">Pods and case</string>
 
     <string name="device_settings_experimental_title">Experimental feature</string>
-    <string name="device_settings_experimental_description">This feature hasn\'t been tested on all devices yet. If something isn\'t working correctly, please open an issue with a debug log.</string>
-    <string name="device_settings_experimental_action">Open Issue Tracker</string>
+    <string name="device_settings_experimental_description">This feature hasn\'t been tested on all devices yet.</string>
 
     <string name="notification_channel_device_status_label">Device status</string>
     <string name="notification_channel_device_status_connected_label">Connected device</string>
@@ -119,7 +118,7 @@
     <string name="device_battery_estimate_reset_action">Reset learned data</string>
     <string name="device_battery_estimate_reset_desc">Start over from the rated battery life.</string>
     <string name="device_battery_estimate_reset_confirm_title">Reset learned data?</string>
-    <string name="device_battery_estimate_reset_confirm_message">CAPod will forget this device\'s measured drain, charging speed and listening time, and start over from the rated battery life.</string>
+    <string name="device_battery_estimate_reset_confirm_message">Earside will forget this device\'s measured drain, charging speed and listening time, and start over from the rated battery life.</string>
     <string name="settings_acknowledgements_label">Acknowledgements</string>
 
 
@@ -170,24 +169,24 @@
     <string name="troubleshooter_title">Troubleshooter</string>
     <string name="troubleshooter_summary">Diagnose and fix Bluetooth connectivity issues.</string>
     <string name="troubleshooter_ble_intro_title">Bluetooth Low Energy Broadcasts</string>
-    <string name="troubleshooter_ble_intro_body1">AirPods (and similar headphones) broadcast status information using a BLE technology called \"advertisements\". Some phones don\'t implement this technology correctly. CAPod can attempt to fix this by trying different compatibility options until data is received. Start music playback on your headphones and place them close to your phone, then start the process.</string>
+    <string name="troubleshooter_ble_intro_body1">AirPods (and similar headphones) broadcast status information using a BLE technology called \"advertisements\". Some phones don\'t implement this technology correctly. Earside can attempt to fix this by trying different compatibility options until data is received. Start music playback on your headphones and place them close to your phone, then start the process.</string>
     <string name="troubleshooter_ble_intro_start_action">Start troubleshooting</string>
     <string name="troubleshooter_ble_process_title">Troubleshoot in progress</string>
     <string name="troubleshooter_ble_process_subtile">Each step takes 5–10 seconds</string>
     <string name="troubleshooter_ble_result_success_title">Success</string>
-    <string name="troubleshooter_ble_result_success_body">BLE advertisement broadcasts are being received by CAPod.</string>
+    <string name="troubleshooter_ble_result_success_body">BLE advertisement broadcasts are being received by Earside.</string>
     <string name="troubleshooter_ble_result_failure_title">Unsuccessful</string>
     <string name="troubleshooter_ble_result_failure_phone_body">Your phone didn\'t receive any BLE data at all. You can retry this test in a crowded area to see if data sources (other than your headphones) can be received. No data being received points towards an issue with your phone\'s operating system.</string>
-    <string name="troubleshooter_ble_result_failure_phone_headphones">Your phone received BLE data, but the data does not come from any supported device. Are your headphones powered on? Does CAPod support your headphone?</string>
+    <string name="troubleshooter_ble_result_failure_phone_headphones">Your phone received BLE data, but the data does not come from any supported device. Are your headphones powered on? Does Earside support your headphone?</string>
 
 
     <string name="onboarding_body1">This app adds support for AirPod specific features to Android.</string>
     <string name="onboarding_body2">Not all Android devices fully support the extra AirPod features. Your operating system requires a correctly working Bluetooth-Low-Energy implementation.</string>
-    <string name="onboarding_body3">CAPod has no ads and does not collect your data.</string>
-    <string name="onboarding_body4">You can upgrade to CAPod Pro to gain extra features and support development.</string>
+    <string name="onboarding_body3">Earside has no ads and does not collect your data.</string>
+    <string name="onboarding_body4">Every feature is free to use.</string>
 
     <!-- Strings from app-common -->
-    <string name="app_name">CAPod</string>
+    <string name="app_name">Earside</string>
     <!-- Upgraded app title. %1$s is the app name, %2$s the tier qualifier ("Pro" / "FOSS").
          Reorder or repunctuate for your language; both placeholders must appear exactly once. -->
     <string name="app_name_upgraded_template">%1$s %2$s</string>
@@ -207,10 +206,10 @@
     <string name="overview_monitoring_active_label">Monitoring for devices</string>
     <string name="overview_monitoring_active_description">Make sure your device is nearby and active.</string>
     <string name="overview_monitoring_off_label">Background monitoring is off</string>
-    <string name="overview_monitoring_off_description">No profile has a paired Bluetooth device, so CAPod only updates while the app is open. Select one to enable background monitoring, the ongoing notification and reactions.</string>
+    <string name="overview_monitoring_off_description">No profile has a paired Bluetooth device, so Earside only updates while the app is open. Select one to enable background monitoring, the ongoing notification and reactions.</string>
     <string name="overview_monitoring_off_action">Select paired device</string>
     <string name="overview_troubleshoot_suggestion_label">Connected, but no data</string>
-    <string name="overview_troubleshoot_suggestion_description">Your device is connected, but CAPod isn\'t receiving any live data from it. Your phone may need a compatibility option — the troubleshooter can try to find one automatically.</string>
+    <string name="overview_troubleshoot_suggestion_description">Your device is connected, but Earside isn\'t receiving any live data from it. Your phone may need a compatibility option — the troubleshooter can try to find one automatically.</string>
     <string name="overview_troubleshoot_suggestion_action">Run troubleshooter</string>
     <string name="overview_unmatched_devices_label">Unmatched devices</string>
     <plurals name="overview_unmatched_devices_description">
@@ -229,13 +228,13 @@
     <string name="permission_bluetooth_label">Bluetooth</string>
     <string name="permission_bluetooth_description">This app requires the \"Bluetooth\" permission to connect to paired bluetooth devices.</string>
     <string name="permission_access_fine_location_label">Access fine location</string>
-    <string name="permission_access_fine_location_description">CAPod uses the \"fine location\" permission to receive Bluetooth Low Energy data. Your headphones use Bluetooth Low Energy technology to broadcast their status. This app will NOT use Bluetooth data to determine your location.</string>
+    <string name="permission_access_fine_location_description">Earside uses the \"fine location\" permission to receive Bluetooth Low Energy data. Your headphones use Bluetooth Low Energy technology to broadcast their status. This app will NOT use Bluetooth data to determine your location.</string>
     <string name="permission_background_location_label">Background location access</string>
-    <string name="permission_background_location_description">CAPod uses \"background location access\" to enable features like \"Show popup\" and \"AutoConnect\" while the app is closed. Background location access allows the app to receive Bluetooth Low Energy data while it is in the background. This app will NOT use Bluetooth data to determine your location.</string>
+    <string name="permission_background_location_description">Earside uses \"background location access\" to enable features like \"Show popup\" and \"AutoConnect\" while the app is closed. Background location access allows the app to receive Bluetooth Low Energy data while it is in the background. This app will NOT use Bluetooth data to determine your location.</string>
     <string name="permission_ignore_battery_optimizations_label">Disable battery optimizations</string>
     <string name="permission_ignore_battery_optimizations_description">Battery optimizations prevent this app from reliably receiving Bluetooth data while the app is in the background.</string>
     <string name="permission_system_alert_window_label">System Alert Window</string>
-    <string name="permission_system_alert_window_description">Allow CAPod to draw over other apps to make the feature \"Show PopUp\" possible.</string>
+    <string name="permission_system_alert_window_description">Allow Earside to draw over other apps to make the feature \"Show PopUp\" possible.</string>
 
 
     <string name="settings_reaction_autoconnect_whenseen_label">When seen</string>
@@ -309,7 +308,7 @@
     <string name="battery_time_remaining_format_h">%1$dh</string>
     <string name="battery_time_remaining_format_m">%1$dm</string>
     <string name="permission_post_notifications_label">Show notifications</string>
-    <string name="permission_post_notifications_description">"Allow CAPod to show notifications about your AirPods, e.g. their current status while connected."</string>
+    <string name="permission_post_notifications_description">"Allow Earside to show notifications about your AirPods, e.g. their current status while connected."</string>
 
     <!-- Device profiles -->
     <string name="profiles_empty_title">No device profiles configured</string>
@@ -334,9 +333,9 @@
     <string name="profiles_signal_quality_title">Minimum Signal Quality</string>
     <string name="profiles_signal_quality_description">Only detect devices with signal strength above this threshold. Lower values increase detection range but may cause false positives. Don\'t set this too high - Bluetooth reception is generally poor and varies with distance and obstacles.</string>
     <string name="profiles_identitykey_label">Identity Key</string>
-    <string name="profiles_maindevice_identitykey_explanation">AirPods frequently change their Bluetooth address for privacy. The IRK helps CAPod recognize your device. You need one-time access to a MacBook.</string>
+    <string name="profiles_maindevice_identitykey_explanation">AirPods frequently change their Bluetooth address for privacy. The IRK helps Earside recognize your device. You need one-time access to a MacBook.</string>
     <string name="profiles_maindevice_encryptionkey_label">Encryption Key</string>
-    <string name="profiles_maindevice_encryptionkey_explanation">AirPods send a status message, part of which is encrypted. The encryption key allows CAPod to decrypt the full message. You need one-time access to a MacBook.</string>
+    <string name="profiles_maindevice_encryptionkey_explanation">AirPods send a status message, part of which is encrypted. The encryption key allows Earside to decrypt the full message. You need one-time access to a MacBook.</string>
     <string name="profiles_key_invalid_format">Invalid key format</string>
     <string name="profiles_key_expected_format">Expected format: %1$s</string>
     <string name="profiles_key_status_configured">Configured</string>
@@ -482,7 +481,6 @@
     <string name="device_settings_not_nearby_description">Settings are only available when this device is nearby and connected to your phone.</string>
     <string name="device_settings_aap_unavailable_label">Advanced settings unavailable</string>
     <string name="device_settings_aap_unavailable_description">Advanced AirPods settings require a Bluetooth feature that is not available on this phone. This may be resolved by a future Android update from your device manufacturer.</string>
-    <string name="device_settings_aap_unavailable_action">View compatibility tracker</string>
     <string name="device_settings_category_sound_label">Sound</string>
     <string name="device_settings_category_controls_label">Controls</string>
     <string name="device_settings_nc_one_airpod_label">ANC with one pod</string>
@@ -526,7 +524,7 @@
     <string name="overview_reactions_hint_body">Auto-play, auto-pause and pop-ups are now configured per device. Tap the settings icon on a card while your headphones are connected.</string>
     <string name="review_app_review_action">Review</string>
     <string name="review_app_dismiss_action">Maybe later</string>
-    <string name="review_app_body">Would you like to leave CAPod a review? ❤️</string>
+    <string name="review_app_body">Would you like to leave Earside a review? ❤️</string>
 
     <!-- New device settings -->
     <string name="device_settings_microphone_mode_label">Microphone</string>

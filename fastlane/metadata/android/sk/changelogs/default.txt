@@ -1,5 +1,0 @@
-Opravy chýb a drobné vylepšenia, aby tvoje AirPods na telefóne stále zobrazovali správnu úroveň batérie.
-
-Čo sa zmenilo v tejto verzii: capod.darken.eu/changelog
-
-Niečo sa po aktualizácii pokazilo alebo sa správa čudne? Daj mi vedieť cez Nastavenia > Podpora. Je to projekt jedného človeka, takže odpoveď môže chvíľu trvať, ale každé hlásenie si prečítam.

@@ -149,7 +149,7 @@ class RecorderActivityVM @Inject constructor(
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 type = "application/zip"
                 addCategory(Intent.CATEGORY_DEFAULT)
-                putExtra(Intent.EXTRA_SUBJECT, "CAPod DebugLog - $displayName")
+                putExtra(Intent.EXTRA_SUBJECT, "Earside DebugLog - $displayName")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
 

@@ -1,5 +1,0 @@
-Correzioni di bug e piccoli miglioramenti, così i tuoi AirPods continuano a mostrare i livelli di batteria corretti sul telefono.
-
-Cos’è cambiato in questa versione: capod.darken.eu/changelog
-
-Qualcosa si è rotto o si comporta in modo strano dopo l’aggiornamento? Segnalamelo tramite Impostazioni > Supporto. È un progetto portato avanti da una sola persona, quindi le risposte potrebbero richiedere un po’ di tempo, ma ogni segnalazione viene letta.

@@ -3,7 +3,6 @@ description: Unit test conventions — JUnit 5, kotest assertions, mockk, BaseTe
 paths:
   - "app/src/test/**"
   - "app/src/testFoss/**"
-  - "app/src/testGplay/**"
   - "app/build.gradle.kts"
   - "buildSrc/src/main/java/Dependencies.kt"
 ---
@@ -39,16 +38,9 @@ Don't copy that pattern for a plain unit test.
 
 ## Source sets and Gradle tasks
 
-Each task compiles and runs only its own flavor — running the wrong one silently skips your test.
-
-| Test location | Task |
-|---|---|
-| `app/src/test/` (shared) | either; run both before pushing |
-| `app/src/testFoss/` | `./gradlew testFossDebugUnitTest` |
-| `app/src/testGplay/` | `./gradlew testGplayDebugUnitTest` |
-
-CI runs both. Flavor-specific tests are for code that only exists in that flavor — billing in
-`gplay`, the sponsor-based upgrade flow in `foss`.
+`./gradlew testFossDebugUnitTest` runs both `app/src/test/` (shared) and `app/src/testFoss/`. The
+`foss` flavor is the only one left; `testFoss` holds tests for code that only exists there, like the
+upgrade flow.
 
 ## Helpers that already exist
 
@@ -67,7 +59,7 @@ every { someSetting.flow } returns flowOf(value)   // covers .value() reads
 coVerify { someSetting.update(any()) }             // verifies .value(x) writes
 ```
 
-`UpgradeRepoGplayTest` uses this shape. Prefer `FakeDataStoreValue` when you need reads and writes to
+Prefer `FakeDataStoreValue` when you need reads and writes to
 actually round-trip.
 
 ## Reading ViewModel state

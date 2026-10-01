@@ -46,8 +46,9 @@ class UpgradeRepoFoss @Inject constructor(
         .flatMapLatest {
             fossCache.upgrade.flow
                 .map { data ->
+                    // Earside unlocks every feature; a sponsor record only adds its date and reason.
                     if (data == null) {
-                        Info()
+                        Info(isPro = true)
                     } else {
                         Info(
                             isPro = true,
@@ -72,7 +73,7 @@ class UpgradeRepoFoss @Inject constructor(
                     // refresh-driven resubscription IS the retry.
                     if (e is CancellationException) throw e
                     log(TAG, WARN) { "upgradeInfo read failed: ${e.asLog()}" }
-                    emit((lastKnownInfo ?: Info()).copy(error = e))
+                    emit((lastKnownInfo ?: Info(isPro = true)).copy(error = e))
                 }
         }
         .setupCommonEventHandlers(TAG) { "upgradeInfo" }

@@ -6,6 +6,7 @@ import java.util.Properties
 
 open class ProjectConfig {
     val packageName = "eu.darken.capod"
+    val applicationId = "app.pa2x2.earside"
     val minSdk = 26
 
     val compileSdk = 36

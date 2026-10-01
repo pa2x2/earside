@@ -7,7 +7,7 @@ import java.lang.reflect.Field
 
 @Keep
 object BuildConfigWrap {
-    val APPLICATION_ID = getBuildConfigValue("PACKAGENAME") as String
+    val APPLICATION_ID = getBuildConfigValue("APPLICATION_ID") as String
     val DEBUG: Boolean = getBuildConfigValue("DEBUG") as Boolean
     val BUILD_TYPE: BuildType = when (val typ = getBuildConfigValue("BUILD_TYPE") as String) {
         "debug" -> BuildType.DEV

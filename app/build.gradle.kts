@@ -15,6 +15,7 @@ android {
 
     defaultConfig {
         namespace = projectConfig.packageName
+        applicationId = projectConfig.applicationId
 
         minSdk = projectConfig.minSdk
         targetSdk = projectConfig.targetSdk
@@ -61,6 +62,7 @@ android {
             include("*.pro")
         }
         debug {
+            applicationIdSuffix = ".dev"
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
@@ -140,7 +142,7 @@ androidComponents {
 
         val apkFolder = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK)
         val loader = variant.artifacts.getBuiltArtifactsLoader()
-        val packageName = projectConfig.packageName
+        val packageName = projectConfig.applicationId
 
         val renameTask = tasks.register("rename${variant.name.replaceFirstChar { it.uppercase() }}Apk") {
             inputs.files(apkFolder)

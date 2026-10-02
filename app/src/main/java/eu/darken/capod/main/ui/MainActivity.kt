@@ -31,6 +31,8 @@ import eu.darken.capod.common.navigation.NavigationController
 import eu.darken.capod.common.navigation.NavigationEntry
 import eu.darken.capod.common.theming.CapodTheme
 import eu.darken.capod.common.uix.Activity2
+import eu.darken.capod.common.updater.UpdateManager
+import eu.darken.capod.common.updater.ui.UpdateSheetHost
 import eu.darken.capod.common.upgrade.UpgradeRepo
 import eu.darken.capod.main.core.GeneralSettings
 import eu.darken.capod.main.core.currentThemeState
@@ -50,6 +52,7 @@ class MainActivity : Activity2() {
     @Inject lateinit var generalSettings: GeneralSettings
     @Inject lateinit var popUpWindow: PopUpWindow
     @Inject lateinit var upgradeRepo: UpgradeRepo
+    @Inject lateinit var updateManager: UpdateManager
 
     // Buffers warm-start intents (onNewIntent) so they are consumed from inside the Compose tree,
     // after navCtrl.setup(backStack) has run. Calling navCtrl directly from onNewIntent races with
@@ -78,6 +81,11 @@ class MainActivity : Activity2() {
             Nav.Main.Overview
         } else {
             Nav.Main.Onboarding
+        }
+
+        // Once per launch, not on recreation; onboarding comes first.
+        if (savedInstanceState == null && startDestination == Nav.Main.Overview) {
+            updateManager.checkOnLaunch()
         }
 
         setContent {
@@ -124,6 +132,7 @@ class MainActivity : Activity2() {
                             }
                         },
                     )
+                    UpdateSheetHost()
                 }
             }
         }
@@ -133,6 +142,7 @@ class MainActivity : Activity2() {
         super.onResume()
         popUpWindow.isMainActivityVisible = true
         popUpWindow.close()
+        updateManager.onActivityResumed(this)
         // Per-resume, unthrottled entitlement reconciliation. This is what heals a renewal state
         // that changed while the user was away (e.g. cancelling the subscription in Google Play's
         // management page — returning to the app resumes this activity). refresh() is bounded and
@@ -145,6 +155,7 @@ class MainActivity : Activity2() {
 
     override fun onPause() {
         popUpWindow.isMainActivityVisible = false
+        updateManager.onActivityPaused(this)
         super.onPause()
     }
 

@@ -149,6 +149,8 @@ jobs:
             echo "::error::$APK is signed with the debug key"
             exit 1
           fi
+          # The in-app updater looks for exactly this name (common/updater/AppUpdate.kt). Renaming
+          # it stops every installed copy from finding its updates.
           mv "$APK" "earside-$TAG.apk"
 
       - name: Create GitHub Release
@@ -161,7 +163,9 @@ jobs:
           body: ${{ needs.plan.outputs.notes }}
           files: earside-${{ needs.plan.outputs.tag }}.apk
           draft: true
-          prerelease: false
+          # A suffixed version (v1.2.0-beta1) is a pre-release, which the in-app updater only offers
+          # on its pre-release channel.
+          prerelease: ${{ contains(needs.plan.outputs.tag, '-') }}
 
       # GitHub tags a draft only once it is published. The tag goes in now, and last: it is what
       # tells later pushes to main that this version is released.

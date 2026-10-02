@@ -3,6 +3,9 @@ package eu.darken.capod.main.ui.settings.general
 import eu.darken.capod.common.navigation.Nav
 import eu.darken.capod.common.navigation.NavEvent
 import eu.darken.capod.common.theming.ThemeMode
+import eu.darken.capod.common.updater.UpdateChannel
+import eu.darken.capod.common.updater.UpdateManager
+import eu.darken.capod.common.updater.UpdateSettings
 import eu.darken.capod.common.upgrade.UpgradeRepo
 import eu.darken.capod.main.core.GeneralSettings
 import io.kotest.matchers.shouldBe
@@ -102,6 +105,13 @@ class GeneralSettingsViewModelTest : BaseTest() {
         dispatcherProvider = TestDispatcherProvider(testDispatcher),
         generalSettings = generalSettings,
         upgradeRepo = upgradeRepo,
+        updateSettings = mockk<UpdateSettings>().also {
+            every { it.checkOnLaunch } returns FakeDataStoreValue(true).mock
+            every { it.channel } returns FakeDataStoreValue(UpdateChannel.STABLE).mock
+        },
+        updateManager = mockk<UpdateManager>().also {
+            every { it.isSupported } returns true
+        },
     ).also { vm = it }
 
     // --- Presentation ---

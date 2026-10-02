@@ -11,6 +11,9 @@ import eu.darken.capod.common.theming.ThemeMode
 import eu.darken.capod.common.theming.ThemeState
 import eu.darken.capod.common.theming.ThemeStyle
 import eu.darken.capod.common.uix.ViewModel4
+import eu.darken.capod.common.updater.UpdateChannel
+import eu.darken.capod.common.updater.UpdateManager
+import eu.darken.capod.common.updater.UpdateSettings
 import eu.darken.capod.common.upgrade.UpgradeRepo
 import eu.darken.capod.common.upgrade.isProForUi
 import eu.darken.capod.main.core.GeneralSettings
@@ -25,6 +28,8 @@ class GeneralSettingsViewModel @Inject constructor(
     dispatcherProvider: DispatcherProvider,
     private val generalSettings: GeneralSettings,
     private val upgradeRepo: UpgradeRepo,
+    private val updateSettings: UpdateSettings,
+    private val updateManager: UpdateManager,
 ) : ViewModel4(dispatcherProvider) {
 
     data class State(
@@ -42,6 +47,13 @@ class GeneralSettingsViewModel @Inject constructor(
         val useIndirectScanResultCallback: Boolean,
         val hideUnmatchedDevices: Boolean,
         val themeState: ThemeState,
+        /** Null in builds that don't update themselves, which hides the update settings. */
+        val updates: Updates? = null,
+    )
+
+    data class Updates(
+        val checkOnLaunch: Boolean,
+        val channel: UpdateChannel,
     )
 
     // Hard-locked = settled, error-free and no entitlement. Anything else (unsettled seed, error)
@@ -49,6 +61,13 @@ class GeneralSettingsViewModel @Inject constructor(
     private val isUpgradeLocked = upgradeRepo.upgradeInfo
         .map { it.error == null && it.isSettled && !it.isPro }
         .asLiveState()
+
+    private val updates = combine(
+        updateSettings.checkOnLaunch.flow,
+        updateSettings.channel.flow,
+    ) { checkOnLaunch, channel ->
+        Updates(checkOnLaunch = checkOnLaunch, channel = channel).takeIf { updateManager.isSupported }
+    }
 
     val state = combine(
         combine(
@@ -80,7 +99,7 @@ class GeneralSettingsViewModel @Inject constructor(
             hideUnmatchedDevices = hideUnmatched,
             themeState = themeState,
         )
-    }.asLiveState()
+    }.combine(updates) { state, updates -> state.copy(updates = updates) }.asLiveState()
 
     fun setShowConnectedNotification(enabled: Boolean) {
         log(TAG, INFO) { "setShowConnectedNotification($enabled)" }
@@ -110,6 +129,16 @@ class GeneralSettingsViewModel @Inject constructor(
     fun setHideUnmatchedDevices(enabled: Boolean) {
         log(TAG, INFO) { "setHideUnmatchedDevices($enabled)" }
         generalSettings.hideUnmatchedDevices.valueBlocking = enabled
+    }
+
+    fun setCheckUpdatesOnLaunch(enabled: Boolean) {
+        log(TAG, INFO) { "setCheckUpdatesOnLaunch($enabled)" }
+        updateSettings.checkOnLaunch.valueBlocking = enabled
+    }
+
+    fun setUpdateChannel(channel: UpdateChannel) {
+        log(TAG, INFO) { "setUpdateChannel($channel)" }
+        updateSettings.channel.valueBlocking = channel
     }
 
     fun setThemeMode(mode: ThemeMode) = launch {

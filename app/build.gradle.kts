@@ -181,6 +181,9 @@ dependencies {
 
     implementation("androidx.core:core-splashscreen:1.0.0-alpha02")
 
+    // Release notes in the update prompt. 0.39+ needs Kotlin 2.3.
+    implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.38.1")
+
     addNavigation()
 
     addCompose()

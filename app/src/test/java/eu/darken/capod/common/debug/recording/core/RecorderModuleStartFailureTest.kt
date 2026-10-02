@@ -386,9 +386,14 @@ class RecorderModuleStartFailureTest : BaseTest() {
 
             // The delayed scan of the failure: it runs while the start is still pending, so the
             // in-flight dir has no activeDir to match and looks like everybody else's leftovers.
+            // Wait for a scan holding BOTH dirs: the start's own state change can trigger a scan
+            // after the in-flight dir exists but before the bystander does, and the replay cache
+            // hands that stale scan out until this refresh lands.
             manager.refresh()
             val seen = withTimeout(AWAIT_TIMEOUT_MS) {
-                manager.sessions.first { scan -> scan.any { it.displayName == inFlight.name } }
+                manager.sessions.first { scan ->
+                    scan.any { it.displayName == inFlight.name } && scan.any { it.displayName == bystander.name }
+                }
             }
             // Non-vacuity: the manager really did scan both dirs, and in a shape its reconciliation
             // would have zipped. The gate is what stopped it, not a scan that never happened.

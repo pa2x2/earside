@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- RemoteViews can't inflate a plain View, so the divider is an ImageView -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="1dp"
+    android:layout_height="20dp"
+    android:layout_gravity="center_vertical"
+    android:layout_marginHorizontal="4dp"
+    android:background="@color/notification_icon_tint"
+    android:alpha="0.4"
+    android:importantForAccessibility="no" />

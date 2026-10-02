@@ -2,9 +2,12 @@ package eu.darken.capod.monitor.ui
 
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.view.View
 import android.widget.RemoteViews
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import dagger.hilt.android.qualifiers.ApplicationContext
 import eu.darken.capod.R
 import eu.darken.capod.common.bluetooth.BluetoothAddress
@@ -18,10 +21,9 @@ import eu.darken.capod.monitor.core.battery.caseCharges
 import eu.darken.capod.monitor.core.battery.displayFraction
 import eu.darken.capod.monitor.core.battery.displayMinutes
 import eu.darken.capod.monitor.core.batteryCaseReading
-import eu.darken.capod.monitor.core.receiver.AncNotificationReceiver
+import eu.darken.capod.monitor.core.receiver.NotificationControlsReceiver
 import eu.darken.capod.monitor.core.visibleAncModes
 import eu.darken.capod.pods.core.apple.PodModel
-import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import eu.darken.capod.pods.core.apple.ble.formatBatteryDurationShort
 import eu.darken.capod.pods.core.apple.ble.formatBatteryPercent
 import eu.darken.capod.pods.core.apple.ble.getBatteryDrawable
@@ -149,7 +151,7 @@ class MonitorNotificationViewFactory @Inject constructor(
         val isRightPodInEar = device.isRightInEar ?: false
         setViewVisibility(R.id.pod_right_ear, if (isRightPodInEar) View.VISIBLE else View.GONE)
 
-        bindAncControls(device)
+        bindControls(device)
     }
 
     private fun createSinglePodBig(device: PodDevice, estimate: BatteryEstimate?): RemoteViews = RemoteViews(
@@ -173,7 +175,7 @@ class MonitorNotificationViewFactory @Inject constructor(
             if (device.isHeadsetBeingCharged == true) View.VISIBLE else View.GONE
         )
 
-        bindAncControls(device)
+        bindControls(device)
     }
 
     private fun createUnknownDeviceBig(device: PodDevice): RemoteViews = RemoteViews(
@@ -184,45 +186,93 @@ class MonitorNotificationViewFactory @Inject constructor(
     }
 
     // Only offered over a ready AAP session: without one a tap has nothing to send through.
-    private fun RemoteViews.bindAncControls(device: PodDevice) {
+    private fun RemoteViews.bindControls(device: PodDevice) {
         val address = device.address
-        val current = device.ancMode?.current
-        val modes = device.visibleAncModes
-        if (!device.hasAncControl || !device.isAapReady || address == null || current == null || modes.isEmpty()) {
-            setViewVisibility(R.id.anc_container, View.GONE)
+        if (!device.isAapReady || address == null) {
+            setViewVisibility(R.id.controls_container, View.GONE)
             return
         }
 
-        val selected = device.pendingAncMode?.takeIf { it in modes } ?: current
-        removeAllViews(R.id.anc_container)
-        modes.forEach { mode ->
-            addView(R.id.anc_container, createAncButton(address, mode, mode == selected))
+        val ancButtons = createAncButtons(device, address)
+        val caButton = createConversationAwarenessButton(device, address)
+        if (ancButtons.isEmpty() && caButton == null) {
+            setViewVisibility(R.id.controls_container, View.GONE)
+            return
         }
-        setViewVisibility(R.id.anc_container, View.VISIBLE)
+
+        removeAllViews(R.id.controls_container)
+        ancButtons.forEach { addView(R.id.controls_container, it) }
+        if (caButton != null) {
+            // CA is an independent switch, the divider keeps it from reading as another listening mode
+            if (ancButtons.isNotEmpty()) {
+                addView(
+                    R.id.controls_container,
+                    RemoteViews(context.packageName, R.layout.monitor_notification_control_divider)
+                )
+            }
+            addView(R.id.controls_container, caButton)
+        }
+        setViewVisibility(R.id.controls_container, View.VISIBLE)
     }
 
-    private fun createAncButton(
-        address: BluetoothAddress,
-        mode: AapSetting.AncMode.Value,
-        isSelected: Boolean,
+    private fun createAncButtons(device: PodDevice, address: BluetoothAddress): List<RemoteViews> {
+        val current = device.ancMode?.current
+        val modes = device.visibleAncModes
+        if (!device.hasAncControl || current == null) return emptyList()
+
+        val selected = device.pendingAncMode?.takeIf { it in modes } ?: current
+        return modes.map { mode ->
+            createControlButton(
+                iconRes = mode.iconDrawableRes(),
+                label = mode.shortLabel(context),
+                isActive = mode == selected,
+                activeDescriptionRes = R.string.monitor_notification_control_selected,
+                inactiveDescriptionRes = null,
+                intent = NotificationControlsReceiver.setAncModeIntent(context, address, mode),
+            )
+        }
+    }
+
+    private fun createConversationAwarenessButton(device: PodDevice, address: BluetoothAddress): RemoteViews? {
+        val enabled = device.conversationalAwareness?.enabled
+        if (!device.hasConversationAwareness || enabled == null) return null
+
+        return createControlButton(
+            iconRes = R.drawable.ic_baseline_hearing_24,
+            label = context.getString(R.string.conversation_awareness_label),
+            isActive = enabled,
+            activeDescriptionRes = R.string.monitor_notification_control_on,
+            inactiveDescriptionRes = R.string.monitor_notification_control_off,
+            intent = NotificationControlsReceiver.setConversationalAwarenessIntent(context, address, !enabled),
+        )
+    }
+
+    private fun createControlButton(
+        @DrawableRes iconRes: Int,
+        label: String,
+        isActive: Boolean,
+        @StringRes activeDescriptionRes: Int,
+        @StringRes inactiveDescriptionRes: Int?,
+        intent: Intent,
     ): RemoteViews = RemoteViews(
         context.packageName,
-        R.layout.monitor_notification_anc_button
+        R.layout.monitor_notification_control_button
     ).apply {
-        setImageViewResource(R.id.anc_button_icon, mode.iconDrawableRes())
-        setTextViewText(R.id.anc_button_label, mode.shortLabel(context))
-        if (isSelected) {
-            setInt(R.id.anc_button, "setBackgroundResource", R.drawable.notification_anc_button_bg_selected)
-            setInt(R.id.anc_button_icon, "setColorFilter", Color.WHITE)
-            setTextColor(R.id.anc_button_label, Color.WHITE)
+        setImageViewResource(R.id.control_button_icon, iconRes)
+        // Icon-only buttons: the description is all TalkBack has, so it carries the state too
+        val descriptionRes = if (isActive) activeDescriptionRes else inactiveDescriptionRes
+        setContentDescription(R.id.control_button, descriptionRes?.let { context.getString(it, label) } ?: label)
+        if (isActive) {
+            setInt(R.id.control_button, "setBackgroundResource", R.drawable.notification_control_button_bg_selected)
+            setInt(R.id.control_button_icon, "setColorFilter", Color.WHITE)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             0,
-            AncNotificationReceiver.intent(context, address, mode),
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntentCompat.FLAG_IMMUTABLE,
         )
-        setOnClickPendingIntent(R.id.anc_button, pendingIntent)
+        setOnClickPendingIntent(R.id.control_button, pendingIntent)
     }
 
     private fun percentToInt(percent: Float): Int =

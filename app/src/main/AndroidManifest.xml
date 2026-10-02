@@ -91,7 +91,7 @@
         </receiver>
 
         <receiver
-            android:name=".monitor.core.receiver.AncNotificationReceiver"
+            android:name=".monitor.core.receiver.NotificationControlsReceiver"
             android:exported="false" />
 
         <receiver

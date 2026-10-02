@@ -576,6 +576,7 @@ private data class NotificationDeviceKey(
     val ancMode: AapSetting.AncMode.Value?,
     val pendingAncMode: AapSetting.AncMode.Value?,
     val visibleAncModes: List<AapSetting.AncMode.Value>,
+    val conversationalAwareness: Boolean?,
 )
 
 private fun PodDevice.toNotificationKey(): NotificationDeviceKey = NotificationDeviceKey(
@@ -606,6 +607,7 @@ private fun PodDevice.toNotificationKey(): NotificationDeviceKey = NotificationD
     ancMode = ancMode?.current,
     pendingAncMode = pendingAncMode,
     visibleAncModes = visibleAncModes,
+    conversationalAwareness = conversationalAwareness?.enabled,
 )
 
 internal data class NotificationSettings(

@@ -86,9 +86,9 @@
 
         </LinearLayout>
 
-        <!-- ANC controls, buttons are added at runtime -->
+        <!-- ANC and Conversation Awareness controls, buttons are added at runtime -->
         <LinearLayout
-            android:id="@+id/anc_container"
+            android:id="@+id/controls_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"

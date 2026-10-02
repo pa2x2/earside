@@ -1,10 +1,16 @@
 package eu.darken.capod.monitor.ui
 
+import android.app.PendingIntent
 import android.content.Context
+import android.graphics.Color
 import android.view.View
 import android.widget.RemoteViews
 import dagger.hilt.android.qualifiers.ApplicationContext
 import eu.darken.capod.R
+import eu.darken.capod.common.bluetooth.BluetoothAddress
+import eu.darken.capod.common.notifications.PendingIntentCompat
+import eu.darken.capod.main.ui.components.iconDrawableRes
+import eu.darken.capod.main.ui.components.shortLabel
 import eu.darken.capod.monitor.core.PodDevice
 import eu.darken.capod.monitor.core.battery.BatteryEstimate
 import eu.darken.capod.monitor.core.battery.CaseCharges
@@ -12,7 +18,10 @@ import eu.darken.capod.monitor.core.battery.caseCharges
 import eu.darken.capod.monitor.core.battery.displayFraction
 import eu.darken.capod.monitor.core.battery.displayMinutes
 import eu.darken.capod.monitor.core.batteryCaseReading
+import eu.darken.capod.monitor.core.receiver.AncNotificationReceiver
+import eu.darken.capod.monitor.core.visibleAncModes
 import eu.darken.capod.pods.core.apple.PodModel
+import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import eu.darken.capod.pods.core.apple.ble.formatBatteryDurationShort
 import eu.darken.capod.pods.core.apple.ble.formatBatteryPercent
 import eu.darken.capod.pods.core.apple.ble.getBatteryDrawable
@@ -139,6 +148,8 @@ class MonitorNotificationViewFactory @Inject constructor(
         setViewVisibility(R.id.pod_right_charging, if (isRightPodCharging) View.VISIBLE else View.GONE)
         val isRightPodInEar = device.isRightInEar ?: false
         setViewVisibility(R.id.pod_right_ear, if (isRightPodInEar) View.VISIBLE else View.GONE)
+
+        bindAncControls(device)
     }
 
     private fun createSinglePodBig(device: PodDevice, estimate: BatteryEstimate?): RemoteViews = RemoteViews(
@@ -161,6 +172,8 @@ class MonitorNotificationViewFactory @Inject constructor(
             R.id.headphones_charging,
             if (device.isHeadsetBeingCharged == true) View.VISIBLE else View.GONE
         )
+
+        bindAncControls(device)
     }
 
     private fun createUnknownDeviceBig(device: PodDevice): RemoteViews = RemoteViews(
@@ -168,6 +181,48 @@ class MonitorNotificationViewFactory @Inject constructor(
         R.layout.monitor_notification_unknown_device_big
     ).apply {
         setTextViewText(R.id.device, device.getLabel(context))
+    }
+
+    // Only offered over a ready AAP session: without one a tap has nothing to send through.
+    private fun RemoteViews.bindAncControls(device: PodDevice) {
+        val address = device.address
+        val current = device.ancMode?.current
+        val modes = device.visibleAncModes
+        if (!device.hasAncControl || !device.isAapReady || address == null || current == null || modes.isEmpty()) {
+            setViewVisibility(R.id.anc_container, View.GONE)
+            return
+        }
+
+        val selected = device.pendingAncMode?.takeIf { it in modes } ?: current
+        removeAllViews(R.id.anc_container)
+        modes.forEach { mode ->
+            addView(R.id.anc_container, createAncButton(address, mode, mode == selected))
+        }
+        setViewVisibility(R.id.anc_container, View.VISIBLE)
+    }
+
+    private fun createAncButton(
+        address: BluetoothAddress,
+        mode: AapSetting.AncMode.Value,
+        isSelected: Boolean,
+    ): RemoteViews = RemoteViews(
+        context.packageName,
+        R.layout.monitor_notification_anc_button
+    ).apply {
+        setImageViewResource(R.id.anc_button_icon, mode.iconDrawableRes())
+        setTextViewText(R.id.anc_button_label, mode.shortLabel(context))
+        if (isSelected) {
+            setInt(R.id.anc_button, "setBackgroundResource", R.drawable.notification_anc_button_bg_selected)
+            setInt(R.id.anc_button_icon, "setColorFilter", Color.WHITE)
+            setTextColor(R.id.anc_button_label, Color.WHITE)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            0,
+            AncNotificationReceiver.intent(context, address, mode),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntentCompat.FLAG_IMMUTABLE,
+        )
+        setOnClickPendingIntent(R.id.anc_button, pendingIntent)
     }
 
     private fun percentToInt(percent: Float): Int =

@@ -90,6 +90,9 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".monitor.core.receiver.AncNotificationReceiver"
+            android:exported="false" />
 
         <receiver
             android:name=".main.ui.widget.WidgetProvider"

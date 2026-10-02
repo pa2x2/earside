@@ -12,7 +12,9 @@ import androidx.compose.material.icons.twotone.DarkMode
 import androidx.compose.material.icons.twotone.FilterList
 import androidx.compose.material.icons.automirrored.twotone.Message
 import androidx.compose.material.icons.twotone.Notifications
+import androidx.compose.material.icons.twotone.NewReleases
 import androidx.compose.material.icons.twotone.Palette
+import androidx.compose.material.icons.twotone.Update
 import androidx.compose.material.icons.twotone.VisibilityOff
 import androidx.compose.material.icons.automirrored.twotone.ViewList
 import androidx.compose.material3.Icon
@@ -44,6 +46,7 @@ import eu.darken.capod.common.theming.ThemeColor
 import eu.darken.capod.common.theming.ThemeMode
 import eu.darken.capod.common.theming.ThemeState
 import eu.darken.capod.common.theming.ThemeStyle
+import eu.darken.capod.common.updater.UpdateChannel
 
 @Composable
 fun GeneralSettingsScreenHost(vm: GeneralSettingsViewModel = hiltViewModel()) {
@@ -61,6 +64,8 @@ fun GeneralSettingsScreenHost(vm: GeneralSettingsViewModel = hiltViewModel()) {
             onOffloadedBatchingDisabledChanged = { disabled -> vm.setOffloadedBatchingDisabled(disabled) },
             onUseIndirectScanResultCallbackChanged = { enabled -> vm.setUseIndirectScanResultCallback(enabled) },
             onHideUnmatchedDevicesChanged = { enabled -> vm.setHideUnmatchedDevices(enabled) },
+            onCheckUpdatesOnLaunchChanged = { enabled -> vm.setCheckUpdatesOnLaunch(enabled) },
+            onUpdateChannelSelected = { channel -> vm.setUpdateChannel(channel) },
             onThemeModeSelected = { mode -> vm.setThemeMode(mode) },
             onThemeStyleSelected = { style -> vm.setThemeStyle(style) },
             onThemeColorSelected = { color -> vm.setThemeColor(color) },
@@ -79,6 +84,8 @@ fun GeneralSettingsScreen(
     onOffloadedBatchingDisabledChanged: (Boolean) -> Unit,
     onUseIndirectScanResultCallbackChanged: (Boolean) -> Unit,
     onHideUnmatchedDevicesChanged: (Boolean) -> Unit,
+    onCheckUpdatesOnLaunchChanged: (Boolean) -> Unit = {},
+    onUpdateChannelSelected: (UpdateChannel) -> Unit = {},
     onThemeModeSelected: (ThemeMode) -> Unit = {},
     onThemeStyleSelected: (ThemeStyle) -> Unit = {},
     onThemeColorSelected: (ThemeColor) -> Unit = {},
@@ -218,6 +225,33 @@ fun GeneralSettingsScreen(
                         )
                     },
                 )
+            }
+            state.updates?.let { updates ->
+                item {
+                    SettingsBaseItem(
+                        title = stringResource(R.string.settings_updates_on_launch_label),
+                        subtitle = stringResource(R.string.settings_updates_on_launch_description),
+                        icon = Icons.TwoTone.Update,
+                        onClick = { onCheckUpdatesOnLaunchChanged(!updates.checkOnLaunch) },
+                        trailingContent = {
+                            Switch(
+                                checked = updates.checkOnLaunch,
+                                onCheckedChange = onCheckUpdatesOnLaunchChanged,
+                                modifier = Modifier.padding(start = 16.dp),
+                            )
+                        },
+                    )
+                }
+                item {
+                    SettingsListPreferenceItem(
+                        icon = Icons.TwoTone.NewReleases,
+                        title = stringResource(R.string.settings_updates_channel_label),
+                        entries = UpdateChannel.entries,
+                        selectedEntry = updates.channel,
+                        onEntrySelected = onUpdateChannelSelected,
+                        entryLabel = { stringResource(it.labelRes) },
+                    )
+                }
             }
             item {
                 SettingsCategoryHeader(

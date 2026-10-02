@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/control_button"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:layout_marginHorizontal="2dp"
+    android:background="@drawable/notification_control_button_bg"
+    android:paddingVertical="8dp">
+
+    <ImageView
+        android:id="@+id/control_button_icon"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:tint="@color/notification_icon_tint"
+        android:tintMode="src_in"
+        tools:src="@drawable/ic_anc_on" />
+
+</FrameLayout>

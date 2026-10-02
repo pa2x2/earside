@@ -20,8 +20,8 @@ android {
         minSdk = projectConfig.minSdk
         targetSdk = projectConfig.targetSdk
 
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "eu.darken.capod.HiltTestRunner"
 
@@ -180,6 +180,9 @@ dependencies {
     addBaseAndroidUi()
 
     implementation("androidx.core:core-splashscreen:1.0.0-alpha02")
+
+    // Release notes in the update prompt. 0.39+ needs Kotlin 2.3.
+    implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.38.1")
 
     addNavigation()
 

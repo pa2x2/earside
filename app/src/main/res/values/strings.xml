@@ -80,6 +80,9 @@
     <string name="notification_channel_device_status_connected_label">Connected device</string>
     <string name="monitor_notification_extra_enabled_hint">You can disable this notification in system settings.</string>
     <string name="monitor_notification_starting">Starting up…</string>
+    <string name="monitor_notification_control_selected">%1$s, selected</string>
+    <string name="monitor_notification_control_on">%1$s, on</string>
+    <string name="monitor_notification_control_off">%1$s, off</string>
 
     <string name="support_debuglog_label">Debug log</string>
     <string name="support_debuglog_desc">Record everything the app is doing into a zip file that you can share.</string>
@@ -608,4 +611,45 @@
 
     <string name="general_navigate_up_action">Navigate up</string>
     <string name="general_progress_loading">Loading</string>
+
+    <string name="settings_updates_check_label">Check for updates</string>
+    <string name="settings_updates_check_idle">Look for a new version on GitHub</string>
+    <string name="settings_updates_checking">Checking…</string>
+    <string name="settings_updates_up_to_date">Earside is up to date</string>
+    <string name="settings_updates_available">Version %1$s is available</string>
+    <string name="settings_updates_on_launch_label">Check for updates on launch</string>
+    <string name="settings_updates_on_launch_description">Look for a new Earside version on GitHub when the app opens.</string>
+    <string name="settings_updates_channel_label">Update channel</string>
+    <string name="settings_updates_channel_stable">Stable</string>
+    <string name="settings_updates_channel_prerelease">Pre-release</string>
+
+    <string name="updates_available_title">Update available</string>
+    <string name="updates_version_label">Version %1$s</string>
+    <string name="updates_update_action">Update now</string>
+    <string name="updates_skip_action">Skip this version</string>
+    <string name="updates_not_now_action">Not now</string>
+    <string name="updates_downloading_label">Downloading…</string>
+    <string name="updates_downloading_percent_label">Downloading… %1$d%%</string>
+    <string name="updates_cancel_download_action">Cancel download</string>
+    <string name="updates_permission_description">To install updates, Android needs your permission for Earside to install apps. Turn on \"Allow from this source\", then come back.</string>
+    <string name="updates_allow_installs_action">Allow installs</string>
+    <string name="updates_installing_label">Installing…</string>
+    <string name="updates_installing_description">Earside closes while the update installs.</string>
+    <string name="updates_open_release_action">Open release page</string>
+    <string name="updates_error_unreachable">Couldn\'t reach GitHub. Check your connection and try again.</string>
+    <string name="updates_error_rate_limited">GitHub limits how often it can be asked for releases. Try again in an hour.</string>
+    <string name="updates_error_server">GitHub answered with an error (HTTP %1$d).</string>
+    <string name="updates_error_invalid_response">GitHub\'s answer couldn\'t be read.</string>
+    <string name="updates_error_download">The download failed. Check your connection and try again.</string>
+    <string name="updates_error_checksum">The download is damaged. Try again.</string>
+    <string name="updates_error_invalid_apk">The downloaded file isn\'t a valid app.</string>
+    <string name="updates_error_wrong_package">The downloaded app isn\'t Earside.</string>
+    <string name="updates_error_not_newer">The downloaded app isn\'t newer than the installed one.</string>
+    <string name="updates_error_signature">The update is signed with a different key than the installed app, so Android can\'t install it over this one.</string>
+    <string name="updates_error_install_blocked">Android blocked the install.</string>
+    <string name="updates_error_install_conflict">The update conflicts with the installed app.</string>
+    <string name="updates_error_install_incompatible">The update isn\'t compatible with this phone.</string>
+    <string name="updates_error_install_storage">There isn\'t enough storage to install the update.</string>
+    <string name="updates_error_install_failed">The install failed.</string>
+    <string name="updates_error_unexpected">Something went wrong with the update.</string>
 </resources>

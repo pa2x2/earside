@@ -86,6 +86,16 @@
 
         </LinearLayout>
 
+        <!-- ANC and Conversation Awareness controls, buttons are added at runtime -->
+        <LinearLayout
+            android:id="@+id/controls_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
     </LinearLayout>
 
 </FrameLayout>

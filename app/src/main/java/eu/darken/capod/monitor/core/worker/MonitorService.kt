@@ -35,11 +35,13 @@ import eu.darken.capod.monitor.core.battery.displayKey
 import eu.darken.capod.monitor.core.battery.estimateFor
 import eu.darken.capod.monitor.core.MonitorModeResolver
 import eu.darken.capod.monitor.core.PodDevice
+import eu.darken.capod.monitor.core.visibleAncModes
 import eu.darken.capod.monitor.core.ble.BlePodMonitor
 import eu.darken.capod.monitor.ui.MonitorNotifications
 import eu.darken.capod.pods.core.apple.PodModel
 import eu.darken.capod.pods.core.apple.aap.AapConnectionManager
 import eu.darken.capod.pods.core.apple.aap.AapPodState
+import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import eu.darken.capod.profiles.core.DeviceProfile
 import eu.darken.capod.profiles.core.DeviceProfilesRepo
 import eu.darken.capod.reaction.core.autoconnect.AutoConnect
@@ -570,6 +572,11 @@ private data class NotificationDeviceKey(
     val leftPodIcon: Int,
     val rightPodIcon: Int,
     val caseIcon: Int,
+    val isAapReady: Boolean,
+    val ancMode: AapSetting.AncMode.Value?,
+    val pendingAncMode: AapSetting.AncMode.Value?,
+    val visibleAncModes: List<AapSetting.AncMode.Value>,
+    val conversationalAwareness: Boolean?,
 )
 
 private fun PodDevice.toNotificationKey(): NotificationDeviceKey = NotificationDeviceKey(
@@ -596,6 +603,11 @@ private fun PodDevice.toNotificationKey(): NotificationDeviceKey = NotificationD
     leftPodIcon = leftPodIcon,
     rightPodIcon = rightPodIcon,
     caseIcon = caseIcon,
+    isAapReady = isAapReady,
+    ancMode = ancMode?.current,
+    pendingAncMode = pendingAncMode,
+    visibleAncModes = visibleAncModes,
+    conversationalAwareness = conversationalAwareness?.enabled,
 )
 
 internal data class NotificationSettings(

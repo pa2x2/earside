@@ -102,6 +102,7 @@ data class PodDevice(
     val hasDualPods: Boolean get() = model.features.hasDualPods
     val hasEarDetection: Boolean get() = model.features.hasEarDetection
     val hasAncControl: Boolean get() = model.features.hasAncControl
+    val hasConversationAwareness: Boolean get() = model.features.hasConversationAwareness
     val hasDualMicrophone: Boolean get() = ble is HasDualMicrophone
     val hasDynamicEndOfCharge: Boolean get() = model.features.hasDynamicEndOfCharge
 

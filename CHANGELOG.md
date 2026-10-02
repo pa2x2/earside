@@ -2,6 +2,18 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-02
+
+### ✨ Added
+
+- The expanded device notification has buttons to switch listening modes and to turn Conversation Awareness on or off. They show up for headphones that support these settings once Earside has connected to them.
+- Earside can update itself from its GitHub releases. When the app opens, it checks for a new version, shows what changed, and downloads and installs it for you. On Android 12 and later, updates after the first one install without asking.
+- Check for updates from Settings. In General settings you can turn off the check on launch or switch to the pre-release channel. If you skip a version, the launch check won't offer it again.
+
+### 🔄 Changed
+
+- The Transparency icon in the widget and the Quick Settings tile now matches the one in the app.
+
 ## [1.0.0] - 2026-10-01
 
 Based on [CAPod v5.4.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.4.0-rc0)
@@ -25,4 +37,5 @@ Based on [CAPod v5.4.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.
 
 - CAPod's contact form, Discord, issue tracker, wiki, translation project, privacy policy and sponsor links.
 
+[1.1.0]: https://github.com/pa2x2/earside/releases/tag/v1.1.0
 [1.0.0]: https://github.com/pa2x2/earside/releases/tag/v1.0.0

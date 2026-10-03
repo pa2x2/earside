@@ -192,20 +192,29 @@ private fun WhenSection(
     onTrigger: (RuleTrigger?) -> Unit,
 ) {
     SettingsSection(title = stringResource(R.string.rules_editor_when_section)) {
-        state.triggerOptions.forEachIndexed { index, editor ->
+        state.triggerOptions.forEachIndexed { index, option ->
             if (index > 0) HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            val editor = option.editor
             val selected = state.draft.triggerType == editor.type
             ChoiceRow(
                 title = stringResource(editor.label),
+                subtitle = if (option.supported) null else stringResource(R.string.rules_not_supported, state.model.label),
                 icon = editor.icon,
                 selected = selected,
+                // A rule saved before the model changed keeps its trigger until the user picks another.
+                enabled = option.supported || selected,
                 onClick = { onTriggerType(editor.type) },
             )
             if (selected) {
                 editor as RuleTriggerEditor<RuleTrigger>
                 // Keyed by type: the new type's settings start from what the draft carried over.
                 key(editor.type) {
-                    editor.Settings(current = state.draft.trigger?.takeIf { editor.type.isInstance(it) }, onChange = onTrigger)
+                    editor.Settings(
+                        current = state.draft.trigger?.takeIf { editor.type.isInstance(it) },
+                        model = state.model,
+                        device = state.device,
+                        onChange = onTrigger,
+                    )
                 }
             }
         }
@@ -226,7 +235,7 @@ private fun ThenSection(
             val checked = editor.type in state.draft.actions
             CheckRow(
                 title = stringResource(editor.label),
-                subtitle = if (option.supported) null else stringResource(R.string.rules_action_not_supported, state.model.label),
+                subtitle = if (option.supported) null else stringResource(R.string.rules_not_supported, state.model.label),
                 icon = editor.icon,
                 checked = checked,
                 // A rule saved before the model changed can still drop the action it no longer supports.

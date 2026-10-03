@@ -733,7 +733,7 @@
 
     <string name="rules_action_anc_label">Set listening mode</string>
     <string name="rules_action_ca_label">Set Conversation Awareness</string>
-    <string name="rules_action_not_supported">Not available on %1$s</string>
+    <string name="rules_not_supported">Not available on %1$s</string>
     <string name="rules_value_on">On</string>
     <string name="rules_value_off">Off</string>
 

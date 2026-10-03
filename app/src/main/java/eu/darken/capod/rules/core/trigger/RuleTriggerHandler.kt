@@ -1,6 +1,7 @@
 package eu.darken.capod.rules.core.trigger
 
 import android.content.Context
+import eu.darken.capod.pods.core.apple.PodModel
 import eu.darken.capod.profiles.core.ProfileId
 import eu.darken.capod.rules.core.RuleTrigger
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,9 @@ import kotlin.time.Duration
 interface RuleTriggerHandler<T : RuleTrigger> {
 
     val type: KClass<T>
+
+    /** Whether this trigger means anything on this model. Unsupported triggers are offered greyed out. */
+    fun isSupported(features: PodModel.Features): Boolean
 
     /** E.g. "When connected to Home". */
     fun summary(context: Context, trigger: T): String

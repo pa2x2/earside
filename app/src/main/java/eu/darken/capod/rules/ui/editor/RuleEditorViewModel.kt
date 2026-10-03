@@ -66,6 +66,8 @@ class RuleEditorViewModel @Inject constructor(
         val draft: Draft,
     )
 
+    data class TriggerOption(val editor: RuleTriggerEditor<*>, val supported: Boolean)
+
     data class ActionOption(val editor: RuleActionEditor<*>, val supported: Boolean)
 
     data class State(
@@ -74,7 +76,7 @@ class RuleEditorViewModel @Inject constructor(
         val deviceLabel: String,
         val model: PodModel,
         val device: PodDevice?,
-        val triggerOptions: List<RuleTriggerEditor<*>>,
+        val triggerOptions: List<TriggerOption>,
         val actionOptions: List<ActionOption>,
         /** Still missing for the chosen trigger type. */
         val missing: List<RuleRequirement>,
@@ -136,7 +138,9 @@ class RuleEditorViewModel @Inject constructor(
                 deviceLabel = profile?.label.orEmpty(),
                 model = model,
                 device = device,
-                triggerOptions = editors.triggers,
+                triggerOptions = editors.triggers.map { editor ->
+                    TriggerOption(editor, handlers.forTriggerType(editor.type)?.isSupported(model.features) == true)
+                },
                 actionOptions = editors.actions.map { editor ->
                     ActionOption(editor, handlers.forActionType(editor.type)?.isSupported(model.features) == true)
                 },

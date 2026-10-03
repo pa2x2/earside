@@ -22,6 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.darken.capod.R
+import eu.darken.capod.monitor.core.PodDevice
+import eu.darken.capod.pods.core.apple.PodModel
 import eu.darken.capod.rules.core.RuleTrigger
 import eu.darken.capod.rules.core.trigger.wifi.WifiNetworkSource
 import javax.inject.Inject
@@ -38,7 +40,12 @@ class WifiConnectedEditor @Inject constructor(
         previous.ssid?.let { RuleTrigger.WifiConnected(it) }
 
     @Composable
-    override fun Settings(current: RuleTrigger.WifiConnected?, onChange: (RuleTrigger.WifiConnected?) -> Unit) {
+    override fun Settings(
+        current: RuleTrigger.WifiConnected?,
+        model: PodModel,
+        device: PodDevice?,
+        onChange: (RuleTrigger.WifiConnected?) -> Unit,
+    ) {
         WifiNetworkField(wifi, current?.ssid) { ssid -> onChange(ssid?.let { RuleTrigger.WifiConnected(it) }) }
     }
 }
@@ -55,7 +62,12 @@ class WifiDisconnectedEditor @Inject constructor(
         previous.ssid?.let { RuleTrigger.WifiDisconnected(it) }
 
     @Composable
-    override fun Settings(current: RuleTrigger.WifiDisconnected?, onChange: (RuleTrigger.WifiDisconnected?) -> Unit) {
+    override fun Settings(
+        current: RuleTrigger.WifiDisconnected?,
+        model: PodModel,
+        device: PodDevice?,
+        onChange: (RuleTrigger.WifiDisconnected?) -> Unit,
+    ) {
         WifiNetworkField(wifi, current?.ssid) { ssid -> onChange(ssid?.let { RuleTrigger.WifiDisconnected(it) }) }
     }
 }

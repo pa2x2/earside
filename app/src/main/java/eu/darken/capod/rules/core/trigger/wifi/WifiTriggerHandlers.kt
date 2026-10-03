@@ -2,6 +2,7 @@ package eu.darken.capod.rules.core.trigger.wifi
 
 import android.content.Context
 import eu.darken.capod.R
+import eu.darken.capod.pods.core.apple.PodModel
 import eu.darken.capod.profiles.core.ProfileId
 import eu.darken.capod.rules.core.RuleTrigger
 import eu.darken.capod.rules.core.trigger.RuleRequirement
@@ -18,6 +19,8 @@ class WifiConnectedHandler @Inject constructor(
 ) : RuleTriggerHandler<RuleTrigger.WifiConnected> {
 
     override val type = RuleTrigger.WifiConnected::class
+
+    override fun isSupported(features: PodModel.Features): Boolean = true
 
     override fun summary(context: Context, trigger: RuleTrigger.WifiConnected): String =
         context.getString(R.string.rules_trigger_wifi_connected_summary, trigger.ssid)
@@ -41,6 +44,8 @@ class WifiDisconnectedHandler @Inject constructor(
 ) : RuleTriggerHandler<RuleTrigger.WifiDisconnected> {
 
     override val type = RuleTrigger.WifiDisconnected::class
+
+    override fun isSupported(features: PodModel.Features): Boolean = true
 
     override fun summary(context: Context, trigger: RuleTrigger.WifiDisconnected): String =
         context.getString(R.string.rules_trigger_wifi_disconnected_summary, trigger.ssid)

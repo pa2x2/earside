@@ -32,9 +32,12 @@ interface RuleTriggerEditor<T : RuleTrigger> {
     /** The settings of [previous] that carry over when the user switches to this type, e.g. the network. */
     fun carryOver(previous: RuleTrigger): T? = null
 
-    /** [current] is null for a new rule. Reports a complete trigger, or null while the settings are incomplete. */
+    /**
+     * [current] is null for a new rule. Reports a complete trigger, or null while the settings are incomplete.
+     * [device] is null while the AirPods are away; [model] is always known from the profile.
+     */
     @Composable
-    fun Settings(current: T?, onChange: (T?) -> Unit)
+    fun Settings(current: T?, model: PodModel, device: PodDevice?, onChange: (T?) -> Unit)
 }
 
 /** The editor's part of one [RuleAction] type, offered on the Then step. */

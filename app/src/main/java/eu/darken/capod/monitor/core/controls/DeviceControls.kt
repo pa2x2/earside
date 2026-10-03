@@ -83,7 +83,8 @@ class DeviceControls @Inject constructor(
                 log(TAG, VERBOSE) { "sent SetAncMode($mode) to $address" }
                 result.complete(Result.Sent)
             } catch (e: CancellationException) {
-                log(TAG, VERBOSE) { "send for $mode cancelled (a newer request superseded it)" }
+                // Also reached once the device already reports the mode, so don't call it superseded here.
+                log(TAG, VERBOSE) { "send for $mode cancelled before it finished" }
                 result.complete(Result.Superseded)
                 throw e
             } catch (e: Exception) {

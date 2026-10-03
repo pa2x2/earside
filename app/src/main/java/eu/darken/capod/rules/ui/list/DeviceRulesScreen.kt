@@ -209,7 +209,7 @@ fun DeviceRulesScreen(
             }
 
             if (state.rules.isEmpty()) {
-                item("empty") { EmptyRules() }
+                item("empty") { EmptyRules(showExample = state.hasAvailableActions) }
             } else {
                 item("rules") {
                     SettingsSection(title = stringResource(R.string.rules_section_label)) {
@@ -295,7 +295,7 @@ private fun RuleRow(
 }
 
 @Composable
-private fun EmptyRules() {
+private fun EmptyRules(showExample: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -313,13 +313,16 @@ private fun EmptyRules() {
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(top = 16.dp),
         )
-        Text(
-            text = stringResource(R.string.rules_empty_description),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp),
-        )
+        // The example names actions; next to "No actions are available" it would promise them anyway.
+        if (showExample) {
+            Text(
+                text = stringResource(R.string.rules_empty_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
     }
 }
 

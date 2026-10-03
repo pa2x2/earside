@@ -1,0 +1,53 @@
+package eu.darken.capod.rules.core.trigger.wifi
+
+import eu.darken.capod.rules.core.RuleTrigger
+import eu.darken.capod.rules.core.trigger.RuleRequirement
+import eu.darken.capod.rules.core.trigger.RuleTriggerHandler
+import eu.darken.capod.rules.core.trigger.TriggerCondition
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+
+class WifiConnectedHandler @Inject constructor(
+    private val wifi: WifiNetworkSource,
+    locationAccess: LocationAccess,
+) : RuleTriggerHandler<RuleTrigger.WifiConnected> {
+
+    override val type = RuleTrigger.WifiConnected::class
+
+    override val missingRequirements: Flow<List<RuleRequirement>> = locationAccess.missing
+
+    override fun condition(trigger: RuleTrigger.WifiConnected): Flow<TriggerCondition> = wifi.state
+        .map { it.onNetwork(trigger.ssid) }
+        .distinctUntilChanged()
+}
+
+class WifiDisconnectedHandler @Inject constructor(
+    private val wifi: WifiNetworkSource,
+    locationAccess: LocationAccess,
+) : RuleTriggerHandler<RuleTrigger.WifiDisconnected> {
+
+    override val type = RuleTrigger.WifiDisconnected::class
+
+    override val missingRequirements: Flow<List<RuleRequirement>> = locationAccess.missing
+
+    override fun condition(trigger: RuleTrigger.WifiDisconnected): Flow<TriggerCondition> = wifi.state
+        .map { state ->
+            when (val on = state.onNetwork(trigger.ssid)) {
+                TriggerCondition.Unknown -> on
+                is TriggerCondition.Known -> TriggerCondition.Known(holds = !on.holds)
+            }
+        }
+        .distinctUntilChanged()
+}
+
+/**
+ * Whether the phone is on [ssid]. A network whose name Android hides could be [ssid], so then the
+ * answer is unknown rather than "no"; otherwise losing location access would look like leaving.
+ */
+internal fun WifiState.onNetwork(ssid: String): TriggerCondition {
+    networks.firstOrNull { it.ssid == ssid }?.let { return TriggerCondition.Known(holds = true, occurrence = "wifi:${it.handle}") }
+    if (networks.any { it.ssid == null }) return TriggerCondition.Unknown
+    return TriggerCondition.Known(holds = false)
+}

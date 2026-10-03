@@ -8,23 +8,34 @@ import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.LocationOff
+import androidx.compose.material.icons.twotone.MyLocation
+import androidx.compose.material.icons.twotone.ShareLocation
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import eu.darken.capod.R
-import eu.darken.capod.common.settings.InfoBoxType
-import eu.darken.capod.common.settings.SettingsInfoBox
 import eu.darken.capod.rules.core.trigger.RuleRequirement
 
 /**
@@ -69,61 +80,76 @@ fun RuleRequirementSteps(
 
     val next = missing.firstOrNull() ?: return
 
-    Column(modifier = modifier) {
+    fun request() = when (next) {
+        RuleRequirement.PRECISE_LOCATION -> if (preciseBlocked) {
+            openAppSettings()
+        } else {
+            preciseLauncher.launch(
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+            )
+        }
+
+        RuleRequirement.BACKGROUND_LOCATION -> if (backgroundBlocked) {
+            openAppSettings()
+        } else {
+            backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+
+        RuleRequirement.LOCATION_SERVICES -> context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+    }
+
+    val icon = when (next) {
+        RuleRequirement.PRECISE_LOCATION -> Icons.TwoTone.MyLocation
+        RuleRequirement.BACKGROUND_LOCATION -> Icons.TwoTone.ShareLocation
+        RuleRequirement.LOCATION_SERVICES -> Icons.TwoTone.LocationOff
+    }
+    val (title, text, button) = when (next) {
+        RuleRequirement.PRECISE_LOCATION -> Triple(
+            R.string.rules_requirement_precise_title,
+            R.string.rules_requirement_precise_text,
+            if (preciseBlocked) R.string.rules_requirement_open_settings else R.string.rules_requirement_allow,
+        )
+
+        RuleRequirement.BACKGROUND_LOCATION -> Triple(
+            R.string.rules_requirement_background_title,
+            R.string.rules_requirement_background_text,
+            if (backgroundBlocked) R.string.rules_requirement_open_settings else R.string.rules_requirement_allow,
+        )
+
+        RuleRequirement.LOCATION_SERVICES -> Triple(
+            R.string.rules_requirement_location_off_title,
+            R.string.rules_requirement_location_off_text,
+            R.string.rules_requirement_turn_on,
+        )
+    }
+
+    // Styled like the Overview's PermissionCard for a permission that blocks scanning: this step
+    // blocks the rule, so it reads as required rather than as a caution.
+    Column(modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = icon, contentDescription = null, modifier = Modifier.padding(end = 12.dp))
+                    Text(text = stringResource(title), style = MaterialTheme.typography.titleMedium)
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = stringResource(text), style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = ::request, modifier = Modifier.align(Alignment.End)) {
+                    Text(stringResource(button))
+                }
+            }
+        }
         if (next != RuleRequirement.LOCATION_SERVICES) {
             Text(
                 text = stringResource(R.string.rules_requirement_location_explanation),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
             )
         }
-        val (title, text, button) = when (next) {
-            RuleRequirement.PRECISE_LOCATION -> Triple(
-                R.string.rules_requirement_precise_title,
-                R.string.rules_requirement_precise_text,
-                if (preciseBlocked) R.string.rules_requirement_open_settings else R.string.rules_requirement_allow,
-            )
-
-            RuleRequirement.BACKGROUND_LOCATION -> Triple(
-                R.string.rules_requirement_background_title,
-                R.string.rules_requirement_background_text,
-                if (backgroundBlocked) R.string.rules_requirement_open_settings else R.string.rules_requirement_allow,
-            )
-
-            RuleRequirement.LOCATION_SERVICES -> Triple(
-                R.string.rules_requirement_location_off_title,
-                R.string.rules_requirement_location_off_text,
-                R.string.rules_requirement_turn_on,
-            )
-        }
-        SettingsInfoBox(
-            title = stringResource(title),
-            text = stringResource(text),
-            type = InfoBoxType.WARNING,
-            action = {
-                TextButton(
-                    onClick = {
-                        when (next) {
-                            RuleRequirement.PRECISE_LOCATION -> if (preciseBlocked) {
-                                openAppSettings()
-                            } else {
-                                preciseLauncher.launch(
-                                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-                                )
-                            }
-
-                            RuleRequirement.BACKGROUND_LOCATION -> if (backgroundBlocked) {
-                                openAppSettings()
-                            } else {
-                                backgroundLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                            }
-
-                            RuleRequirement.LOCATION_SERVICES -> context.startActivity(
-                                Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                            )
-                        }
-                    },
-                ) { Text(stringResource(button)) }
-            },
-        )
     }
 }

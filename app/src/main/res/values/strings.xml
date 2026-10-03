@@ -705,13 +705,10 @@
     <string name="rules_editor_when_title">When should it happen?</string>
     <string name="rules_editor_then_title">What should change?</string>
     <string name="rules_editor_review_title">Review</string>
-    <string name="rules_editor_when_label">When</string>
-    <string name="rules_editor_then_label">Then</string>
     <string name="rules_editor_next">Next</string>
     <string name="rules_editor_back">Back</string>
     <string name="rules_name_label">Name (optional)</string>
     <string name="rules_name_placeholder">e.g. At home</string>
-    <string name="rules_save_needs_access">Wi-Fi rules can\'t be saved without “Allow all the time” location access.</string>
     <string name="rules_conflict_title">Another rule changes this too</string>
     <string name="rules_conflict_order">When several rules are waiting, they run in the order their events happened. For the same event, the rule lower in the list wins.</string>
 

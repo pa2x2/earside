@@ -44,7 +44,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.darken.capod.R
 import eu.darken.capod.common.error.ErrorEventHandler
 import eu.darken.capod.common.navigation.NavigationEventHandler
-import eu.darken.capod.common.settings.InfoBoxType
 import eu.darken.capod.common.settings.SettingsBaseItem
 import eu.darken.capod.common.settings.SettingsInfoBox
 import eu.darken.capod.common.settings.SettingsSection
@@ -148,7 +147,7 @@ fun RuleEditorScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState()),
         ) {
-            StepHeader(state.step)
+            StepHeader(state.step, showCounter = state.isNew)
             when (state.step) {
                 Step.WHEN -> WhenStep(state, onTriggerType, onTrigger, onRequirementReturned)
                 Step.THEN -> ThenStep(state, onActionType, onAction)
@@ -159,18 +158,21 @@ fun RuleEditorScreen(
 }
 
 @Composable
-private fun StepHeader(step: Step) {
+private fun StepHeader(step: Step, showCounter: Boolean) {
     val (title, index) = when (step) {
         Step.WHEN -> R.string.rules_editor_when_title to 1
         Step.THEN -> R.string.rules_editor_then_title to 2
         Step.REVIEW -> R.string.rules_editor_review_title to 3
     }
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-        Text(
-            text = stringResource(R.string.rules_editor_step_counter, index, 3),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
+        // Editing jumps between steps from Review, so a position in the sequence means nothing there.
+        if (showCounter) {
+            Text(
+                text = stringResource(R.string.rules_editor_step_counter, index, 3),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
         Text(text = stringResource(title), style = MaterialTheme.typography.titleLarge)
     }
 }
@@ -255,8 +257,7 @@ private fun ReviewStep(
     SettingsSection {
         val whenEditor = state.triggerOptions.firstOrNull { it.type == state.draft.triggerType }
         SettingsBaseItem(
-            title = stringResource(R.string.rules_editor_when_label),
-            subtitle = state.whenSummary,
+            title = state.whenSummary.orEmpty(),
             icon = whenEditor?.icon,
             onClick = { onOpenStep(Step.WHEN) },
             trailingContent = { Icon(Icons.TwoTone.Edit, contentDescription = null) },
@@ -264,20 +265,13 @@ private fun ReviewStep(
         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
         val thenEditor = state.actionOptions.firstOrNull { it.editor.type == state.draft.actionType }?.editor
         SettingsBaseItem(
-            title = stringResource(R.string.rules_editor_then_label),
-            subtitle = state.thenSummary,
+            title = state.thenSummary.orEmpty(),
             icon = thenEditor?.icon,
             onClick = { onOpenStep(Step.THEN) },
             trailingContent = { Icon(Icons.TwoTone.Edit, contentDescription = null) },
         )
     }
     RuleRequirementSteps(missing = state.missing, onReturned = onRequirementReturned)
-    if (state.missing.isNotEmpty()) {
-        SettingsInfoBox(
-            text = stringResource(R.string.rules_save_needs_access),
-            type = InfoBoxType.WARNING,
-        )
-    }
     Conflicts(state.conflicts)
     Row(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),

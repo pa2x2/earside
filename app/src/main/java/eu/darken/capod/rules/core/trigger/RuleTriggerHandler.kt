@@ -4,6 +4,7 @@ import android.content.Context
 import eu.darken.capod.rules.core.RuleTrigger
 import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KClass
+import kotlin.time.Duration
 
 /**
  * Everything one kind of [RuleTrigger] does. Bound into a set with `@IntoSet` and looked up by
@@ -24,6 +25,13 @@ interface RuleTriggerHandler<T : RuleTrigger> {
 
     /** Whether [trigger]'s condition holds right now. Emits on every change. */
     fun condition(trigger: T): Flow<TriggerCondition>
+
+    /**
+     * How long an occurrence may wait for the device before it's dropped; null waits as long as the
+     * condition holds. Set it when the condition marks a moment rather than a lasting state: a volume
+     * set "because you connected" shouldn't land hours later.
+     */
+    val maxWait: Duration? get() = null
 }
 
 sealed interface TriggerCondition {

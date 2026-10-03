@@ -12,7 +12,8 @@ import java.time.Instant
  * same occurrence doesn't fire the rule again.
  *
  * An occurrence starts when the trigger's condition starts holding, or keeps holding with a new
- * occurrence id (rejoined the network). The rule then waits until the device can take the action,
+ * occurrence id (rejoined the network). The rule then waits until the device can take the action
+ * (no longer than [RuleTriggerHandler.maxWait][eu.darken.capod.rules.core.trigger.RuleTriggerHandler.maxWait]),
  * runs once, and stays quiet until the next occurrence; a manual change in between is left alone.
  */
 @Serializable

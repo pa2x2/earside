@@ -23,19 +23,24 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
+import kotlin.time.toKotlinDuration
 
 /**
  * Runs device rules while the monitor service runs. Two loops share the persisted [RuleRunState]s:
  * one folds every trigger change into them ([observe]), the other runs the rules that are waiting
  * once their device has a ready AAP session. Keeping them apart means a trigger change is recorded
- * even while the AirPods are away, and the rule runs whenever they come back.
+ * even while the AirPods are away, and the rule runs whenever they come back, unless its trigger's
+ * [maxWait][eu.darken.capod.rules.core.trigger.RuleTriggerHandler.maxWait] runs out first.
  */
 @Singleton
 class DeviceRulesEngine @Inject constructor(
@@ -97,7 +102,7 @@ class DeviceRulesEngine @Inject constructor(
             if (rules.isEmpty()) return@flatMapLatest emptyFlow()
 
             // Recorded inside, so a removed rule's last observation can't land after the cleanup above.
-            rules.map { rule -> conditionOf(rule.trigger).onEach { record(rule, it) } }.merge()
+            rules.map { rule -> merge(conditionOf(rule.trigger).onEach { record(rule, it) }, dropWhenStale(rule)) }.merge()
         }
         .map { }
 
@@ -120,11 +125,30 @@ class DeviceRulesEngine @Inject constructor(
         if (before != after) log(TAG, INFO) { "Rule ${rule.id} ($condition): pending $before -> $after" }
     }
 
+    /** When an occurrence of [trigger] that started at [since] stops waiting; null if it waits as long as its condition holds. */
+    private fun waitEnd(trigger: RuleTrigger, since: Instant): Instant? =
+        handlers.forTrigger(trigger)?.maxWait?.let { since + it.toJavaDuration() }
+
+    // Clears the stored wait rather than only skipping the run, so the rule stops showing as waiting.
+    // After a restart, an occurrence that went stale meanwhile is dropped at once.
+    private fun dropWhenStale(rule: DeviceRule): Flow<Unit> {
+        if (handlers.forTrigger(rule.trigger)?.maxWait == null) return emptyFlow()
+        return settings.runStates.flow
+            .map { it.states[rule.id]?.pendingSince }
+            .distinctUntilChanged()
+            .mapLatest { since ->
+                val end = since?.let { waitEnd(rule.trigger, it) } ?: return@mapLatest
+                delay(java.time.Duration.between(timeSource.now(), end).toKotlinDuration())
+                if (finish(rule.id, since, outcome = null)) log(TAG, INFO) { "Rule ${rule.id}: waited since $since, dropped" }
+            }
+    }
+
     private fun runDueRules(): Flow<Unit> = combine(
         enabledRules,
         settings.runStates.flow,
         deviceMonitor.devices,
     ) { rules, runStates, devices ->
+        val now = timeSource.now()
         val ready = devices
             .filter { it.isAapReady && it.address != null }
             .mapNotNull { device -> device.profileId?.let { it to device } }
@@ -133,6 +157,8 @@ class DeviceRulesEngine @Inject constructor(
             .mapNotNull { active ->
                 if (active.profileId !in ready) return@mapNotNull null
                 val since = runStates.states[active.rule.id]?.pendingSince ?: return@mapNotNull null
+                // dropWhenStale may not have caught up yet, e.g. right after a restart.
+                if (waitEnd(active.rule.trigger, since)?.let { it <= now } == true) return@mapNotNull null
                 DueRule(active.profileId, active.index, active.rule, since)
             }
             .inRunOrder()

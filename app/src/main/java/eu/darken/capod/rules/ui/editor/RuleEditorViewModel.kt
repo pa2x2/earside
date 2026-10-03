@@ -1,8 +1,6 @@
 package eu.darken.capod.rules.ui.editor
 
-import android.content.Context
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import eu.darken.capod.common.coroutine.DispatcherProvider
 import eu.darken.capod.common.debug.logging.Logging.Priority.WARN
 import eu.darken.capod.common.debug.logging.log
@@ -23,7 +21,7 @@ import eu.darken.capod.rules.core.RuleTrigger
 import eu.darken.capod.rules.core.trigger.RuleRequirement
 import eu.darken.capod.rules.core.trigger.wifi.LocationAccess
 import eu.darken.capod.rules.ui.DeviceRuleItems
-import eu.darken.capod.rules.ui.RemovedRules
+import eu.darken.capod.rules.ui.RuleEditorResults
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -39,7 +37,6 @@ import kotlin.reflect.KClass
 @HiltViewModel
 class RuleEditorViewModel @Inject constructor(
     dispatcherProvider: DispatcherProvider,
-    @ApplicationContext private val context: Context,
     private val repo: DeviceRulesRepo,
     private val handlers: RuleHandlers,
     private val editors: RuleEditors,
@@ -47,10 +44,8 @@ class RuleEditorViewModel @Inject constructor(
     private val profilesRepo: DeviceProfilesRepo,
     private val deviceMonitor: DeviceMonitor,
     private val locationAccess: LocationAccess,
-    private val removedRules: RemovedRules,
+    private val results: RuleEditorResults,
 ) : ViewModel4(dispatcherProvider) {
-
-    enum class Step { WHEN, THEN, REVIEW }
 
     data class Draft(
         val triggerType: KClass<out RuleTrigger>? = null,
@@ -65,18 +60,15 @@ class RuleEditorViewModel @Inject constructor(
         val profileId: ProfileId,
         /** The rule being edited, or null for a new one. */
         val original: DeviceRule?,
-        val step: Step,
-        /** A step opened from Review goes back to Review. */
-        val fromReview: Boolean,
+        /** What the editor opened with, to tell whether closing loses anything. */
+        val initial: Draft,
         val draft: Draft,
     )
 
     data class ActionOption(val editor: RuleActionEditor<*>, val supported: Boolean)
 
     data class State(
-        val step: Step,
         val isNew: Boolean,
-        val fromReview: Boolean,
         val draft: Draft,
         val deviceLabel: String,
         val model: PodModel,
@@ -85,14 +77,11 @@ class RuleEditorViewModel @Inject constructor(
         val actionOptions: List<ActionOption>,
         /** Still missing for the chosen trigger type. */
         val missing: List<RuleRequirement>,
-        /** Other rules on this device that change the same setting. */
+        /** Other rules on the same event that set the same setting to something else. */
         val conflicts: List<String>,
-        val whenSummary: String?,
-        val thenSummary: String?,
+        val hasChanges: Boolean,
     ) {
-        val canLeaveWhen: Boolean get() = draft.trigger != null && missing.isEmpty()
-        val canLeaveThen: Boolean get() = draft.action != null
-        val canSave: Boolean get() = canLeaveWhen && canLeaveThen
+        val canSave: Boolean get() = draft.trigger != null && draft.action != null && missing.isEmpty()
     }
 
     private val session = MutableStateFlow<Session?>(null)
@@ -108,21 +97,16 @@ class RuleEditorViewModel @Inject constructor(
                     return@launch
                 }
             }
-            session.value = Session(
-                profileId = profileId,
-                original = original,
-                step = if (original == null) Step.WHEN else Step.REVIEW,
-                fromReview = false,
-                draft = original?.let {
-                    Draft(
-                        triggerType = it.trigger::class,
-                        trigger = it.trigger,
-                        actionType = it.action::class,
-                        action = it.action,
-                        name = it.name.orEmpty(),
-                    )
-                } ?: Draft(),
-            )
+            val initial = original?.let {
+                Draft(
+                    triggerType = it.trigger::class,
+                    trigger = it.trigger,
+                    actionType = it.action::class,
+                    action = it.action,
+                    name = it.name.orEmpty(),
+                )
+            } ?: Draft()
+            session.value = Session(profileId = profileId, original = original, initial = initial, draft = initial)
         }
     }
 
@@ -139,16 +123,8 @@ class RuleEditorViewModel @Inject constructor(
         ) { profile, device, entries, missing ->
             val model = profile?.model ?: device?.model ?: PodModel.UNKNOWN
             val draft = s.draft
-            val conflicts = draft.actionType?.let { type ->
-                entries
-                    .mapNotNull { (it as? RuleEntry.Known)?.rule }
-                    .filter { it.id != s.original?.id && it.enabled && it.action::class == type }
-                    .map { items.triggerSummary(it) + " → " + items.actionSummary(it) }
-            }.orEmpty()
             State(
-                step = s.step,
                 isNew = s.original == null,
-                fromReview = s.fromReview,
                 draft = draft,
                 deviceLabel = profile?.label.orEmpty(),
                 model = model,
@@ -158,23 +134,40 @@ class RuleEditorViewModel @Inject constructor(
                     ActionOption(editor, handlers.forActionType(editor.type)?.isSupported(model.features) == true)
                 },
                 missing = missing,
-                conflicts = conflicts,
-                whenSummary = draft.trigger?.let { handlers.forTrigger(it)?.summary(context, it) },
-                thenSummary = draft.action?.let { handlers.forAction(it)?.summary(context, it) },
+                conflicts = conflicts(draft, s.original, entries),
+                hasChanges = draft.normalized() != s.initial.normalized(),
             )
         }
     }.asLiveState()
 
+    // Rules on different events never run together; on the same event, the same value is harmless.
+    private fun conflicts(draft: Draft, original: DeviceRule?, entries: List<RuleEntry>): List<String> {
+        val trigger = draft.trigger ?: return emptyList()
+        val action = draft.action ?: return emptyList()
+        return entries
+            .mapNotNull { (it as? RuleEntry.Known)?.rule }
+            .filter { it.id != original?.id && it.enabled && it.trigger == trigger }
+            .filter { it.action::class == action::class && it.action != action }
+            .map { other -> other.name?.let { "$it: ${items.actionSummary(other)}" } ?: items.actionSummary(other) }
+    }
+
+    private fun Draft.normalized() = copy(name = name.trim())
+
     private fun updateDraft(transform: (Draft) -> Draft) = session.update { it?.copy(draft = transform(it.draft)) }
 
-    fun selectTriggerType(type: KClass<out RuleTrigger>) = updateDraft {
-        if (it.triggerType == type) it else it.copy(triggerType = type, trigger = null)
+    fun selectTriggerType(type: KClass<out RuleTrigger>) = updateDraft { draft ->
+        if (draft.triggerType == type) return@updateDraft draft
+        val carried = draft.trigger?.let { editors.forTrigger(type)?.carryOver(it) }
+        draft.copy(triggerType = type, trigger = carried)
     }
 
     fun setTrigger(trigger: RuleTrigger?) = updateDraft { it.copy(trigger = trigger) }
 
-    fun selectActionType(type: KClass<out RuleAction>) = updateDraft {
-        if (it.actionType == type) it else it.copy(actionType = type, action = null)
+    fun selectActionType(type: KClass<out RuleAction>) = launch {
+        if (session.value?.draft?.actionType == type) return@launch
+        val current = state.first()
+        val initial = editors.forAction(type)?.initial(current.model, current.device)
+        updateDraft { it.copy(actionType = type, action = initial) }
     }
 
     fun setAction(action: RuleAction?) = updateDraft { it.copy(action = action) }
@@ -183,32 +176,6 @@ class RuleEditorViewModel @Inject constructor(
 
     fun recheckRequirements() = locationAccess.recheck()
 
-    fun openStep(step: Step) = session.update { it?.copy(step = step, fromReview = step != Step.REVIEW) }
-
-    /** The step's main button: on to the next step, or back to Review when opened from there. */
-    fun next() = session.update { s ->
-        s ?: return@update null
-        val next = when {
-            s.fromReview -> Step.REVIEW
-            s.step == Step.WHEN -> Step.THEN
-            else -> Step.REVIEW
-        }
-        s.copy(step = next, fromReview = false)
-    }
-
-    /** Returns false when there is no earlier step and the editor should close. */
-    fun back(): Boolean {
-        val s = session.value ?: return false
-        val previous = when {
-            s.fromReview -> Step.REVIEW
-            s.step == Step.REVIEW && s.original == null -> Step.THEN
-            s.step == Step.THEN && s.original == null -> Step.WHEN
-            else -> return false
-        }
-        session.value = s.copy(step = previous, fromReview = false)
-        return true
-    }
-
     fun save() = launch {
         val s = session.value ?: return@launch
         val current = state.first()
@@ -216,18 +183,19 @@ class RuleEditorViewModel @Inject constructor(
         val trigger = s.draft.trigger ?: return@launch
         val action = s.draft.action ?: return@launch
         val name = s.draft.name.trim().takeIf { it.isNotEmpty() }
-        if (s.original == null) {
-            repo.addRule(s.profileId, DeviceRule(name = name, trigger = trigger, action = action))
+        val saved = if (s.original == null) {
+            DeviceRule(name = name, trigger = trigger, action = action).also { repo.addRule(s.profileId, it) }
         } else {
-            repo.updateRule(s.profileId, s.original.copy(name = name, trigger = trigger, action = action))
+            s.original.copy(name = name, trigger = trigger, action = action).also { repo.updateRule(s.profileId, it) }
         }
+        results.offer(RuleEditorResults.Result.Saved(s.profileId, saved.id))
         navUp()
     }
 
     fun delete() = launch {
         val s = session.value ?: return@launch
         val original = s.original ?: return@launch
-        repo.removeRule(s.profileId, original.id)?.let { removedRules.offer(it) }
+        repo.removeRule(s.profileId, original.id)?.let { results.offer(RuleEditorResults.Result.Removed(it)) }
         navUp()
     }
 

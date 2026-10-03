@@ -60,6 +60,15 @@ class RuleRunStateTest : BaseTest() {
     }
 
     @Test
+    fun `Apply now on a just-saved rule survives its first observation`() {
+        // DeviceRulesEngine.applyNow can land before the engine has observed the new rule once.
+        val applied = RuleRunState(home, pendingSince = t1)
+
+        applied.observe(home, Known(true, "wifi:100"), t2).pendingSince shouldBe t1
+        applied.observe(home, Known(false), t2).pendingSince shouldBe null
+    }
+
+    @Test
     fun `waiting rules run in the order their events happened, then in list order`() {
         fun due(index: Int, since: Instant) = DueRule(
             profileId = "p1",

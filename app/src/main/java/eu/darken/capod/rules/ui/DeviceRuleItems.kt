@@ -72,10 +72,13 @@ data class DeviceRuleItem(
     val id: RuleId,
     /** Null for a rule saved by a newer Earside; it can only be deleted. */
     val rule: DeviceRule?,
-    val title: String,
-    val subtitle: String?,
-    val icon: ImageVector?,
-    val status: RuleStatus,
+    val whenText: String = "",
+    val whenIcon: ImageVector? = null,
+    val thenText: String = "",
+    val thenIcon: ImageVector? = null,
+    val status: RuleStatus = RuleStatus.None,
+    /** What the phone still has to allow for this rule's trigger. */
+    val missing: List<RuleRequirement> = emptyList(),
 )
 
 /** One device's rules as shown in its rule list and summed up in Device settings. */
@@ -102,29 +105,19 @@ class DeviceRuleItems @Inject constructor(
     }
 
     private fun RuleEntry.toItem(missing: Map<Any, List<RuleRequirement>>, states: Map<RuleId, RuleRunState>) = when (this) {
-        is RuleEntry.Unsupported -> DeviceRuleItem(
-            id = id,
-            rule = null,
-            title = context.getString(R.string.rules_unsupported_title),
-            subtitle = context.getString(R.string.rules_unsupported_description),
-            icon = null,
-            status = RuleStatus.None,
-        )
+        is RuleEntry.Unsupported -> DeviceRuleItem(id = id, rule = null)
 
         is RuleEntry.Known -> {
-            val whenText = triggerSummary(rule)
-            val thenText = actionSummary(rule)
+            val missingHere = missing[rule.trigger::class].orEmpty()
             DeviceRuleItem(
                 id = id,
                 rule = rule,
-                title = rule.name ?: whenText,
-                subtitle = if (rule.name != null) {
-                    context.getString(R.string.rules_named_subtitle, whenText, thenText)
-                } else {
-                    thenText
-                },
-                icon = editors.forTrigger(rule.trigger::class)?.icon,
-                status = ruleStatus(rule, states[id], missing[rule.trigger::class].orEmpty()),
+                whenText = triggerSummary(rule),
+                whenIcon = editors.forTrigger(rule.trigger::class)?.icon,
+                thenText = actionSummary(rule),
+                thenIcon = editors.forAction(rule.action::class)?.icon,
+                status = ruleStatus(rule, states[id], missingHere),
+                missing = missingHere,
             )
         }
     }
@@ -132,4 +125,6 @@ class DeviceRuleItems @Inject constructor(
     fun triggerSummary(rule: DeviceRule): String = handlers.forTrigger(rule.trigger)?.summary(context, rule.trigger).orEmpty()
 
     fun actionSummary(rule: DeviceRule): String = handlers.forAction(rule.action)?.summary(context, rule.action).orEmpty()
+
+    fun holdsNowText(rule: DeviceRule): String = handlers.forTrigger(rule.trigger)?.holdsNowText(context, rule.trigger).orEmpty()
 }

@@ -29,6 +29,9 @@ interface RuleTriggerEditor<T : RuleTrigger> {
     /** E.g. "Phone joins a Wi-Fi network". */
     @get:StringRes val label: Int
 
+    /** The settings of [previous] that carry over when the user switches to this type, e.g. the network. */
+    fun carryOver(previous: RuleTrigger): T? = null
+
     /** [current] is null for a new rule. Reports a complete trigger, or null while the settings are incomplete. */
     @Composable
     fun Settings(current: T?, onChange: (T?) -> Unit)
@@ -43,6 +46,9 @@ interface RuleActionEditor<A : RuleAction> {
 
     /** E.g. "Set listening mode". */
     @get:StringRes val label: Int
+
+    /** Preselected when the user picks this action, so its values never show without a choice. */
+    fun initial(model: PodModel, device: PodDevice?): A
 
     /** [device] is null while the AirPods are away; [model] is always known from the profile. */
     @Composable

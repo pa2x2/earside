@@ -662,12 +662,18 @@
     <string name="rules_action_anc_unavailable_mode">%1$s isn\'t enabled in Listening modes</string>
     <string name="rules_notification_channel_label">Device rules</string>
     <string name="rules_notification_title">%1$s: rule applied</string>
+    <string name="rules_notification_title_named">%1$s: “%2$s” applied</string>
     <string name="rules_title">Device rules</string>
     <string name="rules_entry_description">Change settings automatically, e.g. when you join a Wi-Fi network</string>
     <plurals name="rules_entry_count">
         <item quantity="one">%d rule</item>
         <item quantity="other">%d rules</item>
     </plurals>
+    <plurals name="rules_entry_all_off">
+        <item quantity="one">off</item>
+        <item quantity="other">all off</item>
+    </plurals>
+    <string name="rules_entry_on">%1$d on</string>
     <plurals name="rules_entry_waiting">
         <item quantity="one">%d waiting for AirPods</item>
         <item quantity="other">%d waiting for AirPods</item>
@@ -676,18 +682,16 @@
         <item quantity="one">%d needs attention</item>
         <item quantity="other">%d need attention</item>
     </plurals>
-    <string name="rules_list_description">Rules run while your AirPods are connected. Each one runs once each time its event happens, so you can still change settings yourself.</string>
     <string name="rules_no_actions_for_model">No actions are available for %1$s yet.</string>
     <string name="rules_notify_label">Notify when a rule applies</string>
     <string name="rules_notify_description">Show a notification each time one of this device\'s rules changes a setting</string>
     <string name="rules_section_label">Rules</string>
     <string name="rules_empty_title">No rules yet</string>
-    <string name="rules_empty_description">Change listening mode or Conversation Awareness automatically, for example when your phone joins your home Wi-Fi.</string>
+    <string name="rules_empty_description">Rules change a setting when something happens on your phone, like joining your home Wi-Fi. If your AirPods aren\'t connected then, the rule applies when they connect. You can still change the setting yourself afterwards.</string>
     <string name="rules_add_action">Add rule</string>
     <string name="rules_delete_action">Delete</string>
     <string name="rules_removed_message">Rule deleted</string>
     <string name="rules_undo_action">Undo</string>
-    <string name="rules_named_subtitle">%1$s → %2$s</string>
     <string name="rules_unsupported_title">Rule from a newer version</string>
     <string name="rules_unsupported_description">This version of Earside can\'t show or run it. Update the app to use it.</string>
     <string name="rules_unsupported_delete_message">This rule was made by a newer version of Earside. Delete it?</string>
@@ -702,16 +706,18 @@
 
     <string name="rules_editor_new_title">New rule</string>
     <string name="rules_editor_edit_title">Edit rule</string>
-    <string name="rules_editor_step_counter">Step %1$d of %2$d</string>
-    <string name="rules_editor_when_title">When should it happen?</string>
-    <string name="rules_editor_then_title">What should change?</string>
-    <string name="rules_editor_review_title">Review</string>
-    <string name="rules_editor_next">Next</string>
-    <string name="rules_editor_back">Back</string>
+    <string name="rules_editor_when_section">When</string>
+    <string name="rules_editor_then_section">Then</string>
+    <string name="rules_discard_message">Discard your changes to this rule?</string>
+    <string name="rules_discard_action">Discard</string>
+    <string name="rules_keep_editing_action">Keep editing</string>
     <string name="rules_name_label">Name (optional)</string>
     <string name="rules_name_placeholder">e.g. At home</string>
-    <string name="rules_conflict_title">Another rule changes this too</string>
-    <string name="rules_conflict_order">When several rules are waiting, they run in the order their events happened. For the same event, the rule lower in the list wins.</string>
+    <string name="rules_conflict_title">Clashes with another rule</string>
+    <string name="rules_conflict_explanation">Both run on the same event, so which value sticks is unpredictable. Switch one off or change its trigger.</string>
+    <string name="rules_apply_now_action">Apply now</string>
+    <string name="rules_apply_now_wifi_connected">You\'re on %1$s now</string>
+    <string name="rules_apply_now_wifi_disconnected">You\'re not on %1$s now</string>
 
     <string name="rules_trigger_wifi_connected_label">Phone joins a Wi-Fi network</string>
     <string name="rules_trigger_wifi_disconnected_label">Phone leaves a Wi-Fi network</string>
@@ -726,7 +732,7 @@
     <string name="rules_value_on">On</string>
     <string name="rules_value_off">Off</string>
 
-    <string name="rules_requirement_location_explanation">Android only shares the Wi-Fi name with apps that have location access. Earside reads the name to match this rule and stores no location.</string>
+    <string name="rules_requirement_location_explanation">Android only shares the Wi-Fi name with apps that have location access. Earside reads the name to match your rules and stores no location.</string>
     <string name="rules_requirement_precise_title">Allow precise location</string>
     <string name="rules_requirement_precise_text">So Earside can see which Wi-Fi network your phone is on.</string>
     <string name="rules_requirement_background_title">Allow location all the time</string>

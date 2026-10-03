@@ -34,20 +34,33 @@ class DeviceRulesNotifications @Inject constructor(
         )
     }
 
-    fun showApplied(profileId: ProfileId, deviceLabel: String, actionSummary: String, triggerSummary: String) {
+    fun showApplied(
+        profileId: ProfileId,
+        deviceLabel: String,
+        ruleName: String?,
+        actionSummary: String,
+        triggerSummary: String,
+    ) {
         if (!notificationManager.areNotificationsEnabled()) {
             log(TAG, WARN) { "Notifications disabled, rule-applied notification suppressed" }
             return
         }
+        // PendingIntent identity ignores extras, so each device gets its own request code; a shared
+        // one would send every rule notification to the device that applied a rule last.
         val openPi = PendingIntent.getActivity(
             context,
-            PENDING_INTENT_REQUEST_CODE,
-            Intent(context, MainActivity::class.java),
-            PendingIntentCompat.FLAG_IMMUTABLE,
+            profileId.hashCode(),
+            Intent(context, MainActivity::class.java).putExtra(MainActivity.EXTRA_DEVICE_RULES_PROFILE_ID, profileId),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntentCompat.FLAG_IMMUTABLE,
         )
+        val title = if (ruleName != null) {
+            context.getString(R.string.rules_notification_title_named, deviceLabel, ruleName)
+        } else {
+            context.getString(R.string.rules_notification_title, deviceLabel)
+        }
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.device_earbuds_generic_both)
-            .setContentTitle(context.getString(R.string.rules_notification_title, deviceLabel))
+            .setContentTitle(title)
             .setContentText(actionSummary)
             .setSubText(triggerSummary)
             .setContentIntent(openPi)
@@ -63,6 +76,5 @@ class DeviceRulesNotifications @Inject constructor(
         private val CHANNEL_ID = "${BuildConfigWrap.APPLICATION_ID}.notification.channel.rules"
         private const val NOTIFICATION_ID = 5
         private const val TAG_PREFIX = "rules:"
-        private const val PENDING_INTENT_REQUEST_CODE = 2
     }
 }

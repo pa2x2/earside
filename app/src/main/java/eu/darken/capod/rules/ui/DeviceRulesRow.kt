@@ -22,6 +22,11 @@ fun DeviceRulesRow(
     } else {
         buildList {
             add(resources.getQuantityString(R.plurals.rules_entry_count, rules.size, rules.size))
+            val on = rules.count { it.rule?.enabled == true }
+            when {
+                on == 0 -> add(resources.getQuantityString(R.plurals.rules_entry_all_off, rules.size))
+                on < rules.size -> add(resources.getString(R.string.rules_entry_on, on))
+            }
             val waiting = rules.count { it.status == RuleStatus.Waiting }
             if (waiting > 0) add(resources.getQuantityString(R.plurals.rules_entry_waiting, waiting, waiting))
             val attention = rules.count { it.status.needsAttention }

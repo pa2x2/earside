@@ -19,7 +19,10 @@ import java.time.Instant
 data class RuleRunState(
     /** The trigger this state was observed for. An edited trigger starts over. */
     @SerialName("trigger") val trigger: RuleTrigger,
-    /** Last known condition; null until the first one, which never fires (the rule saw no change). */
+    /**
+     * Last known condition; null until the first one, which never starts an occurrence (the rule
+     * saw no change). It keeps one started by [DeviceRulesEngine.applyNow], though.
+     */
     @SerialName("observed") val observed: ObservedCondition? = null,
     /** When the current occurrence started, while the rule waits to run. */
     @SerialName("pendingSince") @Serializable(with = InstantEpochMillisSerializer::class)
@@ -54,7 +57,7 @@ fun RuleRunState?.observe(trigger: RuleTrigger, condition: TriggerCondition, now
     val previous = current.observed
     val pendingSince = when {
         !condition.holds -> null
-        previous == null -> null
+        previous == null -> current.pendingSince
         !previous.holds -> now
         condition.occurrence != null && condition.occurrence != previous.occurrence -> now
         else -> current.pendingSince

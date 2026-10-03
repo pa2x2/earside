@@ -25,9 +25,11 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Runs device rules while the monitor service runs. Two loops share the persisted [RuleRunState]s:
@@ -60,6 +62,30 @@ class DeviceRulesEngine @Inject constructor(
         .distinctUntilChanged()
 
     fun monitor(): Flow<Unit> = merge(observeTriggers(), runDueRules())
+
+    /**
+     * Whether [rule]'s condition holds right now and its device has a ready AAP session, so
+     * [applyNow] would run it at once. A saved or re-enabled rule otherwise waits for the next
+     * occurrence, since the first observation never starts one.
+     */
+    suspend fun canApplyNow(profileId: ProfileId, rule: DeviceRule): Boolean {
+        if (!rule.enabled) return false
+        val ready = deviceMonitor.devices.first().any { it.profileId == profileId && it.isAapReady && it.address != null }
+        if (!ready) return false
+        // The Wi-Fi source debounces a fresh registration for 2 s before its first state.
+        val condition = withTimeoutOrNull(5.seconds) { conditionOf(rule.trigger).first { it is TriggerCondition.Known } }
+        return (condition as? TriggerCondition.Known)?.holds == true
+    }
+
+    /** Starts an occurrence for [rule] now; the run loop then applies it like any other. */
+    suspend fun applyNow(rule: DeviceRule) {
+        val now = timeSource.now()
+        log(TAG, INFO) { "Rule ${rule.id}: applying now ($now)" }
+        settings.runStates.update { stored ->
+            val state = stored.states[rule.id]?.takeIf { it.trigger == rule.trigger } ?: RuleRunState(rule.trigger)
+            stored.copy(states = stored.states + (rule.id to state.copy(pendingSince = now)))
+        }
+    }
 
     private fun observeTriggers(): Flow<Unit> = enabledRules
         .map { rules -> rules.map { it.rule } }
@@ -151,6 +177,7 @@ class DeviceRulesEngine @Inject constructor(
             notifications.showApplied(
                 profileId = due.profileId,
                 deviceLabel = device.label ?: device.getLabel(context),
+                ruleName = rule.name,
                 actionSummary = handler.summary(context, rule.action),
                 triggerSummary = triggerSummary,
             )

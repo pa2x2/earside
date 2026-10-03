@@ -34,6 +34,9 @@ class WifiConnectedEditor @Inject constructor(
     override val icon = Icons.TwoTone.Wifi
     override val label = R.string.rules_trigger_wifi_connected_label
 
+    override fun carryOver(previous: RuleTrigger): RuleTrigger.WifiConnected? =
+        previous.ssid?.let { RuleTrigger.WifiConnected(it) }
+
     @Composable
     override fun Settings(current: RuleTrigger.WifiConnected?, onChange: (RuleTrigger.WifiConnected?) -> Unit) {
         WifiNetworkField(wifi, current?.ssid) { ssid -> onChange(ssid?.let { RuleTrigger.WifiConnected(it) }) }
@@ -48,11 +51,17 @@ class WifiDisconnectedEditor @Inject constructor(
     override val icon = Icons.TwoTone.WifiOff
     override val label = R.string.rules_trigger_wifi_disconnected_label
 
+    override fun carryOver(previous: RuleTrigger): RuleTrigger.WifiDisconnected? =
+        previous.ssid?.let { RuleTrigger.WifiDisconnected(it) }
+
     @Composable
     override fun Settings(current: RuleTrigger.WifiDisconnected?, onChange: (RuleTrigger.WifiDisconnected?) -> Unit) {
         WifiNetworkField(wifi, current?.ssid) { ssid -> onChange(ssid?.let { RuleTrigger.WifiDisconnected(it) }) }
     }
 }
+
+private val RuleTrigger.ssid: String?
+    get() = (this as? RuleTrigger.WifiConnected)?.ssid ?: (this as? RuleTrigger.WifiDisconnected)?.ssid
 
 /** A typed network name, with the networks the phone is on right now offered as one-tap picks. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -72,7 +81,7 @@ private fun WifiNetworkField(
         onChange(value.takeIf { it.isNotBlank() })
     }
 
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+    Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
         OutlinedTextField(
             value = text,
             onValueChange = ::update,

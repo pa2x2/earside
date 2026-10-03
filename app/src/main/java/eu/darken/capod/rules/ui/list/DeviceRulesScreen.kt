@@ -1,6 +1,8 @@
 package eu.darken.capod.rules.ui.list
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,8 +17,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.ArrowBack
 import androidx.compose.material.icons.twotone.Add
 import androidx.compose.material.icons.twotone.AutoMode
+import androidx.compose.material.icons.twotone.Delete
+import androidx.compose.material.icons.twotone.Headphones
 import androidx.compose.material.icons.twotone.Notifications
 import androidx.compose.material.icons.twotone.Upgrade
+import androidx.compose.material.icons.twotone.Wifi
+import androidx.compose.material.icons.twotone.WifiOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -30,20 +36,25 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -58,12 +69,13 @@ import eu.darken.capod.common.settings.SettingsInfoBox
 import eu.darken.capod.common.settings.SettingsSection
 import eu.darken.capod.common.settings.SettingsSwitchItem
 import eu.darken.capod.pods.core.apple.PodModel
+import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import eu.darken.capod.rules.core.DeviceRule
 import eu.darken.capod.rules.core.RuleAction
 import eu.darken.capod.rules.core.RuleId
 import eu.darken.capod.rules.core.RuleTrigger
-import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import eu.darken.capod.rules.ui.DeviceRuleItem
+import eu.darken.capod.rules.ui.RuleRequirementSteps
 import eu.darken.capod.rules.ui.RuleStatus
 import eu.darken.capod.rules.ui.text
 import java.time.Instant
@@ -85,6 +97,7 @@ fun DeviceRulesScreenHost(
     val snackbarHostState = remember { SnackbarHostState() }
     val removedMessage = stringResource(R.string.rules_removed_message)
     val undoLabel = stringResource(R.string.rules_undo_action)
+    val applyLabel = stringResource(R.string.rules_apply_now_action)
     LaunchedEffect(Unit) {
         vm.events.collect { event ->
             when (event) {
@@ -95,6 +108,15 @@ fun DeviceRulesScreenHost(
                         duration = SnackbarDuration.Long,
                     )
                     if (result == SnackbarResult.ActionPerformed) vm.undoRemove(event.removed)
+                }
+
+                is DeviceRulesViewModel.Event.OfferApply -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = event.text,
+                        actionLabel = applyLabel,
+                        duration = SnackbarDuration.Long,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) vm.applyNow(event.ruleId)
                 }
             }
         }
@@ -110,8 +132,9 @@ fun DeviceRulesScreenHost(
         onAddRule = { vm.addRule() },
         onOpenRule = { vm.openRule(it) },
         onEnabledChange = { id, enabled -> vm.setEnabled(id, enabled) },
-        onDeleteUnsupported = { vm.deleteRule(it) },
+        onDelete = { vm.deleteRule(it) },
         onNotifyChange = { vm.setNotify(it) },
+        onRequirementReturned = { vm.recheckRequirements() },
     )
 }
 
@@ -124,8 +147,9 @@ fun DeviceRulesScreen(
     onAddRule: () -> Unit = {},
     onOpenRule: (RuleId) -> Unit = {},
     onEnabledChange: (RuleId, Boolean) -> Unit = { _, _ -> },
-    onDeleteUnsupported: (RuleId) -> Unit = {},
+    onDelete: (RuleId) -> Unit = {},
     onNotifyChange: (Boolean) -> Unit = {},
+    onRequirementReturned: () -> Unit = {},
 ) {
     var deleteCandidate by rememberSaveable { mutableStateOf<RuleId?>(null) }
     deleteCandidate?.let { id ->
@@ -135,7 +159,7 @@ fun DeviceRulesScreen(
             confirmButton = {
                 TextButton(onClick = {
                     deleteCandidate = null
-                    onDeleteUnsupported(id)
+                    onDelete(id)
                 }) { Text(stringResource(R.string.rules_delete_action)) }
             },
             dismissButton = {
@@ -168,26 +192,20 @@ fun DeviceRulesScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onAddRule,
-                icon = { Icon(Icons.TwoTone.Add, contentDescription = null) },
-                text = { Text(stringResource(R.string.rules_add_action)) },
-            )
+            // Every action would be greyed out in the editor.
+            if (state.hasAvailableActions) {
+                ExtendedFloatingActionButton(
+                    onClick = onAddRule,
+                    icon = { Icon(Icons.TwoTone.Add, contentDescription = null) },
+                    text = { Text(stringResource(R.string.rules_add_action)) },
+                )
+            }
         },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = padding,
         ) {
-            item("description") {
-                Text(
-                    text = stringResource(R.string.rules_list_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
-
             if (!state.hasAvailableActions) {
                 item("no_actions") {
                     SettingsInfoBox(
@@ -196,8 +214,42 @@ fun DeviceRulesScreen(
                 }
             }
 
+            // The rules share their trigger's requirements, so one card fixes all of them.
+            if (state.missing.isNotEmpty()) {
+                item("requirements") {
+                    RuleRequirementSteps(missing = state.missing, onReturned = onRequirementReturned)
+                }
+            }
+
+            if (state.rules.isEmpty()) {
+                item("empty") { EmptyRules(showExplainer = state.hasAvailableActions) }
+            } else {
+                item("rules") {
+                    SettingsSection(title = stringResource(R.string.rules_section_label)) {
+                        state.rules.forEachIndexed { index, item ->
+                            if (index > 0) HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                            key(item.id) {
+                                SwipeToDelete(onDelete = { onDelete(item.id) }) {
+                                    if (item.rule != null) {
+                                        RuleRow(
+                                            item = item,
+                                            rule = item.rule,
+                                            now = state.now,
+                                            onClick = { onOpenRule(item.id) },
+                                            onEnabledChange = { onEnabledChange(item.id, it) },
+                                        )
+                                    } else {
+                                        UnsupportedRuleRow(onDelete = { deleteCandidate = item.id })
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             item("notify") {
-                SettingsSection {
+                SettingsSection(modifier = Modifier.padding(top = 8.dp)) {
                     SettingsSwitchItem(
                         icon = Icons.TwoTone.Notifications,
                         title = stringResource(R.string.rules_notify_label),
@@ -208,39 +260,55 @@ fun DeviceRulesScreen(
                 }
             }
 
-            if (state.rules.isEmpty()) {
-                item("empty") { EmptyRules(showExample = state.hasAvailableActions) }
-            } else {
-                item("rules") {
-                    SettingsSection(title = stringResource(R.string.rules_section_label)) {
-                        state.rules.forEachIndexed { index, item ->
-                            if (index > 0) HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                            RuleRow(
-                                item = item,
-                                now = state.now,
-                                onClick = { if (item.rule != null) onOpenRule(item.id) else deleteCandidate = item.id },
-                                onEnabledChange = { onEnabledChange(item.id, it) },
-                            )
-                        }
-                    }
-                }
-            }
-
             item("fab_spacer") { Spacer(Modifier.height(88.dp)) }
         }
+    }
+}
+
+/** Deleting offers Undo, so a swipe needs no confirmation. */
+@Composable
+private fun SwipeToDelete(
+    onDelete: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val swipeState = rememberSwipeToDismissBoxState()
+    SwipeToDismissBox(
+        state = swipeState,
+        onDismiss = { onDelete() },
+        backgroundContent = {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                repeat(2) {
+                    Icon(
+                        imageVector = Icons.TwoTone.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
+        },
+    ) {
+        // Opaque, so the delete background only shows while the row is being swiped.
+        Column(modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)) { content() }
     }
 }
 
 @Composable
 private fun RuleRow(
     item: DeviceRuleItem,
+    rule: DeviceRule,
     now: Instant,
     onClick: () -> Unit,
     onEnabledChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    val enabled = item.rule?.enabled ?: false
-    val contentAlpha = if (item.rule == null || enabled) 1f else 0.6f
+    val contentAlpha = if (rule.enabled) 1f else 0.6f
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -248,29 +316,28 @@ private fun RuleRow(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector = item.icon ?: Icons.TwoTone.Upgrade,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f * contentAlpha),
-            modifier = Modifier
-                .align(Alignment.Top)
-                .padding(top = 2.dp)
-                .size(24.dp),
-        )
-        Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
-            )
-            item.subtitle?.let {
+            rule.name?.let {
                 Text(
                     text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha),
+                    modifier = Modifier.padding(bottom = 2.dp),
                 )
             }
+            // Without a name, the When line leads the row.
+            RuleLine(
+                icon = item.whenIcon,
+                text = item.whenText,
+                style = if (rule.name == null) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium,
+                alpha = contentAlpha * if (rule.name == null) 1f else 0.7f,
+            )
+            RuleLine(
+                icon = item.thenIcon,
+                text = item.thenText,
+                style = MaterialTheme.typography.bodyMedium,
+                alpha = contentAlpha * 0.7f,
+            )
             item.status.text(context, now)?.let {
                 Text(
                     text = it,
@@ -280,22 +347,81 @@ private fun RuleRow(
                     } else {
                         MaterialTheme.colorScheme.primary
                     },
-                    modifier = Modifier.padding(top = 2.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                 )
             }
         }
-        if (item.rule != null) {
-            Switch(
-                checked = enabled,
-                onCheckedChange = onEnabledChange,
-                modifier = Modifier.padding(start = 16.dp),
+        Switch(
+            checked = rule.enabled,
+            onCheckedChange = onEnabledChange,
+            modifier = Modifier.padding(start = 16.dp),
+        )
+    }
+}
+
+@Composable
+private fun RuleLine(
+    icon: ImageVector?,
+    text: String,
+    style: TextStyle,
+    alpha: Float,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 1.dp),
+    ) {
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f * alpha),
+                modifier = Modifier.size(18.dp),
             )
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(
+            text = text,
+            style = style,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+        )
+    }
+}
+
+@Composable
+private fun UnsupportedRuleRow(onDelete: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onDelete)
+            .padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.TwoTone.Upgrade,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier
+                .align(Alignment.Top)
+                .padding(top = 2.dp)
+                .size(24.dp),
+        )
+        Spacer(Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = stringResource(R.string.rules_unsupported_title), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = stringResource(R.string.rules_unsupported_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        IconButton(onClick = onDelete) {
+            Icon(Icons.TwoTone.Delete, contentDescription = stringResource(R.string.rules_delete_action))
         }
     }
 }
 
 @Composable
-private fun EmptyRules(showExample: Boolean) {
+private fun EmptyRules(showExplainer: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -313,8 +439,8 @@ private fun EmptyRules(showExample: Boolean) {
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(top = 16.dp),
         )
-        // The example names actions; next to "No actions are available" it would promise them anyway.
-        if (showExample) {
+        // It promises a setting change; next to "No actions are available" there is none to make.
+        if (showExplainer) {
             Text(
                 text = stringResource(R.string.rules_empty_description),
                 style = MaterialTheme.typography.bodyMedium,
@@ -329,9 +455,14 @@ private fun EmptyRules(showExample: Boolean) {
 @Preview2
 @Composable
 private fun DeviceRulesScreenPreview() = PreviewWrapper {
-    val rule = DeviceRule(
+    val named = DeviceRule(
+        name = "At home",
         trigger = RuleTrigger.WifiConnected("Home"),
         action = RuleAction.SetAncMode(AapSetting.AncMode.Value.OFF),
+    )
+    val unnamed = DeviceRule(
+        trigger = RuleTrigger.WifiDisconnected("Home"),
+        action = RuleAction.SetAncMode(AapSetting.AncMode.Value.ON),
     )
     DeviceRulesScreen(
         state = DeviceRulesViewModel.State(
@@ -339,14 +470,25 @@ private fun DeviceRulesScreenPreview() = PreviewWrapper {
             model = PodModel.AIRPODS_PRO2,
             rules = listOf(
                 DeviceRuleItem(
-                    id = rule.id,
-                    rule = rule,
-                    title = "When connected to Home",
-                    subtitle = "Listening mode: Off",
-                    icon = null,
+                    id = named.id,
+                    rule = named,
+                    whenText = "When connected to Home",
+                    whenIcon = Icons.TwoTone.Wifi,
+                    thenText = "Listening mode: Off",
+                    thenIcon = Icons.TwoTone.Headphones,
+                    status = RuleStatus.Applied(Instant.now().minusSeconds(300)),
+                ),
+                DeviceRuleItem(
+                    id = unnamed.id,
+                    rule = unnamed,
+                    whenText = "When disconnected from Home",
+                    whenIcon = Icons.TwoTone.WifiOff,
+                    thenText = "Listening mode: ANC",
+                    thenIcon = Icons.TwoTone.Headphones,
                     status = RuleStatus.Waiting,
                 ),
             ),
+            missing = emptyList(),
             notify = false,
             hasAvailableActions = true,
             now = Instant.now(),
@@ -363,6 +505,7 @@ private fun DeviceRulesScreenEmptyPreview() = PreviewWrapper {
             deviceLabel = "My AirPods",
             model = PodModel.AIRPODS_GEN4,
             rules = emptyList(),
+            missing = emptyList(),
             notify = false,
             hasAvailableActions = false,
             now = Instant.now(),

@@ -21,6 +21,9 @@ class WifiConnectedHandler @Inject constructor(
     override fun summary(context: Context, trigger: RuleTrigger.WifiConnected): String =
         context.getString(R.string.rules_trigger_wifi_connected_summary, trigger.ssid)
 
+    override fun holdsNowText(context: Context, trigger: RuleTrigger.WifiConnected): String =
+        context.getString(R.string.rules_apply_now_wifi_connected, trigger.ssid)
+
     override val missingRequirements: Flow<List<RuleRequirement>> = locationAccess.missing
 
     override fun condition(trigger: RuleTrigger.WifiConnected): Flow<TriggerCondition> = wifi.state
@@ -37,6 +40,9 @@ class WifiDisconnectedHandler @Inject constructor(
 
     override fun summary(context: Context, trigger: RuleTrigger.WifiDisconnected): String =
         context.getString(R.string.rules_trigger_wifi_disconnected_summary, trigger.ssid)
+
+    override fun holdsNowText(context: Context, trigger: RuleTrigger.WifiDisconnected): String =
+        context.getString(R.string.rules_apply_now_wifi_disconnected, trigger.ssid)
 
     override val missingRequirements: Flow<List<RuleRequirement>> = locationAccess.missing
 

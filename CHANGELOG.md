@@ -2,6 +2,16 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-10-03
+
+### ✨ Added
+
+- Device rules change your AirPods' settings when something happens. You set them up for each device under Reactions in its settings. If the AirPods aren't connected when a rule fires, it applies once they connect.
+- A rule can fire when the phone joins or leaves a Wi-Fi network, during set hours on the days you pick, while Do Not Disturb is on, during a call, when the AirPods connect, when they go in or out of your ears, or when their battery runs low.
+- A rule can set the listening mode, Conversation Awareness, Volume Swipe, Adaptive Audio Noise, Chime Volume, Personalized Volume, ANC with one pod, Microphone, Sleep Detection, and the phone's media volume while the AirPods play it. One rule can change several of these.
+- A rule can put the previous setting back when its condition ends, unless you changed that setting yourself in the meantime. Apply now runs a rule right away if its condition already holds, and Earside can notify you each time a rule changes a setting.
+- Rules that react to Wi-Fi need location access set to "Allow all the time", because Android only tells apps the Wi-Fi network name when they have it. Earside compares the name with your rules and stores no location.
+
 ## [1.1.0] - 2026-10-02
 
 ### ✨ Added
@@ -37,5 +47,6 @@ Based on [CAPod v5.4.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.
 
 - CAPod's contact form, Discord, issue tracker, wiki, translation project, privacy policy and sponsor links.
 
+[1.2.0]: https://github.com/pa2x2/earside/releases/tag/v1.2.0
 [1.1.0]: https://github.com/pa2x2/earside/releases/tag/v1.1.0
 [1.0.0]: https://github.com/pa2x2/earside/releases/tag/v1.0.0

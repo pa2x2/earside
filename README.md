@@ -20,7 +20,9 @@ It was forked from `d4rken-org/capod` at `v5.4.0-rc0` (September 2026), and ever
 
 ## Privacy
 
-Earside has no internet permission, so it cannot send anything anywhere. It reads what your headphones broadcast over Bluetooth and keeps its settings on your phone. A debug log stays on the phone unless you share it yourself.
+Earside reads what your headphones broadcast over Bluetooth and keeps its settings on your phone. A debug log stays on the phone unless you share it yourself.
+
+The internet is used only for app updates: Earside asks GitHub for the latest releases of this repository and downloads the update you choose to install. It checks when the app opens, which you can turn off in the settings. The request names the Earside version and nothing about you or your headphones.
 
 ## Disclaimer
 

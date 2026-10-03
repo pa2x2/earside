@@ -82,4 +82,7 @@ abstract class RuleEditorsModule {
     @Binds @IntoSet abstract fun timeWindow(editor: TimeWindowEditor): RuleTriggerEditor<*>
     @Binds @IntoSet abstract fun doNotDisturbOn(editor: DoNotDisturbOnEditor): RuleTriggerEditor<*>
     @Binds @IntoSet abstract fun inCall(editor: InCallEditor): RuleTriggerEditor<*>
+    @Binds @IntoSet abstract fun airPodsConnected(editor: AirPodsConnectedEditor): RuleTriggerEditor<*>
+    @Binds @IntoSet abstract fun wearing(editor: WearingEditor): RuleTriggerEditor<*>
+    @Binds @IntoSet abstract fun batteryLow(editor: BatteryLowEditor): RuleTriggerEditor<*>
 }

@@ -12,6 +12,9 @@ import eu.darken.capod.rules.core.trigger.RuleTriggerHandler
 import eu.darken.capod.rules.core.trigger.time.TimeWindowHandler
 import eu.darken.capod.rules.core.trigger.phone.DoNotDisturbOnHandler
 import eu.darken.capod.rules.core.trigger.phone.InCallHandler
+import eu.darken.capod.rules.core.trigger.device.AirPodsConnectedHandler
+import eu.darken.capod.rules.core.trigger.device.BatteryLowHandler
+import eu.darken.capod.rules.core.trigger.device.WearingHandler
 import eu.darken.capod.rules.core.trigger.wifi.WifiConnectedHandler
 import eu.darken.capod.rules.core.trigger.wifi.WifiDisconnectedHandler
 import javax.inject.Inject
@@ -53,4 +56,7 @@ abstract class RuleHandlersModule {
     @Binds @IntoSet abstract fun timeWindow(handler: TimeWindowHandler): RuleTriggerHandler<*>
     @Binds @IntoSet abstract fun doNotDisturbOn(handler: DoNotDisturbOnHandler): RuleTriggerHandler<*>
     @Binds @IntoSet abstract fun inCall(handler: InCallHandler): RuleTriggerHandler<*>
+    @Binds @IntoSet abstract fun airPodsConnected(handler: AirPodsConnectedHandler): RuleTriggerHandler<*>
+    @Binds @IntoSet abstract fun wearing(handler: WearingHandler): RuleTriggerHandler<*>
+    @Binds @IntoSet abstract fun batteryLow(handler: BatteryLowHandler): RuleTriggerHandler<*>
 }

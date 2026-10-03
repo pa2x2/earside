@@ -63,6 +63,27 @@ sealed interface RuleTrigger {
     @Serializable
     @SerialName("call.active")
     data object InCall : RuleTrigger
+    /** The rule's AirPods are connected to the phone over Bluetooth. */
+    @Serializable
+    @SerialName("airpods.connected")
+    data object AirPodsConnected : RuleTrigger
+
+    @Serializable
+    @SerialName("airpods.wearing")
+    data class Wearing(@SerialName("state") val state: State) : RuleTrigger {
+        /** For single-headset models, [BOTH_IN] means worn and [ONE_IN] never holds. */
+        @Serializable
+        enum class State {
+            @SerialName("both_in") BOTH_IN,
+            @SerialName("one_in") ONE_IN,
+            @SerialName("none_in") NONE_IN,
+        }
+    }
+
+    /** Holds at [thresholdPercent] or below, until the battery is back up to 10 points above it. */
+    @Serializable
+    @SerialName("battery.low")
+    data class BatteryLow(@SerialName("threshold") val thresholdPercent: Int) : RuleTrigger
 }
 
 @Serializable

@@ -52,6 +52,7 @@ import eu.darken.capod.reaction.core.charged.ChargedReaction
 import eu.darken.capod.reaction.core.charged.ChargedReactionNotifications
 import eu.darken.capod.reaction.core.sleep.SleepReaction
 import eu.darken.capod.reaction.ui.popup.PopUpWindow
+import eu.darken.capod.rules.core.DeviceRulesEngine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -92,6 +93,7 @@ class MonitorService : Service() {
     @Inject lateinit var chargedReaction: ChargedReaction
     @Inject lateinit var chargedReactionNotifications: ChargedReactionNotifications
     @Inject lateinit var conversationReaction: ConversationReaction
+    @Inject lateinit var deviceRulesEngine: DeviceRulesEngine
     @Inject lateinit var popUpWindow: PopUpWindow
     @Inject lateinit var profilesRepo: DeviceProfilesRepo
     @Inject lateinit var aapConnectionManager: AapConnectionManager
@@ -401,6 +403,11 @@ class MonitorService : Service() {
         conversationReaction.monitor()
             .setupCommonEventHandlers(TAG) { "conversationReaction" }
             .catch { log(TAG, WARN) { "conversationReaction failed:\n${it.asLog()}" } }
+            .launchIn(monitorScope)
+
+        deviceRulesEngine.monitor()
+            .setupCommonEventHandlers(TAG) { "deviceRulesEngine" }
+            .catch { log(TAG, WARN) { "deviceRulesEngine failed:\n${it.asLog()}" } }
             .launchIn(monitorScope)
 
         batteryEstimator.monitor()

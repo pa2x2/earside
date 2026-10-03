@@ -19,6 +19,7 @@ import eu.darken.capod.common.hasApiLevel
 import eu.darken.capod.main.ui.MainActivity
 import eu.darken.capod.main.ui.components.iconDrawableRes
 import eu.darken.capod.main.ui.components.shortLabel
+import eu.darken.capod.monitor.core.controls.DeviceControls
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -36,7 +37,7 @@ import kotlin.time.Duration.Companion.seconds
 class AncTileService : TileService() {
 
     @Inject lateinit var dispatcherProvider: DispatcherProvider
-    @Inject lateinit var sendCoordinator: AncTileSendCoordinator
+    @Inject lateinit var deviceControls: DeviceControls
     @Inject lateinit var stateStore: AncTileStateStore
 
     private var listenScope: CoroutineScope? = null
@@ -121,7 +122,7 @@ class AncTileService : TileService() {
             return
         }
 
-        sendCoordinator.scheduleSetAncMode(address, nextMode, 1.seconds)
+        deviceControls.setAncMode(address, nextMode, debounce = 1.seconds)
 
         val optimisticState = state.copy(pending = nextMode)
         renderTile(optimisticState)

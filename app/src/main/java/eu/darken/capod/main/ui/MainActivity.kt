@@ -180,12 +180,21 @@ class MainActivity : Activity2() {
                 navCtrl.goTo(Nav.Main.DeviceSettings(profileId), popUpTo = Nav.Main.Overview)
             }
         }
+        intent?.getStringExtra(EXTRA_DEVICE_RULES_PROFILE_ID)?.let { profileId ->
+            intent.removeExtra(EXTRA_DEVICE_RULES_PROFILE_ID)
+            if (generalSettings.isOnboardingDone.valueBlocking) {
+                // Through the device's settings, so back leads where the rules are normally opened from.
+                navCtrl.goTo(Nav.Main.DeviceSettings(profileId), popUpTo = Nav.Main.Overview)
+                navCtrl.goTo(Nav.Main.DeviceRules(profileId))
+            }
+        }
     }
 
     companion object {
         const val EXTRA_NAVIGATE_TO_UPGRADE = "navigate_to_upgrade"
         const val EXTRA_UPGRADE_FOR_RESULT = "upgrade_for_result"
         const val EXTRA_DEVICE_SETTINGS_PROFILE_ID = "device_settings_profile_id"
+        const val EXTRA_DEVICE_RULES_PROFILE_ID = "device_rules_profile_id"
         private val TAG = logTag("MainActivity")
     }
 }

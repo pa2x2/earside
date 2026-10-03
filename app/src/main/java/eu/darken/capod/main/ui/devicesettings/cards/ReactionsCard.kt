@@ -63,6 +63,7 @@ internal fun ReactionsCard(
     onAutoConnectConditionChange: (AutoConnectCondition) -> Unit = {},
     onShowPopUpOnCaseOpenChange: (Boolean) -> Unit = {},
     onShowPopUpOnConnectionChange: (Boolean) -> Unit = {},
+    deviceRules: @Composable () -> Unit = {},
 ) {
     val reactions = device.reactions
     val enabled = device.isAapReady
@@ -71,6 +72,8 @@ internal fun ReactionsCard(
     var showConversationActionDialog by remember { mutableStateOf(false) }
 
     SettingsSection(title = stringResource(R.string.settings_reaction_label)) {
+        deviceRules()
+        ReactionsDivider()
         if (features.hasEarDetection) {
             SettingsSwitchItem(
                 icon = Icons.TwoTone.PlayCircle,

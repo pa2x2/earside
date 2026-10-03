@@ -7,15 +7,11 @@ import android.net.Uri
 import dagger.hilt.android.AndroidEntryPoint
 import eu.darken.capod.common.bluetooth.BluetoothAddress
 import eu.darken.capod.common.coroutine.AppScope
-import eu.darken.capod.common.debug.logging.Logging.Priority.ERROR
 import eu.darken.capod.common.debug.logging.Logging.Priority.VERBOSE
 import eu.darken.capod.common.debug.logging.Logging.Priority.WARN
-import eu.darken.capod.common.debug.logging.asLog
 import eu.darken.capod.common.debug.logging.log
 import eu.darken.capod.common.debug.logging.logTag
-import eu.darken.capod.main.ui.tile.AncTileSendCoordinator
-import eu.darken.capod.pods.core.apple.aap.AapConnectionManager
-import eu.darken.capod.pods.core.apple.aap.protocol.AapCommand
+import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -26,11 +22,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class NotificationControlsReceiver : BroadcastReceiver() {
 
     @Inject @AppScope lateinit var appScope: CoroutineScope
-    @Inject lateinit var aapManager: AapConnectionManager
-
-    // Shared with the QS tile so taps from either surface debounce against each other instead of
-    // stacking SetAncMode commands on the AAP session.
-    @Inject lateinit var ancSendCoordinator: AncTileSendCoordinator
+    @Inject lateinit var deviceControls: DeviceControls
 
     override fun onReceive(context: Context, intent: Intent) {
         val address = intent.getStringExtra(EXTRA_ADDRESS)
@@ -47,11 +39,9 @@ class NotificationControlsReceiver : BroadcastReceiver() {
                     return
                 }
                 log(TAG, VERBOSE) { "onReceive: SetAncMode($mode) for $address" }
-                ancSendCoordinator.scheduleSetAncMode(address, mode, debounce = 300.milliseconds)
+                deviceControls.setAncMode(address, mode, debounce = 300.milliseconds)
             }
 
-            // No debounce needed: the AAP queue keeps only the newest command of a type, so rapid
-            // taps collapse to the last value.
             ACTION_SET_CONVERSATIONAL_AWARENESS -> {
                 if (!intent.hasExtra(EXTRA_ENABLED)) {
                     log(TAG, WARN) { "onReceive: no target state in $intent" }
@@ -62,9 +52,7 @@ class NotificationControlsReceiver : BroadcastReceiver() {
                 val pending = goAsync()
                 appScope.launch {
                     try {
-                        aapManager.sendCommand(address, AapCommand.SetConversationalAwareness(enabled))
-                    } catch (e: Exception) {
-                        log(TAG, ERROR) { "SetConversationalAwareness failed: ${e.asLog()}" }
+                        deviceControls.setConversationalAwareness(address, enabled)
                     } finally {
                         pending.finish()
                     }

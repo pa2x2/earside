@@ -11,12 +11,10 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import eu.darken.capod.common.debug.logging.Logging.Priority.ERROR
 import eu.darken.capod.common.debug.logging.Logging.Priority.VERBOSE
-import eu.darken.capod.common.debug.logging.asLog
 import eu.darken.capod.common.debug.logging.log
 import eu.darken.capod.common.debug.logging.logTag
 import eu.darken.capod.monitor.core.DeviceMonitor
-import eu.darken.capod.pods.core.apple.aap.AapConnectionManager
-import eu.darken.capod.pods.core.apple.aap.protocol.AapCommand
+import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 
 @Keep
@@ -26,7 +24,7 @@ class AncModeActionCallback : ActionCallback {
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface AncModeCallbackEntryPoint {
-        fun aapConnectionManager(): AapConnectionManager
+        fun deviceControls(): DeviceControls
         fun widgetSettings(): WidgetSettings
         fun deviceMonitor(): DeviceMonitor
         fun widgetManager(): WidgetManager
@@ -73,12 +71,8 @@ class AncModeActionCallback : ActionCallback {
             return
         }
 
-        try {
-            ep.aapConnectionManager().sendCommand(address, AapCommand.SetAncMode(mode))
-            log(TAG, VERBOSE) { "onAction: sent SetAncMode($mode) to $address" }
-        } catch (e: Exception) {
-            log(TAG, ERROR) { "onAction: sendCommand failed: ${e.asLog()}" }
-        }
+        val result = ep.deviceControls().setAncMode(address, mode).await()
+        log(TAG, VERBOSE) { "onAction: SetAncMode($mode) to $address -> $result" }
 
         ep.widgetManager().refreshWidgets()
     }

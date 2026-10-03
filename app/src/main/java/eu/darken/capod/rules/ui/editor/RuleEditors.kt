@@ -79,4 +79,5 @@ abstract class RuleEditorsModule {
     @Binds @IntoSet abstract fun wifiDisconnected(editor: WifiDisconnectedEditor): RuleTriggerEditor<*>
     @Binds @IntoSet abstract fun setAncMode(editor: SetAncModeEditor): RuleActionEditor<*>
     @Binds @IntoSet abstract fun setConversationalAwareness(editor: SetConversationalAwarenessEditor): RuleActionEditor<*>
+    @Binds @IntoSet abstract fun timeWindow(editor: TimeWindowEditor): RuleTriggerEditor<*>
 }

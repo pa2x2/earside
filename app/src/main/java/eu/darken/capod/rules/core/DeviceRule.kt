@@ -1,8 +1,11 @@
 package eu.darken.capod.rules.core
 
+import eu.darken.capod.common.serialization.LocalTimeIsoSerializer
 import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.time.DayOfWeek
+import java.time.LocalTime
 import java.util.UUID
 
 typealias RuleId = String
@@ -38,6 +41,19 @@ sealed interface RuleTrigger {
     @Serializable
     @SerialName("wifi.disconnected")
     data class WifiDisconnected(@SerialName("ssid") val ssid: String) : RuleTrigger
+
+    /**
+     * Wall-clock times, so the window follows DST and time zone changes. An [end] before [start]
+     * runs into the next day, and the window belongs to the day it starts on: [days] are start days.
+     * [start] == [end] or no [days] is a window that never holds; the editor doesn't save one.
+     */
+    @Serializable
+    @SerialName("time.window")
+    data class TimeWindow(
+        @SerialName("start") @Serializable(with = LocalTimeIsoSerializer::class) val start: LocalTime,
+        @SerialName("end") @Serializable(with = LocalTimeIsoSerializer::class) val end: LocalTime,
+        @SerialName("days") val days: Set<DayOfWeek>,
+    ) : RuleTrigger
 }
 
 @Serializable

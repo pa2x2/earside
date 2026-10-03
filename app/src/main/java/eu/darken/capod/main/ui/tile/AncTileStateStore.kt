@@ -6,7 +6,9 @@ import eu.darken.capod.common.flow.combine
 import eu.darken.capod.common.upgrade.UpgradeRepo
 import eu.darken.capod.main.core.PermissionTool
 import eu.darken.capod.monitor.core.DeviceMonitor
+import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.monitor.core.primaryByTier
+import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import eu.darken.capod.profiles.core.DeviceProfilesRepo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -36,7 +38,7 @@ class AncTileStateStore @Inject constructor(
     upgradeRepo: UpgradeRepo,
     bluetoothManager: BluetoothManager2,
     permissionTool: PermissionTool,
-    private val sendCoordinator: AncTileSendCoordinator,
+    private val deviceControls: DeviceControls,
 ) {
 
     private val rawState: StateFlow<AncTileState> = combine(
@@ -64,15 +66,15 @@ class AncTileStateStore @Inject constructor(
 
     init {
         appScope.launch {
-            rawState.collect { state -> sendCoordinator.acknowledgeDeviceState(state) }
+            rawState.collect { state -> deviceControls.acknowledgeDeviceState(state) }
         }
     }
 
     val state: StateFlow<AncTileState> = combineFlows(
         rawState,
-        sendCoordinator.pendingModes,
+        deviceControls.pendingAncModes,
     ) { rawState, _ ->
-        sendCoordinator.applyPendingTarget(rawState)
+        deviceControls.applyPendingTarget(rawState)
     }
         .distinctUntilChanged()
         .stateIn(
@@ -81,5 +83,32 @@ class AncTileStateStore @Inject constructor(
             initialValue = AncTileState.Connecting,
         )
 
-    fun currentState(): AncTileState = sendCoordinator.applyPendingTarget(rawState.value)
+    fun currentState(): AncTileState = deviceControls.applyPendingTarget(rawState.value)
 }
+
+/** Shows the listening mode a tap asked for until the device confirms it. Pure: never clears the target. */
+internal fun DeviceControls.applyPendingTarget(state: AncTileState): AncTileState {
+    val active = state as? AncTileState.Active ?: return state
+    val address = active.deviceAddress ?: return active
+    val target = pendingAncModes.value[address] ?: return active
+
+    if (target !in active.visible) return active
+
+    if (active.isConfirmed(target)) return active
+
+    return active.copy(pending = target)
+}
+
+/** Drops the pending target once the device confirms it, or once it can no longer be shown. */
+internal fun DeviceControls.acknowledgeDeviceState(state: AncTileState) {
+    val active = state as? AncTileState.Active ?: return
+    val address = active.deviceAddress ?: return
+    val target = pendingAncModes.value[address] ?: return
+
+    if (target !in active.visible || active.isConfirmed(target)) {
+        clearPendingAncMode(address, target)
+    }
+}
+
+private fun AncTileState.Active.isConfirmed(target: AapSetting.AncMode.Value): Boolean =
+    pending == target || (current == target && pending == null)

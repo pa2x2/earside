@@ -25,6 +25,7 @@ import eu.darken.capod.monitor.core.battery.BatteryDrainStore
 import eu.darken.capod.monitor.core.battery.BatteryEstimator
 import eu.darken.capod.monitor.core.battery.BatteryHealth
 import eu.darken.capod.monitor.core.battery.DrainProfile
+import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.monitor.core.resolvedAncCycleMask
 import eu.darken.capod.pods.core.apple.aap.AapConnectionManager
 import eu.darken.capod.pods.core.apple.aap.protocol.AapCommand
@@ -63,6 +64,7 @@ class DeviceSettingsViewModel @Inject constructor(
     private val monitorModeResolver: MonitorModeResolver,
     private val nudgeCapabilityStore: NudgeCapabilityStore,
     private val timeSource: TimeSource,
+    private val deviceControls: DeviceControls,
 ) : ViewModel4(dispatcherProvider) {
 
     private val targetProfileId = MutableStateFlow<ProfileId?>(null)
@@ -298,9 +300,21 @@ class DeviceSettingsViewModel @Inject constructor(
         }
     }
 
-    fun setAncMode(mode: AapSetting.AncMode.Value) = send(AapCommand.SetAncMode(mode))
+    fun setAncMode(mode: AapSetting.AncMode.Value) = launch {
+        val address = currentAddress() ?: return@launch
+        val result = deviceControls.setAncMode(address, mode).await()
+        reportControlResult(AapCommand.SetAncMode(mode), result)
+    }
 
-    fun setConversationalAwareness(enabled: Boolean) = send(AapCommand.SetConversationalAwareness(enabled))
+    fun setConversationalAwareness(enabled: Boolean) = launch {
+        val address = currentAddress() ?: return@launch
+        val result = deviceControls.setConversationalAwareness(address, enabled)
+        reportControlResult(AapCommand.SetConversationalAwareness(enabled), result)
+    }
+
+    private suspend fun reportControlResult(command: AapCommand, result: DeviceControls.Result) {
+        if (result is DeviceControls.Result.Failed) events.emit(Event.SendFailed(command, result.error.message))
+    }
 
     fun setNcWithOneAirPod(enabled: Boolean) = send(AapCommand.SetNcWithOneAirPod(enabled))
 

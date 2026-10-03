@@ -1,18 +1,25 @@
 package eu.darken.capod.rules.ui.editor
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.twotone.VolumeUp
 import androidx.compose.material.icons.twotone.Headphones
 import androidx.compose.material.icons.twotone.Hearing
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -28,7 +35,9 @@ import eu.darken.capod.pods.core.apple.PodModel
 import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import eu.darken.capod.rules.core.RuleAction
 import eu.darken.capod.rules.core.action.SetAncModeHandler
+import eu.darken.capod.rules.core.action.SetMediaVolumeHandler
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 class SetAncModeEditor @Inject constructor(
     private val handler: SetAncModeHandler,
@@ -109,6 +118,50 @@ class SetConversationalAwarenessEditor @Inject constructor() : RuleActionEditor<
                     label = { Text(stringResource(label)) },
                 )
             }
+        }
+    }
+}
+
+class SetMediaVolumeEditor @Inject constructor(
+    private val handler: SetMediaVolumeHandler,
+) : RuleActionEditor<RuleAction.SetMediaVolume> {
+
+    override val type = RuleAction.SetMediaVolume::class
+    override val icon = Icons.AutoMirrored.TwoTone.VolumeUp
+    override val label = R.string.rules_action_media_volume_label
+
+    override fun initial(model: PodModel, device: PodDevice?) = RuleAction.SetMediaVolume(handler.currentPercent())
+
+    @Composable
+    override fun Settings(
+        current: RuleAction.SetMediaVolume?,
+        model: PodModel,
+        device: PodDevice?,
+        onChange: (RuleAction.SetMediaVolume?) -> Unit,
+    ) {
+        val percent = current?.percent ?: 0
+        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Slider(
+                    value = percent.toFloat(),
+                    onValueChange = { onChange(RuleAction.SetMediaVolume(it.roundToInt())) },
+                    valueRange = 0f..100f,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = stringResource(R.string.rules_action_media_volume_value, percent),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.width(48.dp),
+                )
+            }
+            Text(
+                text = stringResource(R.string.rules_action_media_volume_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

@@ -130,4 +130,8 @@ sealed interface RuleAction {
     @Serializable
     @SerialName("sleep_detection.set")
     data class SetSleepDetection(@SerialName("enabled") val enabled: Boolean) : RuleAction
+    /** 0–100 of the phone's media volume range, not a volume step: phones have different numbers of steps. */
+    @Serializable
+    @SerialName("media_volume.set")
+    data class SetMediaVolume(@SerialName("percent") val percent: Int) : RuleAction
 }

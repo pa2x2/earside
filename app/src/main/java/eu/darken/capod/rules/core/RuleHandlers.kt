@@ -15,6 +15,7 @@ import eu.darken.capod.rules.core.action.SetPersonalizedVolumeHandler
 import eu.darken.capod.rules.core.action.SetSleepDetectionHandler
 import eu.darken.capod.rules.core.action.SetToneVolumeHandler
 import eu.darken.capod.rules.core.action.SetVolumeSwipeHandler
+import eu.darken.capod.rules.core.action.SetMediaVolumeHandler
 import eu.darken.capod.rules.core.trigger.RuleTriggerHandler
 import eu.darken.capod.rules.core.trigger.time.TimeWindowHandler
 import eu.darken.capod.rules.core.trigger.phone.DoNotDisturbOnHandler
@@ -73,4 +74,5 @@ abstract class RuleHandlersModule {
     @Binds @IntoSet abstract fun setNcWithOneAirPod(handler: SetNcWithOneAirPodHandler): RuleActionHandler<*>
     @Binds @IntoSet abstract fun setMicrophoneMode(handler: SetMicrophoneModeHandler): RuleActionHandler<*>
     @Binds @IntoSet abstract fun setSleepDetection(handler: SetSleepDetectionHandler): RuleActionHandler<*>
+    @Binds @IntoSet abstract fun setMediaVolume(handler: SetMediaVolumeHandler): RuleActionHandler<*>
 }

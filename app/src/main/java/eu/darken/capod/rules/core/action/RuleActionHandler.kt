@@ -23,7 +23,8 @@ interface RuleActionHandler<A : RuleAction> {
 
     /**
      * Whether the action can run against [device] now. A waiting rule runs as soon as this holds, so
-     * an action that needs an AAP session waits for one, and one that only touches the phone doesn't.
+     * an action that needs an AAP session waits for one, and one on the phone waits for what it needs,
+     * e.g. the AirPods playing the phone's media.
      */
     fun isReady(device: PodDevice): Boolean
 
@@ -37,8 +38,9 @@ interface RuleActionHandler<A : RuleAction> {
     fun current(device: PodDevice, action: A): A?
 
     /**
-     * Only called once [isReady] holds for [device]. Device settings must go through [DeviceControls],
-     * so a rule changes a setting exactly like the other controls do.
+     * Only called once [isReady] holds for [device]. AirPods settings must go through [DeviceControls],
+     * so a rule changes a setting exactly like the other controls do; a phone setting reports its
+     * result the same way.
      */
     suspend fun execute(device: PodDevice, action: A): DeviceControls.Result
 }

@@ -804,4 +804,9 @@
     <string name="rules_action_nc_one_airpod_label">Set ANC with one pod</string>
     <string name="rules_action_microphone_mode_label">Set Microphone</string>
     <string name="rules_action_sleep_detection_label">Set Sleep Detection</string>
+    <string name="rules_action_media_volume_label">Set media volume</string>
+    <string name="rules_action_media_volume_summary">Media volume: %1$d%%</string>
+    <string name="rules_action_media_volume_value">%1$d%%</string>
+    <string name="rules_action_media_volume_hint">Set while your AirPods play the phone\'s audio, so the speaker volume stays as it is.</string>
+    <string name="rules_action_media_volume_unavailable_fixed">This phone doesn\'t let apps change the volume</string>
 </resources>

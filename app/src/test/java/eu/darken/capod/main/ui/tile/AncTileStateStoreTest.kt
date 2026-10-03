@@ -6,6 +6,7 @@ import eu.darken.capod.common.upgrade.UpgradeRepo
 import eu.darken.capod.main.core.PermissionTool
 import eu.darken.capod.monitor.core.DeviceMonitor
 import eu.darken.capod.monitor.core.PodDevice
+import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.pods.core.apple.PodModel
 import eu.darken.capod.pods.core.apple.aap.AapConnectionManager
 import eu.darken.capod.pods.core.apple.aap.AapPodState
@@ -76,16 +77,16 @@ class AncTileStateStoreTest : BaseTest() {
     }
 
     @Test
-    fun `current state overlays coordinator target before collected state updates`() = runTest {
-        val coordinator = coordinator()
+    fun `current state overlays pending target before collected state updates`() = runTest {
+        val controls = controls()
         val store = store(
             devices = MutableStateFlow(listOf(activeDevice(currentMode = off))),
-            sendCoordinator = coordinator,
+            deviceControls = controls,
         )
         val listener = collectState(store)
         runCurrent()
 
-        coordinator.scheduleSetAncMode(address, on, debounce = 1.seconds)
+        controls.setAncMode(address, on, debounce = 1.seconds)
 
         val current = store.currentState()
         current.shouldBeInstanceOf<AncTileState.Active>()
@@ -95,22 +96,22 @@ class AncTileStateStoreTest : BaseTest() {
     }
 
     @Test
-    fun `device confirmation clears coordinator target through state store`() = runTest {
+    fun `device confirmation clears pending target through state store`() = runTest {
         val devices = MutableStateFlow(listOf(activeDevice(currentMode = off)))
-        val coordinator = coordinator()
+        val controls = controls()
         val store = store(
             devices = devices,
-            sendCoordinator = coordinator,
+            deviceControls = controls,
         )
         runCurrent()
 
-        coordinator.scheduleSetAncMode(address, on, debounce = 1.seconds)
-        coordinator.pendingModes.value[address] shouldBe on
+        controls.setAncMode(address, on, debounce = 1.seconds)
+        controls.pendingAncModes.value[address] shouldBe on
 
         devices.value = listOf(activeDevice(currentMode = on))
         runCurrent()
 
-        coordinator.pendingModes.value[address] shouldBe null
+        controls.pendingAncModes.value[address] shouldBe null
         val current = store.currentState()
         current.shouldBeInstanceOf<AncTileState.Active>()
         current.current shouldBe on
@@ -127,7 +128,7 @@ class AncTileStateStoreTest : BaseTest() {
         isPro: MutableStateFlow<Boolean> = MutableStateFlow(true),
         bluetoothEnabled: MutableStateFlow<Boolean> = MutableStateFlow(true),
         missingPermissions: MutableStateFlow<Set<Permission>> = MutableStateFlow(emptySet()),
-        sendCoordinator: AncTileSendCoordinator = coordinator(),
+        deviceControls: DeviceControls = controls(),
     ): AncTileStateStore {
         val deviceMonitor = mockk<DeviceMonitor> {
             every { this@mockk.devices } returns devices
@@ -152,13 +153,13 @@ class AncTileStateStoreTest : BaseTest() {
             upgradeRepo = upgradeRepo,
             bluetoothManager = bluetoothManager,
             permissionTool = permissionTool,
-            sendCoordinator = sendCoordinator,
+            deviceControls = deviceControls,
         )
     }
 
-    private fun TestScope.coordinator(
+    private fun TestScope.controls(
         aapManager: AapConnectionManager = mockk(relaxed = true),
-    ): AncTileSendCoordinator = AncTileSendCoordinator(
+    ): DeviceControls = DeviceControls(
         appScope = backgroundScope,
         aapManager = aapManager,
     )

@@ -270,6 +270,30 @@ class MediaControl @Inject constructor(
     /** Current STREAM_MUSIC volume index. Used to detect user-initiated volume changes after a duck. */
     fun currentMusicVolume(): Int = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
 
+    /** STREAM_MUSIC's volume indexes. The lowest isn't always 0, and the number of steps differs between phones. */
+    fun musicVolumeRange(): IntRange {
+        val min = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
+        } else {
+            0
+        }
+        return min..audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+    }
+
+    val isVolumeFixed: Boolean get() = audioManager.isVolumeFixed
+
+    /**
+     * Sets STREAM_MUSIC to [index] without showing the volume panel. Returns the level read back, which
+     * may differ (see [duckMusicVolume]), or null if the write was denied.
+     */
+    fun setMusicVolume(index: Int): Int? = try {
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, index, 0)
+        audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).also { log(TAG, INFO) { "setMusicVolume($index): $it" } }
+    } catch (e: SecurityException) {
+        log(TAG, WARN) { "setMusicVolume: setStreamVolume denied: ${e.message}" }
+        null
+    }
+
     /**
      * Lowers STREAM_MUSIC volume by [reductionPercent] (relative to the current level) and classifies
      * what actually happened, so the caller can restore the prior level later, fall back to audio

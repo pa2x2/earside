@@ -2,12 +2,11 @@ package eu.darken.capod.monitor.core.aap
 
 import android.view.KeyEvent
 import eu.darken.capod.common.MediaControl
-import eu.darken.capod.common.debug.logging.Logging.Priority.WARN
 import eu.darken.capod.common.debug.logging.log
 import eu.darken.capod.common.debug.logging.logTag
 import eu.darken.capod.common.flow.setupCommonEventHandlers
+import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.pods.core.apple.aap.AapConnectionManager
-import eu.darken.capod.pods.core.apple.aap.protocol.AapCommand
 import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import eu.darken.capod.pods.core.apple.aap.protocol.StemPressEvent
 import eu.darken.capod.profiles.core.AppleDeviceProfile
@@ -26,6 +25,7 @@ class StemPressReaction @Inject constructor(
     private val aapManager: AapConnectionManager,
     private val profilesRepo: DeviceProfilesRepo,
     private val mediaControl: MediaControl,
+    private val deviceControls: DeviceControls,
 ) {
     fun monitor(): Flow<Unit> = aapManager.stemPressEvents
         .onEach { (address, event) ->
@@ -85,7 +85,7 @@ class StemPressReaction @Inject constructor(
         val aapState = aapManager.allStates.first()[address] ?: return
         val state = resolveEffectiveAncState(aapState, profile) ?: return
         val next = nextGestureAncMode(state) ?: return
-        sendAncCommand(address, next)
+        deviceControls.setAncMode(address, next)
     }
 
     private suspend fun toggleAncTransparency(address: String) {
@@ -101,15 +101,7 @@ class StemPressReaction @Inject constructor(
         } else {
             if (AapSetting.AncMode.Value.TRANSPARENCY in supported) AapSetting.AncMode.Value.TRANSPARENCY else return
         }
-        sendAncCommand(address, target)
-    }
-
-    private suspend fun sendAncCommand(address: String, mode: AapSetting.AncMode.Value) {
-        try {
-            aapManager.sendCommand(address, AapCommand.SetAncMode(mode))
-        } catch (e: Exception) {
-            log(TAG, WARN) { "SetAncMode($mode) failed for $address: $e" }
-        }
+        deviceControls.setAncMode(address, target)
     }
 
     companion object {

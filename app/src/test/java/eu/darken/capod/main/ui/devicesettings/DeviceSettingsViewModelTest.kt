@@ -163,6 +163,8 @@ class DeviceSettingsViewModelTest : BaseTest() {
         monitorModeResolver = monitorModeResolver,
         nudgeCapabilityStore = nudgeCapabilityStore,
         timeSource = timeSource,
+        deviceControls = mockk(relaxed = true),
+        deviceRuleItems = mockk { every { observe(any()) } returns flowOf(emptyList()) },
     ).also { vm = it }
 
     private fun runVmTest(testBody: suspend TestScope.() -> Unit) = runTest(testDispatcher) {

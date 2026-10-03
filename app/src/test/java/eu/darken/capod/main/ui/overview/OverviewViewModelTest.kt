@@ -163,6 +163,7 @@ class OverviewViewModelTest : BaseTest() {
         batteryEstimator = batteryEstimator,
         timeSource = timeSource,
         reviewTool = reviewTool,
+        deviceControls = mockk(relaxed = true),
     )
 
     @Nested

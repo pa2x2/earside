@@ -8,7 +8,6 @@ import eu.darken.capod.common.coroutine.DispatcherProvider
 import eu.darken.capod.common.datastore.value
 import eu.darken.capod.common.debug.Bugs
 import eu.darken.capod.common.debug.logging.Logging.Priority.INFO
-import eu.darken.capod.common.debug.logging.Logging.Priority.WARN
 import eu.darken.capod.common.debug.logging.log
 import eu.darken.capod.common.debug.logging.logTag
 import eu.darken.capod.common.flow.SingleEventFlow
@@ -28,6 +27,7 @@ import eu.darken.capod.monitor.core.PodDevice
 import eu.darken.capod.monitor.core.battery.BatteryEstimate
 import eu.darken.capod.monitor.core.battery.BatteryEstimator
 import eu.darken.capod.monitor.core.battery.estimateFor
+import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.monitor.core.podDeviceTierComparator
 import eu.darken.capod.monitor.core.worker.MonitorControl
 import eu.darken.capod.pods.core.apple.aap.AapConnectionManager
@@ -68,6 +68,7 @@ class OverviewViewModel @Inject constructor(
     private val batteryEstimator: BatteryEstimator,
     private val timeSource: TimeSource,
     private val reviewTool: ReviewTool,
+    private val deviceControls: DeviceControls,
 ) : ViewModel4(dispatcherProvider) {
 
     val requestPermissionEvent = SingleEventFlow<Permission>()
@@ -461,14 +462,7 @@ class OverviewViewModel @Inject constructor(
 
     fun setAncMode(device: PodDevice, mode: AapSetting.AncMode.Value) {
         val address = device.address ?: return
-        launch {
-            try {
-                aapManager.sendCommand(address, AapCommand.SetAncMode(mode))
-                log(TAG, INFO) { "ANC mode set to $mode for $address" }
-            } catch (e: Exception) {
-                log(TAG, WARN) { "Failed to set ANC mode: ${e.message}" }
-            }
-        }
+        deviceControls.setAncMode(address, mode)
     }
 
     companion object {

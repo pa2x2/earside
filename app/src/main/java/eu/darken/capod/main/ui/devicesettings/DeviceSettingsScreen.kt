@@ -70,6 +70,7 @@ import eu.darken.capod.pods.core.apple.ble.devices.HasStateDetection
 import eu.darken.capod.reaction.core.autoconnect.AutoConnectCondition
 import eu.darken.capod.reaction.core.charged.ChargedSlotScope
 import eu.darken.capod.reaction.core.conversation.ConversationAction
+import eu.darken.capod.rules.ui.DeviceRulesRow
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -174,6 +175,7 @@ fun DeviceSettingsScreenHost(
         onDynamicEndOfChargeChange = { vm.setDynamicEndOfCharge(it) },
         onDeviceNameChange = { vm.setDeviceName(it) },
         onPressControlsClick = { vm.navToPressControls() },
+        onDeviceRulesClick = { vm.navToDeviceRules() },
         onEditProfile = { vm.navToEditProfile() },
         onForceConnect = { vm.forceConnect() },
         onUpgrade = { vm.launchUpgrade() },
@@ -217,6 +219,7 @@ fun DeviceSettingsScreen(
     onDynamicEndOfChargeChange: (Boolean) -> Unit = {},
     onDeviceNameChange: (String) -> Unit = {},
     onPressControlsClick: () -> Unit = {},
+    onDeviceRulesClick: () -> Unit = {},
     onEditProfile: () -> Unit = {},
     onForceConnect: () -> Unit = {},
     onUpgrade: () -> Unit = {},
@@ -404,11 +407,16 @@ fun DeviceSettingsScreen(
             }
 
             // ── Reactions (gated on classic connection — needs phone to be the audio target) ──
+            // Device rules are set up ahead of time, so their row stays while disconnected.
+            val deviceRules: @Composable () -> Unit = {
+                DeviceRulesRow(rules = state.rules, onClick = onDeviceRulesClick)
+            }
             if (device != null && device.hasSelectedPairedDevice &&
                 features != null && state.isClassicallyConnected
             ) {
                 item("reactions_section") {
                     ReactionsCard(
+                        deviceRules = deviceRules,
                         device = device,
                         features = features,
                         isPro = isPro,
@@ -425,6 +433,12 @@ fun DeviceSettingsScreen(
                         onShowPopUpOnCaseOpenChange = onShowPopUpOnCaseOpenChange,
                         onShowPopUpOnConnectionChange = onShowPopUpOnConnectionChange,
                     )
+                }
+            } else {
+                item("reactions_section") {
+                    SettingsSection(title = stringResource(R.string.settings_reaction_label)) {
+                        deviceRules()
+                    }
                 }
             }
 

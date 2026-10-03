@@ -38,6 +38,8 @@ import eu.darken.capod.reaction.core.autoconnect.AutoConnectCondition
 import eu.darken.capod.reaction.core.charged.ChargedSlotScope
 import eu.darken.capod.reaction.core.conversation.ConversationAction
 import eu.darken.capod.reaction.core.stem.StemAction
+import eu.darken.capod.rules.ui.DeviceRuleItem
+import eu.darken.capod.rules.ui.DeviceRuleItems
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.channelFlow
@@ -65,6 +67,7 @@ class DeviceSettingsViewModel @Inject constructor(
     private val nudgeCapabilityStore: NudgeCapabilityStore,
     private val timeSource: TimeSource,
     private val deviceControls: DeviceControls,
+    private val deviceRuleItems: DeviceRuleItems,
 ) : ViewModel4(dispatcherProvider) {
 
     private val targetProfileId = MutableStateFlow<ProfileId?>(null)
@@ -134,6 +137,7 @@ class DeviceSettingsViewModel @Inject constructor(
             profilesRepo.profiles,
             nudgeCapabilityStore.availability,
             drainStore.profiles,
+            deviceRuleItems.observe(profileId),
         ) { args ->
             val device = args[1] as PodDevice?
             val upgrade = args[2] as UpgradeRepo.Info
@@ -149,6 +153,9 @@ class DeviceSettingsViewModel @Inject constructor(
 
             @Suppress("UNCHECKED_CAST")
             val drainProfiles = args[8] as Map<ProfileId, DrainProfile>
+
+            @Suppress("UNCHECKED_CAST")
+            val rules = args[9] as List<DeviceRuleItem>
             val appleProfile = profiles.filterIsInstance<AppleDeviceProfile>()
                 .firstOrNull { it.id == profileId }
             val stemActions = appleProfile?.stemActions
@@ -190,6 +197,7 @@ class DeviceSettingsViewModel @Inject constructor(
                     (appleProfile?.batteryEstimateEnabled ?: true) &&
                     device.model.batterySpec != null &&
                     device.hasSelectedPairedDevice,
+                rules = rules,
             )
         }
     }.asLiveState()
@@ -225,6 +233,7 @@ class DeviceSettingsViewModel @Inject constructor(
         /** True when a runtime figure CAN be derived for this device (rated model, feature on) —
          * shows the "still determining" placeholder while [batteryHealth] is null. */
         val batteryHealthPending: Boolean = false,
+        val rules: List<DeviceRuleItem> = emptyList(),
     ) {
         val reactions: ReactionConfig get() = device?.reactions ?: ReactionConfig()
     }
@@ -540,6 +549,11 @@ class DeviceSettingsViewModel @Inject constructor(
         batteryEstimator.reset(profileId)
     }
 
+
+    fun navToDeviceRules() {
+        val profileId = targetProfileId.value ?: return
+        navTo(Nav.Main.DeviceRules(profileId = profileId))
+    }
 
     fun navToPressControls() = launch {
         log(TAG, INFO) { "navToPressControls()" }

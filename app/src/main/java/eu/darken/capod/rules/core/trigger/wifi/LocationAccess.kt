@@ -5,9 +5,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.core.content.ContextCompat
-import androidx.core.content.PermissionChecker
 import androidx.core.location.LocationManagerCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import eu.darken.capod.common.debug.logging.log
@@ -72,8 +72,10 @@ class LocationAccess @Inject constructor(
         }
     }
 
+    // Not PermissionChecker: it also checks the app-op, which "While using the app" leaves in
+    // foreground mode, and it reports that as denied even with the permission granted.
     private fun isGranted(permission: String): Boolean =
-        PermissionChecker.checkSelfPermission(context, permission) == PermissionChecker.PERMISSION_GRANTED
+        ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
     companion object {
         private val TAG = logTag("Rules", "LocationAccess")

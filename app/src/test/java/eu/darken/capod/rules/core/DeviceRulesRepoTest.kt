@@ -34,6 +34,7 @@ class DeviceRulesRepoTest : BaseTest() {
         val settings = mockk<DeviceRulesSettings> {
             every { rules } returns storage.mock
             every { notifyProfiles } returns FakeDataStoreValue(NotifyProfiles()).mock
+            every { runStates } returns FakeDataStoreValue(RuleRunStates()).mock
         }
         val repo = DeviceRulesRepo(settings, json)
 

@@ -27,6 +27,13 @@ object Nav {
 
         @Serializable
         data class PressControls(val profileId: String) : Main
+
+        @Serializable
+        data class DeviceRules(val profileId: String) : Main
+
+        /** [ruleId] null adds a rule. */
+        @Serializable
+        data class DeviceRuleEditor(val profileId: String, val ruleId: String? = null) : Main
     }
 
     sealed interface Settings : NavigationDestination {

@@ -27,6 +27,8 @@ data class RuleRunState(
     @SerialName("lastOutcome") val lastOutcome: Outcome? = null,
     @SerialName("lastOutcomeAt") @Serializable(with = InstantEpochMillisSerializer::class)
     val lastOutcomeAt: Instant? = null,
+    /** Why the last run didn't apply, as shown to the user. */
+    @SerialName("lastOutcomeDetail") val lastOutcomeDetail: String? = null,
 ) {
 
     @Serializable

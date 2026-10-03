@@ -13,6 +13,7 @@ import eu.darken.capod.rules.core.trigger.wifi.WifiConnectedHandler
 import eu.darken.capod.rules.core.trigger.wifi.WifiDisconnectedHandler
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.reflect.KClass
 
 /** Finds the handler for a trigger or action by its type. */
 @Singleton
@@ -30,6 +31,10 @@ class RuleHandlers @Inject constructor(
 
     @Suppress("UNCHECKED_CAST")
     fun <T : RuleTrigger> forTrigger(trigger: T): RuleTriggerHandler<T>? = triggers[trigger::class] as RuleTriggerHandler<T>?
+
+    fun forTriggerType(type: KClass<out RuleTrigger>): RuleTriggerHandler<*>? = triggers[type]
+
+    fun forActionType(type: KClass<out RuleAction>): RuleActionHandler<*>? = actions[type]
 
     @Suppress("UNCHECKED_CAST")
     fun <A : RuleAction> forAction(action: A): RuleActionHandler<A>? = actions[action::class] as RuleActionHandler<A>?

@@ -126,7 +126,7 @@ class DeviceRulesEngine @Inject constructor(
         val unavailable = handler.unavailableReason(context, device, rule.action)
         if (unavailable != null) {
             log(TAG, INFO) { "Rule ${rule.id}: ${rule.action} not available: $unavailable" }
-            finish(rule.id, due.pendingSince, RuleRunState.Outcome.NOT_AVAILABLE)
+            finish(rule.id, due.pendingSince, RuleRunState.Outcome.NOT_AVAILABLE, unavailable)
             return
         }
 
@@ -155,7 +155,12 @@ class DeviceRulesEngine @Inject constructor(
      * Ends the occurrence that started at [pendingSince]. A newer occurrence that began while the
      * action ran is left waiting. Returns false if the state moved on.
      */
-    private suspend fun finish(ruleId: RuleId, pendingSince: Instant, outcome: RuleRunState.Outcome?): Boolean {
+    private suspend fun finish(
+        ruleId: RuleId,
+        pendingSince: Instant,
+        outcome: RuleRunState.Outcome?,
+        detail: String? = null,
+    ): Boolean {
         val now = timeSource.now()
         var finished = false
         settings.runStates.update { stored ->
@@ -165,7 +170,7 @@ class DeviceRulesEngine @Inject constructor(
             val updated = if (outcome == null) {
                 state.copy(pendingSince = null)
             } else {
-                state.copy(pendingSince = null, lastOutcome = outcome, lastOutcomeAt = now)
+                state.copy(pendingSince = null, lastOutcome = outcome, lastOutcomeAt = now, lastOutcomeDetail = detail)
             }
             stored.copy(states = stored.states + (ruleId to updated))
         }

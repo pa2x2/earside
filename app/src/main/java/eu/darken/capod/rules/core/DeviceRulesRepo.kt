@@ -87,6 +87,9 @@ class DeviceRulesRepo @Inject constructor(
         raws.toMutableList().apply { add(removed.index.coerceIn(0, size), removed.raw) }
     }
 
+    /** What each rule has seen and done, written by [DeviceRulesEngine]. */
+    val runStates: Flow<Map<RuleId, RuleRunState>> = settings.runStates.flow.map { it.states }.distinctUntilChanged()
+
     val notifyProfiles: Flow<Set<ProfileId>> = settings.notifyProfiles.flow.map { it.profiles }.distinctUntilChanged()
 
     suspend fun setNotify(profileId: ProfileId, enabled: Boolean) {

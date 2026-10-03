@@ -2,6 +2,7 @@ package eu.darken.capod.rules.core.trigger.wifi
 
 import android.content.Context
 import eu.darken.capod.R
+import eu.darken.capod.profiles.core.ProfileId
 import eu.darken.capod.rules.core.RuleTrigger
 import eu.darken.capod.rules.core.trigger.RuleRequirement
 import eu.darken.capod.rules.core.trigger.RuleTriggerHandler
@@ -29,7 +30,7 @@ class WifiConnectedHandler @Inject constructor(
 
     override val missingRequirements: Flow<List<RuleRequirement>> = locationAccess.missing
 
-    override fun condition(trigger: RuleTrigger.WifiConnected): Flow<TriggerCondition> = wifi.state
+    override fun condition(profileId: ProfileId, trigger: RuleTrigger.WifiConnected): Flow<TriggerCondition> = wifi.state
         .map { it.onNetwork(trigger.ssid) }
         .distinctUntilChanged()
 }
@@ -52,7 +53,7 @@ class WifiDisconnectedHandler @Inject constructor(
 
     override val missingRequirements: Flow<List<RuleRequirement>> = locationAccess.missing
 
-    override fun condition(trigger: RuleTrigger.WifiDisconnected): Flow<TriggerCondition> = wifi.state
+    override fun condition(profileId: ProfileId, trigger: RuleTrigger.WifiDisconnected): Flow<TriggerCondition> = wifi.state
         .map { state ->
             when (val on = state.onNetwork(trigger.ssid)) {
                 TriggerCondition.Unknown -> on

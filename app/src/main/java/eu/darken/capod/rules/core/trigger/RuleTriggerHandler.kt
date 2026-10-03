@@ -1,6 +1,7 @@
 package eu.darken.capod.rules.core.trigger
 
 import android.content.Context
+import eu.darken.capod.profiles.core.ProfileId
 import eu.darken.capod.rules.core.RuleTrigger
 import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KClass
@@ -26,8 +27,11 @@ interface RuleTriggerHandler<T : RuleTrigger> {
     /** What the phone still has to allow before this trigger can be observed, in the order to ask for it. */
     val missingRequirements: Flow<List<RuleRequirement>>
 
-    /** Whether [trigger]'s condition holds right now. Emits on every change. */
-    fun condition(trigger: T): Flow<TriggerCondition>
+    /**
+     * Whether [trigger]'s condition holds right now for a rule on [profileId]'s device, so a trigger
+     * can watch that device. Emits on every change.
+     */
+    fun condition(profileId: ProfileId, trigger: T): Flow<TriggerCondition>
 
     /**
      * How long an occurrence may wait for the device before it's dropped; null waits as long as the

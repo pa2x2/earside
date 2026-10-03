@@ -84,7 +84,7 @@ class DeviceRulesEngine @Inject constructor(
         }
         if (!ready) return false
         // The Wi-Fi source debounces a fresh registration for 2 s before its first state.
-        val condition = withTimeoutOrNull(5.seconds) { conditionOf(rule.trigger).first { it is TriggerCondition.Known } }
+        val condition = withTimeoutOrNull(5.seconds) { conditionOf(profileId, rule.trigger).first { it is TriggerCondition.Known } }
         return (condition as? TriggerCondition.Known)?.holds == true
     }
 
@@ -99,13 +99,13 @@ class DeviceRulesEngine @Inject constructor(
     }
 
     private fun observeTriggers(): Flow<Unit> = enabledRules
-        .map { rules -> rules.map { it.rule } }
+        .map { rules -> rules.map { it.profileId to it.rule } }
         .distinctUntilChanged()
         .flatMapLatest { rules ->
             // A disabled or deleted rule forgets what it saw, so enabling it again doesn't fire it.
             // One with undo switched off forgets what to put back, so switching it on again can't
             // restore a value from long ago.
-            val byId = rules.associateBy { it.id }
+            val byId = rules.associate { (_, rule) -> rule.id to rule }
             settings.runStates.update { stored ->
                 val states = stored.states.mapNotNull { (id, state) ->
                     val rule = byId[id] ?: return@mapNotNull null
@@ -116,15 +116,17 @@ class DeviceRulesEngine @Inject constructor(
             if (rules.isEmpty()) return@flatMapLatest emptyFlow()
 
             // Recorded inside, so a removed rule's last observation can't land after the cleanup above.
-            rules.map { rule -> merge(conditionOf(rule.trigger).onEach { record(rule, it) }, dropWhenStale(rule)) }.merge()
+            rules.map { (profileId, rule) ->
+                merge(conditionOf(profileId, rule.trigger).onEach { record(rule, it) }, dropWhenStale(rule))
+            }.merge()
         }
         .map { }
 
     // A rule listed as needing access stays out of play until it has it, even when part of its
     // condition is visible without it (no Wi-Fi at all still shows without location access).
-    private fun <T : RuleTrigger> conditionOf(trigger: T): Flow<TriggerCondition> {
+    private fun <T : RuleTrigger> conditionOf(profileId: ProfileId, trigger: T): Flow<TriggerCondition> {
         val handler = handlers.forTrigger(trigger) ?: return flowOf(TriggerCondition.Unknown)
-        return combine(handler.missingRequirements, handler.condition(trigger)) { missing, condition ->
+        return combine(handler.missingRequirements, handler.condition(profileId, trigger)) { missing, condition ->
             if (missing.isEmpty()) condition else TriggerCondition.Unknown
         }.distinctUntilChanged()
     }

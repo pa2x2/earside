@@ -15,15 +15,18 @@ import eu.darken.capod.common.debug.logging.logTag
 import eu.darken.capod.common.hasApiLevel
 import eu.darken.capod.rules.core.trigger.RuleRequirement
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Android only shares the Wi-Fi name with apps holding precise location access, from the
@@ -36,7 +39,7 @@ class LocationAccess @Inject constructor(
 
     private val recheckTrigger = MutableStateFlow(UUID.randomUUID())
 
-    /** Permissions come back from system dialogs and settings pages without a callback; screens call this on resume. */
+    /** For screens on resume, so a grant shows at once instead of on the next periodic check. */
     fun recheck() {
         recheckTrigger.value = UUID.randomUUID()
     }
@@ -57,7 +60,18 @@ class LocationAccess @Inject constructor(
         awaitClose { context.unregisterReceiver(receiver) }
     }
 
-    val missing: Flow<List<RuleRequirement>> = combine(recheckTrigger, locationModeChanges) { _, _ -> check() }
+    // Android announces location being switched on or off, but not a permission being granted, so
+    // access restored in system settings is only noticed by checking again. Revoking kills the app.
+    private val periodicRecheck: Flow<Unit> = flow {
+        while (true) {
+            emit(Unit)
+            delay(1.minutes)
+        }
+    }
+
+    val missing: Flow<List<RuleRequirement>> = combine(recheckTrigger, locationModeChanges, periodicRecheck) { _, _, _ ->
+        check()
+    }
         .distinctUntilChanged()
         .onEach { log(TAG) { "Missing location requirements: $it" } }
 

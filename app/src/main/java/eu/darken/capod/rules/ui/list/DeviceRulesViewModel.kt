@@ -15,17 +15,21 @@ import eu.darken.capod.rules.core.DeviceRulesRepo
 import eu.darken.capod.rules.core.RemovedRule
 import eu.darken.capod.rules.core.RuleHandlers
 import eu.darken.capod.rules.core.RuleId
+import eu.darken.capod.rules.core.trigger.wifi.LocationAccess
 import eu.darken.capod.rules.ui.DeviceRuleItem
 import eu.darken.capod.rules.ui.DeviceRuleItems
 import eu.darken.capod.rules.ui.RemovedRules
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class DeviceRulesViewModel @Inject constructor(
@@ -35,6 +39,7 @@ class DeviceRulesViewModel @Inject constructor(
     private val handlers: RuleHandlers,
     private val profilesRepo: DeviceProfilesRepo,
     private val removedRules: RemovedRules,
+    private val locationAccess: LocationAccess,
     private val timeSource: TimeSource,
 ) : ViewModel4(dispatcherProvider) {
 
@@ -60,12 +65,21 @@ class DeviceRulesViewModel @Inject constructor(
         val now: Instant,
     )
 
+    // Keeps "Applied 5 minutes ago" current while the list is open.
+    private val clock = flow {
+        while (true) {
+            emit(timeSource.now())
+            delay(30.seconds)
+        }
+    }
+
     val state = profileId.filterNotNull().flatMapLatest { id ->
         combine(
             profilesRepo.profiles.map { profiles -> profiles.firstOrNull { it.id == id } },
             items.observe(id),
             repo.notifyProfiles,
-        ) { profile, rules, notify ->
+            clock,
+        ) { profile, rules, notify, now ->
             val model = profile?.model ?: PodModel.UNKNOWN
             State(
                 deviceLabel = profile?.label.orEmpty(),
@@ -73,13 +87,14 @@ class DeviceRulesViewModel @Inject constructor(
                 rules = rules,
                 notify = id in notify,
                 hasAvailableActions = handlers.allActions.any { it.isSupported(model.features) },
-                now = timeSource.now(),
+                now = now,
             )
         }
     }.asLiveState()
 
-    /** A rule deleted in the editor gets its Undo here, once the list is showing again. */
+    /** Access may have been granted in system settings; a rule deleted in the editor gets its Undo here. */
     fun onResumed() {
+        locationAccess.recheck()
         removedRules.take()?.let { events.tryEmit(Event.RuleRemoved(it)) }
     }
 

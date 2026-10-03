@@ -694,6 +694,7 @@
 
     <string name="rules_status_waiting">Waiting for AirPods to connect</string>
     <string name="rules_status_applied">Applied %1$s</string>
+    <string name="rules_status_applied_just_now">Applied just now</string>
     <string name="rules_status_not_applied">Couldn\'t apply</string>
     <string name="rules_status_not_applied_reason">Couldn\'t apply: %1$s</string>
     <string name="rules_status_needs_access">Needs location access</string>

@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import java.time.Duration
 import java.time.Instant
 import javax.inject.Inject
 
@@ -54,7 +55,11 @@ fun RuleStatus.text(context: Context, now: Instant): String? = when (this) {
     RuleStatus.NeedsAccess -> context.getString(R.string.rules_status_needs_access)
     RuleStatus.LocationOff -> context.getString(R.string.rules_status_location_off)
     RuleStatus.Waiting -> context.getString(R.string.rules_status_waiting)
-    is RuleStatus.Applied -> context.getString(R.string.rules_status_applied, relative(at, now))
+    is RuleStatus.Applied -> if (Duration.between(at, now) < Duration.ofMinutes(1)) {
+        context.getString(R.string.rules_status_applied_just_now)
+    } else {
+        context.getString(R.string.rules_status_applied, relative(at, now))
+    }
     is RuleStatus.CouldNotApply -> detail
         ?.let { context.getString(R.string.rules_status_not_applied_reason, it) }
         ?: context.getString(R.string.rules_status_not_applied)

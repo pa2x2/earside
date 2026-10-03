@@ -3,6 +3,7 @@ package eu.darken.capod.rules.ui.editor
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Hearing
+import androidx.compose.material.icons.twotone.HearingDisabled
 import androidx.compose.material.icons.twotone.Headphones
 import androidx.compose.material3.RadioButton
 import androidx.compose.runtime.Composable
@@ -86,7 +87,7 @@ class SetConversationalAwarenessEditor @Inject constructor() : RuleActionEditor<
             listOf(true, false).forEach { enabled ->
                 ChoiceRow(
                     title = stringResource(if (enabled) R.string.rules_value_on else R.string.rules_value_off),
-                    icon = null,
+                    icon = if (enabled) Icons.TwoTone.Hearing else Icons.TwoTone.HearingDisabled,
                     selected = current?.enabled == enabled,
                     onClick = { onChange(RuleAction.SetConversationalAwareness(enabled)) },
                 )

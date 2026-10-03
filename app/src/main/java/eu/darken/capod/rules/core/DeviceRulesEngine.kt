@@ -75,8 +75,14 @@ class DeviceRulesEngine @Inject constructor(
         }
         .map { }
 
-    private fun <T : RuleTrigger> conditionOf(trigger: T): Flow<TriggerCondition> =
-        handlers.forTrigger(trigger)?.condition(trigger) ?: flowOf(TriggerCondition.Unknown)
+    // A rule listed as needing access stays out of play until it has it, even when part of its
+    // condition is visible without it (no Wi-Fi at all still shows without location access).
+    private fun <T : RuleTrigger> conditionOf(trigger: T): Flow<TriggerCondition> {
+        val handler = handlers.forTrigger(trigger) ?: return flowOf(TriggerCondition.Unknown)
+        return combine(handler.missingRequirements, handler.condition(trigger)) { missing, condition ->
+            if (missing.isEmpty()) condition else TriggerCondition.Unknown
+        }.distinctUntilChanged()
+    }
 
     private suspend fun record(rule: DeviceRule, condition: TriggerCondition) {
         val now = timeSource.now()

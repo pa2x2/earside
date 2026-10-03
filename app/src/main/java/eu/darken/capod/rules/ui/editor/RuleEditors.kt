@@ -85,4 +85,11 @@ abstract class RuleEditorsModule {
     @Binds @IntoSet abstract fun airPodsConnected(editor: AirPodsConnectedEditor): RuleTriggerEditor<*>
     @Binds @IntoSet abstract fun wearing(editor: WearingEditor): RuleTriggerEditor<*>
     @Binds @IntoSet abstract fun batteryLow(editor: BatteryLowEditor): RuleTriggerEditor<*>
+    @Binds @IntoSet abstract fun setVolumeSwipe(editor: SetVolumeSwipeEditor): RuleActionEditor<*>
+    @Binds @IntoSet abstract fun setAdaptiveAudioNoise(editor: SetAdaptiveAudioNoiseEditor): RuleActionEditor<*>
+    @Binds @IntoSet abstract fun setToneVolume(editor: SetToneVolumeEditor): RuleActionEditor<*>
+    @Binds @IntoSet abstract fun setPersonalizedVolume(editor: SetPersonalizedVolumeEditor): RuleActionEditor<*>
+    @Binds @IntoSet abstract fun setNcWithOneAirPod(editor: SetNcWithOneAirPodEditor): RuleActionEditor<*>
+    @Binds @IntoSet abstract fun setMicrophoneMode(editor: SetMicrophoneModeEditor): RuleActionEditor<*>
+    @Binds @IntoSet abstract fun setSleepDetection(editor: SetSleepDetectionEditor): RuleActionEditor<*>
 }

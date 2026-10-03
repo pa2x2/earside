@@ -98,4 +98,36 @@ sealed interface RuleAction {
     @Serializable
     @SerialName("conversation_awareness.set")
     data class SetConversationalAwareness(@SerialName("enabled") val enabled: Boolean) : RuleAction
+
+    @Serializable
+    @SerialName("volume_swipe.set")
+    data class SetVolumeSwipe(@SerialName("enabled") val enabled: Boolean) : RuleAction
+
+    /** [level] is 0..100 as Device Settings shows it, 100 being the most noise reduction. */
+    @Serializable
+    @SerialName("adaptive_audio_noise.set")
+    data class SetAdaptiveAudioNoise(@SerialName("level") val level: Int) : RuleAction
+
+    /** [level] is a percentage, 15..100 like Device Settings' Chime Volume slider. */
+    @Serializable
+    @SerialName("tone_volume.set")
+    data class SetToneVolume(@SerialName("level") val level: Int) : RuleAction
+
+    @Serializable
+    @SerialName("personalized_volume.set")
+    data class SetPersonalizedVolume(@SerialName("enabled") val enabled: Boolean) : RuleAction
+
+    @Serializable
+    @SerialName("nc_one_airpod.set")
+    data class SetNcWithOneAirPod(@SerialName("enabled") val enabled: Boolean) : RuleAction
+
+    @Serializable
+    @SerialName("microphone_mode.set")
+    data class SetMicrophoneMode(
+        @SerialName("mode") val mode: AapSetting.MicrophoneMode.Mode,
+    ) : RuleAction
+
+    @Serializable
+    @SerialName("sleep_detection.set")
+    data class SetSleepDetection(@SerialName("enabled") val enabled: Boolean) : RuleAction
 }

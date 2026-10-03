@@ -28,7 +28,8 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * The one place that changes listening mode and Conversation Awareness on a device. The QS tile,
  * notification, widget, Overview, Device Settings, stem presses and device rules all go through
- * here, so the same control behaves the same whatever triggered it.
+ * here, so the same control behaves the same whatever triggered it. Device rules also change the
+ * other settings they offer through here.
  *
  * Listening mode sends are process-scoped and per device: a new request cancels one that hasn't
  * gone out yet. Without that, surfaces stacked separate `SetAncMode` commands (QS taps across
@@ -114,6 +115,40 @@ class DeviceControls @Inject constructor(
         throw e
     } catch (e: Exception) {
         log(TAG, ERROR) { "SetConversationalAwareness($enabled) failed for $address: ${e.asLog()}" }
+        Result.Failed(e)
+    }
+
+    suspend fun setVolumeSwipe(address: BluetoothAddress, enabled: Boolean): Result =
+        send(address, AapCommand.SetVolumeSwipe(enabled))
+
+    /** [level] 0..100, 100 being the most noise reduction. */
+    suspend fun setAdaptiveAudioNoise(address: BluetoothAddress, level: Int): Result =
+        send(address, AapCommand.SetAdaptiveAudioNoise(level))
+
+    suspend fun setToneVolume(address: BluetoothAddress, level: Int): Result =
+        send(address, AapCommand.SetToneVolume(level))
+
+    suspend fun setPersonalizedVolume(address: BluetoothAddress, enabled: Boolean): Result =
+        send(address, AapCommand.SetPersonalizedVolume(enabled))
+
+    suspend fun setNcWithOneAirPod(address: BluetoothAddress, enabled: Boolean): Result =
+        send(address, AapCommand.SetNcWithOneAirPod(enabled))
+
+    suspend fun setMicrophoneMode(address: BluetoothAddress, mode: AapSetting.MicrophoneMode.Mode): Result =
+        send(address, AapCommand.SetMicrophoneMode(mode))
+
+    suspend fun setSleepDetection(address: BluetoothAddress, enabled: Boolean): Result =
+        send(address, AapCommand.SetSleepDetection(enabled))
+
+    // Like setConversationalAwareness: the AAP queue keeps only the newest command of a type.
+    private suspend fun send(address: BluetoothAddress, command: AapCommand): Result = try {
+        aapManager.sendCommand(address, command)
+        log(TAG, VERBOSE) { "sent $command to $address" }
+        Result.Sent
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        log(TAG, ERROR) { "$command failed for $address: ${e.asLog()}" }
         Result.Failed(e)
     }
 

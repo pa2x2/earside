@@ -795,4 +795,13 @@
     <string name="rules_undo_battery_low">Back to the previous setting once the battery is back to %1$d%%, unless you changed it since</string>
     <string name="rules_battery_threshold_option">%1$d%%</string>
     <string name="rules_battery_low_hint">Goes by the emptiest AirPod you\'re using; ones charging in the case don\'t count. It ends once the battery is back up %1$d%% above this.</string>
+    <string name="rules_action_setting_summary">%1$s: %2$s</string>
+    <string name="rules_action_volume_swipe_label">Set Volume Swipe</string>
+    <string name="rules_action_adaptive_noise_label">Set Adaptive Audio Noise</string>
+    <string name="rules_action_adaptive_noise_hint">Only takes effect in Adaptive listening mode</string>
+    <string name="rules_action_tone_volume_label">Set Chime Volume</string>
+    <string name="rules_action_personalized_volume_label">Set Personalized Volume</string>
+    <string name="rules_action_nc_one_airpod_label">Set ANC with one pod</string>
+    <string name="rules_action_microphone_mode_label">Set Microphone</string>
+    <string name="rules_action_sleep_detection_label">Set Sleep Detection</string>
 </resources>

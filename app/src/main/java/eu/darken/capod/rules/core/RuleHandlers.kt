@@ -8,6 +8,13 @@ import dagger.multibindings.IntoSet
 import eu.darken.capod.rules.core.action.RuleActionHandler
 import eu.darken.capod.rules.core.action.SetAncModeHandler
 import eu.darken.capod.rules.core.action.SetConversationalAwarenessHandler
+import eu.darken.capod.rules.core.action.SetAdaptiveAudioNoiseHandler
+import eu.darken.capod.rules.core.action.SetMicrophoneModeHandler
+import eu.darken.capod.rules.core.action.SetNcWithOneAirPodHandler
+import eu.darken.capod.rules.core.action.SetPersonalizedVolumeHandler
+import eu.darken.capod.rules.core.action.SetSleepDetectionHandler
+import eu.darken.capod.rules.core.action.SetToneVolumeHandler
+import eu.darken.capod.rules.core.action.SetVolumeSwipeHandler
 import eu.darken.capod.rules.core.trigger.RuleTriggerHandler
 import eu.darken.capod.rules.core.trigger.time.TimeWindowHandler
 import eu.darken.capod.rules.core.trigger.phone.DoNotDisturbOnHandler
@@ -59,4 +66,11 @@ abstract class RuleHandlersModule {
     @Binds @IntoSet abstract fun airPodsConnected(handler: AirPodsConnectedHandler): RuleTriggerHandler<*>
     @Binds @IntoSet abstract fun wearing(handler: WearingHandler): RuleTriggerHandler<*>
     @Binds @IntoSet abstract fun batteryLow(handler: BatteryLowHandler): RuleTriggerHandler<*>
+    @Binds @IntoSet abstract fun setVolumeSwipe(handler: SetVolumeSwipeHandler): RuleActionHandler<*>
+    @Binds @IntoSet abstract fun setAdaptiveAudioNoise(handler: SetAdaptiveAudioNoiseHandler): RuleActionHandler<*>
+    @Binds @IntoSet abstract fun setToneVolume(handler: SetToneVolumeHandler): RuleActionHandler<*>
+    @Binds @IntoSet abstract fun setPersonalizedVolume(handler: SetPersonalizedVolumeHandler): RuleActionHandler<*>
+    @Binds @IntoSet abstract fun setNcWithOneAirPod(handler: SetNcWithOneAirPodHandler): RuleActionHandler<*>
+    @Binds @IntoSet abstract fun setMicrophoneMode(handler: SetMicrophoneModeHandler): RuleActionHandler<*>
+    @Binds @IntoSet abstract fun setSleepDetection(handler: SetSleepDetectionHandler): RuleActionHandler<*>
 }

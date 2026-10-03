@@ -3,7 +3,6 @@ package eu.darken.capod.rules.core
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import eu.darken.capod.common.TimeSource
-import eu.darken.capod.common.bluetooth.BluetoothAddress
 import eu.darken.capod.common.datastore.value
 import eu.darken.capod.common.debug.logging.Logging.Priority.INFO
 import eu.darken.capod.common.debug.logging.Logging.Priority.VERBOSE
@@ -14,6 +13,7 @@ import eu.darken.capod.monitor.core.DeviceMonitor
 import eu.darken.capod.monitor.core.PodDevice
 import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.profiles.core.ProfileId
+import eu.darken.capod.rules.core.action.RuleActionHandler
 import eu.darken.capod.rules.core.trigger.TriggerCondition
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -39,8 +39,9 @@ import kotlin.time.toKotlinDuration
 /**
  * Runs device rules while the monitor service runs. Two loops share the persisted [RuleRunState]s:
  * one folds every trigger change into them ([observe]), the other runs the rules that are waiting
- * once their device has a ready AAP session. Keeping them apart means a trigger change is recorded
- * even while the AirPods are away, and the rule runs whenever they come back, unless its trigger's
+ * once their actions are ready to run on their device ([RuleActionHandler.isReady]). Keeping them
+ * apart means a trigger change is recorded even while the AirPods are away, and the rule runs
+ * whenever they come back, unless its trigger's
  * [maxWait][eu.darken.capod.rules.core.trigger.RuleTriggerHandler.maxWait] runs out first.
  */
 @Singleton
@@ -70,13 +71,16 @@ class DeviceRulesEngine @Inject constructor(
     fun monitor(): Flow<Unit> = merge(observeTriggers(), runDueRules())
 
     /**
-     * Whether [rule]'s condition holds right now and its device has a ready AAP session, so
+     * Whether [rule]'s condition holds right now and its actions are ready to run on its device, so
      * [applyNow] would run it at once. A saved or re-enabled rule otherwise waits for the next
      * occurrence, since the first observation never starts one.
      */
     suspend fun canApplyNow(profileId: ProfileId, rule: DeviceRule): Boolean {
         if (!rule.enabled) return false
-        val ready = deviceMonitor.devices.first().any { it.profileId == profileId && it.isAapReady && it.address != null }
+        val actionHandlers = rule.actions.map { handlers.forAction(it) ?: return false }
+        val ready = deviceMonitor.devices.first().any { device ->
+            device.profileId == profileId && actionHandlers.all { it.isReady(device) }
+        }
         if (!ready) return false
         // The Wi-Fi source debounces a fresh registration for 2 s before its first state.
         val condition = withTimeoutOrNull(5.seconds) { conditionOf(rule.trigger).first { it is TriggerCondition.Known } }
@@ -150,20 +154,22 @@ class DeviceRulesEngine @Inject constructor(
         deviceMonitor.devices,
     ) { rules, runStates, devices ->
         val now = timeSource.now()
-        val ready = devices
-            .filter { it.isAapReady && it.address != null }
-            .mapNotNull { device -> device.profileId?.let { it to device } }
-            .toMap()
+        val targets = mutableMapOf<RuleId, PodDevice>()
         rules
             .mapNotNull { active ->
-                if (active.profileId !in ready) return@mapNotNull null
                 val since = runStates.states[active.rule.id]?.pendingSince ?: return@mapNotNull null
                 // dropWhenStale may not have caught up yet, e.g. right after a restart.
                 if (waitEnd(active.rule.trigger, since)?.let { it <= now } == true) return@mapNotNull null
+                val device = devices.firstOrNull { device ->
+                    // Without a handler there's nothing to wait for; runAction() then records the failure.
+                    device.profileId == active.profileId &&
+                        active.rule.actions.all { handlers.forAction(it)?.isReady(device) != false }
+                } ?: return@mapNotNull null
+                targets[active.rule.id] = device
                 DueRule(active.profileId, active.index, active.rule, since)
             }
             .inRunOrder()
-            .map { it to ready.getValue(it.profileId) }
+            .map { it to targets.getValue(it.rule.id) }
     }
         .conflate()
         .onEach { due -> due.forEach { (rule, device) -> run(rule, device) } }
@@ -171,19 +177,12 @@ class DeviceRulesEngine @Inject constructor(
 
     private suspend fun run(due: DueRule, device: PodDevice) {
         val rule = due.rule
-        val address = device.address
-        if (address == null) {
-            log(TAG, WARN) { "Rule ${rule.id}: no address for ${device.profileId}" }
-            finish(rule.id, due.pendingSince, RuleRunState.Outcome.FAILED)
-            return
-        }
-
-        log(TAG, INFO) { "Rule ${rule.id}: running on $address (pending since ${due.pendingSince})" }
+        log(TAG, INFO) { "Rule ${rule.id}: running on ${device.address} (pending since ${due.pendingSince})" }
         val results = mutableListOf<ActionResult>()
         for (action in rule.actions) {
             // An earlier rule or action took time; the occurrence may have ended or been handled.
             if (settings.runStates.value().states[rule.id]?.pendingSince != due.pendingSince) return
-            results += runAction(rule.id, action, device, address)
+            results += runAction(rule.id, action, device)
         }
         val (outcome, detail) = results.outcome()
         log(TAG, if (outcome == RuleRunState.Outcome.FAILED) WARN else VERBOSE) { "Rule ${rule.id}: outcome $outcome" }
@@ -207,7 +206,6 @@ class DeviceRulesEngine @Inject constructor(
         ruleId: RuleId,
         action: RuleAction,
         device: PodDevice,
-        address: BluetoothAddress,
     ): ActionResult {
         val handler = handlers.forAction(action)
         if (handler == null) {
@@ -223,7 +221,7 @@ class DeviceRulesEngine @Inject constructor(
 
         log(TAG, INFO) { "Rule $ruleId: running $action" }
         val summary = handler.summary(context, action)
-        return when (handler.execute(address, action)) {
+        return when (handler.execute(device, action)) {
             DeviceControls.Result.Sent -> ActionResult.Applied(summary)
             DeviceControls.Result.Superseded -> ActionResult.Superseded
             is DeviceControls.Result.Failed -> ActionResult.Failed(summary)

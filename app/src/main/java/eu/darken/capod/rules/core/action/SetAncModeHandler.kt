@@ -2,7 +2,6 @@ package eu.darken.capod.rules.core.action
 
 import android.content.Context
 import eu.darken.capod.R
-import eu.darken.capod.common.bluetooth.BluetoothAddress
 import eu.darken.capod.main.ui.components.shortLabel
 import eu.darken.capod.monitor.core.PodDevice
 import eu.darken.capod.monitor.core.controls.DeviceControls
@@ -19,6 +18,8 @@ class SetAncModeHandler @Inject constructor(
 
     override fun isSupported(features: PodModel.Features): Boolean = features.hasAncControl
 
+    override fun isReady(device: PodDevice): Boolean = device.isAapReady && device.address != null
+
     override fun summary(context: Context, action: RuleAction.SetAncMode): String =
         context.getString(R.string.rules_action_anc_summary, action.mode.shortLabel(context))
 
@@ -28,6 +29,6 @@ class SetAncModeHandler @Inject constructor(
         return context.getString(R.string.rules_action_anc_unavailable_mode, action.mode.shortLabel(context))
     }
 
-    override suspend fun execute(address: BluetoothAddress, action: RuleAction.SetAncMode): DeviceControls.Result =
-        deviceControls.setAncMode(address, action.mode).await()
+    override suspend fun execute(device: PodDevice, action: RuleAction.SetAncMode): DeviceControls.Result =
+        deviceControls.setAncMode(device.address!!, action.mode).await()
 }

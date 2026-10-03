@@ -1,7 +1,6 @@
 package eu.darken.capod.rules.core.action
 
 import android.content.Context
-import eu.darken.capod.common.bluetooth.BluetoothAddress
 import eu.darken.capod.monitor.core.PodDevice
 import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.pods.core.apple.PodModel
@@ -22,9 +21,18 @@ interface RuleActionHandler<A : RuleAction> {
     /** E.g. "Listening mode: Off". */
     fun summary(context: Context, action: A): String
 
+    /**
+     * Whether the action can run against [device] now. A waiting rule runs as soon as this holds, so
+     * an action that needs an AAP session waits for one, and one that only touches the phone doesn't.
+     */
+    fun isReady(device: PodDevice): Boolean
+
     /** Why [device] can't take [action] right now, or null if it can. Checked just before running. */
     fun unavailableReason(context: Context, device: PodDevice, action: A): String?
 
-    /** Must go through [DeviceControls], so a rule changes a setting exactly like the other controls do. */
-    suspend fun execute(address: BluetoothAddress, action: A): DeviceControls.Result
+    /**
+     * Only called once [isReady] holds for [device]. Device settings must go through [DeviceControls],
+     * so a rule changes a setting exactly like the other controls do.
+     */
+    suspend fun execute(device: PodDevice, action: A): DeviceControls.Result
 }

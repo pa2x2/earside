@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.Label
+import androidx.compose.material.icons.automirrored.twotone.Undo
 import androidx.compose.material.icons.twotone.Close
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material3.AlertDialog
@@ -47,6 +48,7 @@ import eu.darken.capod.common.navigation.NavigationEventHandler
 import eu.darken.capod.common.settings.InfoBoxType
 import eu.darken.capod.common.settings.SettingsInfoBox
 import eu.darken.capod.common.settings.SettingsSection
+import eu.darken.capod.common.settings.SettingsSwitchItem
 import eu.darken.capod.rules.core.RuleAction
 import eu.darken.capod.rules.core.RuleTrigger
 import eu.darken.capod.rules.ui.RuleRequirementSteps
@@ -79,6 +81,7 @@ fun RuleEditorScreenHost(
         onTrigger = { vm.setTrigger(it) },
         onActionType = { vm.toggleActionType(it) },
         onAction = { type, action -> vm.setAction(type, action) },
+        onUndoWhenEnds = { vm.setUndoWhenEnds(it) },
         onName = { vm.setName(it) },
         onRequirementReturned = { vm.recheckRequirements() },
         onSave = { vm.save() },
@@ -95,6 +98,7 @@ fun RuleEditorScreen(
     onTrigger: (RuleTrigger?) -> Unit,
     onActionType: (KClass<out RuleAction>) -> Unit,
     onAction: (KClass<out RuleAction>, RuleAction?) -> Unit,
+    onUndoWhenEnds: (Boolean) -> Unit,
     onName: (String) -> Unit,
     onRequirementReturned: () -> Unit,
     onSave: () -> Unit,
@@ -168,6 +172,13 @@ fun RuleEditorScreen(
             Spacer(Modifier.height(8.dp))
             ThenSection(state, onActionType, onAction)
             Conflicts(state.conflicts)
+            SettingsSwitchItem(
+                icon = Icons.AutoMirrored.TwoTone.Undo,
+                title = stringResource(R.string.rules_undo_label),
+                subtitle = state.undoText ?: stringResource(R.string.rules_undo_description),
+                checked = state.draft.undoWhenEnds,
+                onCheckedChange = onUndoWhenEnds,
+            )
             NameField(initial = state.draft.name, onName = onName)
         }
     }

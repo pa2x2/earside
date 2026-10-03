@@ -23,6 +23,8 @@ data class DeviceRule(
     @SerialName("trigger") val trigger: RuleTrigger,
     /** Run in this order. Never empty, and at most one of each type, so they never fight each other. */
     @SerialName("actions") val actions: List<RuleAction>,
+    /** Put back the values [actions] replaced once the trigger's condition stops holding. */
+    @SerialName("undo") val undoWhenEnds: Boolean = false,
 )
 
 @Serializable

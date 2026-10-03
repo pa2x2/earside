@@ -27,6 +27,12 @@ class SetConversationalAwarenessHandler @Inject constructor(
         action: RuleAction.SetConversationalAwareness,
     ): String? = null
 
+    override fun current(
+        device: PodDevice,
+        action: RuleAction.SetConversationalAwareness,
+    ): RuleAction.SetConversationalAwareness? =
+        device.conversationalAwareness?.let { RuleAction.SetConversationalAwareness(it.enabled) }
+
     override suspend fun execute(
         device: PodDevice,
         action: RuleAction.SetConversationalAwareness,

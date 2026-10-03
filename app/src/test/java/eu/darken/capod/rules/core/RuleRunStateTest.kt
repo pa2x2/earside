@@ -69,6 +69,39 @@ class RuleRunStateTest : BaseTest() {
     }
 
     @Test
+    fun `leaving starts a restore only after the rule changed something`() {
+        val off = RuleAction.SetAncMode(AapSetting.AncMode.Value.OFF)
+        val transparency = RuleAction.SetAncMode(AapSetting.AncMode.Value.TRANSPARENCY)
+        val arrived = null.observe(home, Known(false), t1).observe(home, Known(true, "wifi:100"), t1)
+
+        // Left before the AirPods connected: the rule never ran, so there's nothing to put back.
+        arrived.observe(home, Known(false), t2).restoreSince shouldBe null
+
+        val ran = arrived.applied().copy(restore = listOfNotNull(null.forRun(off, current = transparency)))
+        ran.observe(home, Known(false), t2).restoreSince shouldBe t2
+    }
+
+    @Test
+    fun `rejoining before the restore went out keeps the value from before the rule`() {
+        val off = RuleAction.SetAncMode(AapSetting.AncMode.Value.OFF)
+        val transparency = RuleAction.SetAncMode(AapSetting.AncMode.Value.TRANSPARENCY)
+        val ran = null.observe(home, Known(false), t1).observe(home, Known(true, "wifi:100"), t1)
+            .applied()
+            .copy(restore = listOfNotNull(null.forRun(off, current = transparency)))
+
+        // Left and came back while the AirPods were away, so the restore never ran.
+        val back = ran.observe(home, Known(false), t2).observe(home, Known(true, "wifi:101"), t3)
+        back.restoreSince shouldBe null
+        back.pendingSince shouldBe t3
+
+        // The device still has the rule's value; that's not what to go back to.
+        back.restore.single().forRun(off, current = off) shouldBe RuleRunState.Restore(set = off, previous = transparency)
+        // Changed by hand in between: that choice is what comes back next time.
+        val adaptive = RuleAction.SetAncMode(AapSetting.AncMode.Value.ADAPTIVE)
+        back.restore.single().forRun(off, current = adaptive) shouldBe RuleRunState.Restore(set = off, previous = adaptive)
+    }
+
+    @Test
     fun `waiting rules run in the order their events happened, then in list order`() {
         fun due(index: Int, since: Instant) = DueRule(
             profileId = "p1",

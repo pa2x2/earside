@@ -13,6 +13,7 @@ import eu.darken.capod.rules.core.RuleEntry
 import eu.darken.capod.rules.core.RuleHandlers
 import eu.darken.capod.rules.core.RuleId
 import eu.darken.capod.rules.core.RuleRunState
+import eu.darken.capod.rules.core.RuleTrigger
 import eu.darken.capod.rules.core.trigger.RuleRequirement
 import eu.darken.capod.rules.ui.editor.RuleEditors
 import kotlinx.coroutines.flow.Flow
@@ -129,4 +130,6 @@ class DeviceRuleItems @Inject constructor(
     fun actionSummary(action: RuleAction): String = handlers.forAction(action)?.summary(context, action).orEmpty()
 
     fun holdsNowText(rule: DeviceRule): String = handlers.forTrigger(rule.trigger)?.holdsNowText(context, rule.trigger).orEmpty()
+
+    fun undoText(trigger: RuleTrigger): String? = handlers.forTrigger(trigger)?.undoText(context, trigger)
 }

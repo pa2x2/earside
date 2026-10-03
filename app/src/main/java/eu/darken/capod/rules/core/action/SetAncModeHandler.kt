@@ -29,6 +29,9 @@ class SetAncModeHandler @Inject constructor(
         return context.getString(R.string.rules_action_anc_unavailable_mode, action.mode.shortLabel(context))
     }
 
+    override fun current(device: PodDevice, action: RuleAction.SetAncMode): RuleAction.SetAncMode? =
+        device.ancMode?.let { RuleAction.SetAncMode(it.current) }
+
     override suspend fun execute(device: PodDevice, action: RuleAction.SetAncMode): DeviceControls.Result =
         deviceControls.setAncMode(device.address!!, action.mode).await()
 }

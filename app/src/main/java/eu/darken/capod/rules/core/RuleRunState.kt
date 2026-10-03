@@ -15,6 +15,8 @@ import java.time.Instant
  * occurrence id (rejoined the network). The rule then waits until the device can take the action
  * (no longer than [RuleTriggerHandler.maxWait][eu.darken.capod.rules.core.trigger.RuleTriggerHandler.maxWait]),
  * runs once, and stays quiet until the next occurrence; a manual change in between is left alone.
+ * With [DeviceRule.undoWhenEnds], the end of the occurrence likewise waits for the device and then
+ * puts back what the rule replaced.
  */
 @Serializable
 data class RuleRunState(
@@ -33,7 +35,22 @@ data class RuleRunState(
     val lastOutcomeAt: Instant? = null,
     /** Why the last run didn't apply in full, as shown to the user. */
     @SerialName("lastOutcomeDetail") val lastOutcomeDetail: String? = null,
+    /** What the last run replaced, at most one per action, until it's put back. */
+    @SerialName("restore") val restore: List<Restore> = emptyList(),
+    /** When the condition ended, while [restore] waits for the device. */
+    @SerialName("restoreSince") @Serializable(with = InstantEpochMillisSerializer::class)
+    val restoreSince: Instant? = null,
 ) {
+
+    /**
+     * [previous] goes back only while the device still has [set]: a change by hand or by another
+     * rule since then stands.
+     */
+    @Serializable
+    data class Restore(
+        @SerialName("set") val set: RuleAction,
+        @SerialName("previous") val previous: RuleAction,
+    )
 
     @Serializable
     data class ObservedCondition(
@@ -56,17 +73,34 @@ fun RuleRunState?.observe(trigger: RuleTrigger, condition: TriggerCondition, now
     if (condition !is TriggerCondition.Known) return current
 
     val previous = current.observed
-    val pendingSince = when {
-        !condition.holds -> null
-        previous == null -> current.pendingSince
-        !previous.holds -> now
-        condition.occurrence != null && condition.occurrence != previous.occurrence -> now
-        else -> current.pendingSince
-    }
+    val started = previous != null && condition.holds &&
+        (!previous.holds || condition.occurrence != null && condition.occurrence != previous.occurrence)
+    val ended = previous?.holds == true && !condition.holds
     return current.copy(
         observed = RuleRunState.ObservedCondition(condition.holds, condition.occurrence),
-        pendingSince = pendingSince,
+        pendingSince = when {
+            !condition.holds -> null
+            started -> now
+            else -> current.pendingSince
+        },
+        restoreSince = when {
+            // Back before the device took the restore, so the rule's value is wanted again.
+            started -> null
+            ended && current.restore.isNotEmpty() -> now
+            else -> current.restoreSince
+        },
     )
+}
+
+/**
+ * What to put back after [action] is applied to a device whose setting is [current], or null if
+ * nothing is (value unknown, or already [action]). A restore that never ran is carried over:
+ * otherwise a rule running again in between would record its own value as the one to go back to.
+ */
+fun RuleRunState.Restore?.forRun(action: RuleAction, current: RuleAction?): RuleRunState.Restore? = when {
+    this != null && current == set -> copy(set = action)
+    current == null || current == action -> null
+    else -> RuleRunState.Restore(set = action, previous = current)
 }
 
 data class DueRule(
@@ -74,7 +108,10 @@ data class DueRule(
     /** Position in the device's rule list. */
     val index: Int,
     val rule: DeviceRule,
+    /** For a [restore], when the condition ended. */
     val pendingSince: Instant,
+    /** Puts back [RuleRunState.restore] instead of running the rule's actions. */
+    val restore: Boolean = false,
 )
 
 /**

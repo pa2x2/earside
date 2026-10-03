@@ -663,6 +663,7 @@
     <string name="rules_notification_channel_label">Device rules</string>
     <string name="rules_notification_title">%1$s: rule applied</string>
     <string name="rules_notification_title_named">%1$s: “%2$s” applied</string>
+    <string name="rules_notification_restored">Undone · %1$s</string>
     <string name="rules_title">Device rules</string>
     <string name="rules_entry_description">Change settings automatically, e.g. when you join a Wi-Fi network</string>
     <plurals name="rules_entry_count">
@@ -718,6 +719,10 @@
     <string name="rules_apply_now_action">Apply now</string>
     <string name="rules_apply_now_wifi_connected">You\'re on %1$s now</string>
     <string name="rules_apply_now_wifi_disconnected">You\'re not on %1$s now</string>
+    <string name="rules_undo_label">Undo when this ends</string>
+    <string name="rules_undo_description">Back to the previous setting when the event ends, unless you changed it since</string>
+    <string name="rules_undo_wifi_connected">Back to the previous setting when you leave %1$s, unless you changed it since</string>
+    <string name="rules_undo_wifi_disconnected">Back to the previous setting when you\'re on %1$s again, unless you changed it since</string>
 
     <string name="rules_trigger_wifi_connected_label">Phone joins a Wi-Fi network</string>
     <string name="rules_trigger_wifi_disconnected_label">Phone leaves a Wi-Fi network</string>

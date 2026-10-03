@@ -2,6 +2,7 @@ package eu.darken.capod.rules.core
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import eu.darken.capod.R
 import eu.darken.capod.common.TimeSource
 import eu.darken.capod.common.datastore.value
 import eu.darken.capod.common.debug.logging.Logging.Priority.INFO
@@ -93,7 +94,7 @@ class DeviceRulesEngine @Inject constructor(
         log(TAG, INFO) { "Rule ${rule.id}: applying now ($now)" }
         settings.runStates.update { stored ->
             val state = stored.states[rule.id]?.takeIf { it.trigger == rule.trigger } ?: RuleRunState(rule.trigger)
-            stored.copy(states = stored.states + (rule.id to state.copy(pendingSince = now)))
+            stored.copy(states = stored.states + (rule.id to state.copy(pendingSince = now, restoreSince = null)))
         }
     }
 
@@ -102,8 +103,16 @@ class DeviceRulesEngine @Inject constructor(
         .distinctUntilChanged()
         .flatMapLatest { rules ->
             // A disabled or deleted rule forgets what it saw, so enabling it again doesn't fire it.
-            val ids = rules.map { it.id }.toSet()
-            settings.runStates.update { it.copy(states = it.states.filterKeys { id -> id in ids }) }
+            // One with undo switched off forgets what to put back, so switching it on again can't
+            // restore a value from long ago.
+            val byId = rules.associateBy { it.id }
+            settings.runStates.update { stored ->
+                val states = stored.states.mapNotNull { (id, state) ->
+                    val rule = byId[id] ?: return@mapNotNull null
+                    id to if (rule.undoWhenEnds) state else state.copy(restore = emptyList(), restoreSince = null)
+                }
+                stored.copy(states = states.toMap())
+            }
             if (rules.isEmpty()) return@flatMapLatest emptyFlow()
 
             // Recorded inside, so a removed rule's last observation can't land after the cleanup above.
@@ -125,9 +134,14 @@ class DeviceRulesEngine @Inject constructor(
         val (old, new) = settings.runStates.update { stored ->
             stored.copy(states = stored.states + (rule.id to stored.states[rule.id].observe(rule.trigger, condition, now)))
         }
-        val before = old.states[rule.id]?.pendingSince
-        val after = new.states[rule.id]?.pendingSince
-        if (before != after) log(TAG, INFO) { "Rule ${rule.id} ($condition): pending $before -> $after" }
+        val before = old.states[rule.id]
+        val after = new.states[rule.id]
+        if (before?.pendingSince != after?.pendingSince) {
+            log(TAG, INFO) { "Rule ${rule.id} ($condition): pending ${before?.pendingSince} -> ${after?.pendingSince}" }
+        }
+        if (before?.restoreSince != after?.restoreSince) {
+            log(TAG, INFO) { "Rule ${rule.id} ($condition): restore ${before?.restoreSince} -> ${after?.restoreSince}" }
+        }
     }
 
     /** When an occurrence of [trigger] that started at [since] stops waiting; null if it waits as long as its condition holds. */
@@ -154,52 +168,123 @@ class DeviceRulesEngine @Inject constructor(
         deviceMonitor.devices,
     ) { rules, runStates, devices ->
         val now = timeSource.now()
-        val targets = mutableMapOf<RuleId, PodDevice>()
-        rules
-            .mapNotNull { active ->
-                val since = runStates.states[active.rule.id]?.pendingSince ?: return@mapNotNull null
-                // dropWhenStale may not have caught up yet, e.g. right after a restart.
-                if (waitEnd(active.rule.trigger, since)?.let { it <= now } == true) return@mapNotNull null
-                val device = devices.firstOrNull { device ->
-                    // Without a handler there's nothing to wait for; runAction() then records the failure.
-                    device.profileId == active.profileId &&
-                        active.rule.actions.all { handlers.forAction(it)?.isReady(device) != false }
-                } ?: return@mapNotNull null
-                targets[active.rule.id] = device
-                DueRule(active.profileId, active.index, active.rule, since)
+        val due = rules
+            .flatMap { active ->
+                val state = runStates.states[active.rule.id] ?: return@flatMap emptyList()
+                // Without a handler there's nothing to wait for; the run then records the failure.
+                fun readyDevice(actions: List<RuleAction>) = devices.firstOrNull { device ->
+                    device.profileId == active.profileId && actions.all { handlers.forAction(it)?.isReady(device) != false }
+                }
+
+                val run = state.pendingSince
+                    // dropWhenStale may not have caught up yet, e.g. right after a restart.
+                    ?.takeUnless { since -> waitEnd(active.rule.trigger, since)?.let { it <= now } == true }
+                    ?.let { since ->
+                        readyDevice(active.rule.actions)?.let { DueRule(active.profileId, active.index, active.rule, since) to it }
+                    }
+                // A restore waits until the device has reported each setting; without it, there's no
+                // telling whether the rule's value is still in place.
+                val restore = state.restoreSince?.let { since ->
+                    readyDevice(state.restore.map { it.previous })
+                        ?.takeIf { device -> state.restore.all { currentOf(device, it.set) != null } }
+                        ?.let { DueRule(active.profileId, active.index, active.rule, since, restore = true) to it }
+                }
+                listOfNotNull(run, restore)
             }
-            .inRunOrder()
-            .map { it to targets.getValue(it.rule.id) }
+            .toMap()
+        due.keys.toList().inRunOrder().map { it to due.getValue(it) }
     }
         .conflate()
-        .onEach { due -> due.forEach { (rule, device) -> run(rule, device) } }
+        .onEach { due -> due.forEach { (rule, device) -> if (rule.restore) restore(rule, device) else run(rule, device) } }
         .map { }
+
+    private fun currentOf(device: PodDevice, action: RuleAction): RuleAction? =
+        handlers.forAction(action)?.current(device, action)
 
     private suspend fun run(due: DueRule, device: PodDevice) {
         val rule = due.rule
         log(TAG, INFO) { "Rule ${rule.id}: running on ${device.address} (pending since ${due.pendingSince})" }
         val results = mutableListOf<ActionResult>()
+        val restore = mutableListOf<RuleRunState.Restore>()
         for (action in rule.actions) {
             // An earlier rule or action took time; the occurrence may have ended or been handled.
-            if (settings.runStates.value().states[rule.id]?.pendingSince != due.pendingSince) return
-            results += runAction(rule.id, action, device)
+            val state = settings.runStates.value().states[rule.id]
+            if (state?.pendingSince != due.pendingSince) return
+            // Read before running, so it's the value the action replaces.
+            val current = if (rule.undoWhenEnds) currentOf(device, action) else null
+            val result = runAction(rule.id, action, device)
+            results += result
+            if (rule.undoWhenEnds) {
+                // An action that didn't apply replaced nothing; any unfinished restore for it stays.
+                val unfinished = state.restore.firstOrNull { it.set::class == action::class }
+                val next = if (result is ActionResult.Applied) unfinished.forRun(action, current) else unfinished
+                next?.let { restore += it }
+            }
         }
         val (outcome, detail) = results.outcome()
         log(TAG, if (outcome == RuleRunState.Outcome.FAILED) WARN else VERBOSE) { "Rule ${rule.id}: outcome $outcome" }
 
-        if (!finish(rule.id, due.pendingSince, outcome, detail)) return
+        if (!finish(rule.id, due.pendingSince, outcome, detail, restore.takeIf { rule.undoWhenEnds })) return
         val applied = results.filterIsInstance<ActionResult.Applied>()
         // Also when another action didn't apply: the notice is about the settings that did change.
-        if (applied.isNotEmpty() && due.profileId in repo.notifyProfiles.first()) {
-            val triggerSummary = handlers.forTrigger(rule.trigger)?.summary(context, rule.trigger).orEmpty()
-            notifications.showApplied(
-                profileId = due.profileId,
-                deviceLabel = device.label ?: device.getLabel(context),
-                ruleName = rule.name,
-                actionSummary = applied.joinToString(", ") { it.summary },
-                triggerSummary = triggerSummary,
-            )
+        if (applied.isNotEmpty()) notifyIfWanted(due, device, applied.joinToString(", ") { it.summary })
+    }
+
+    private suspend fun restore(due: DueRule, device: PodDevice) {
+        val rule = due.rule
+        val restores = settings.runStates.value().states[rule.id]
+            ?.takeIf { it.restoreSince == due.pendingSince }
+            ?.restore
+            ?: return
+        val restored = mutableListOf<String>()
+        for (restore in restores) {
+            // Back on the trigger before every setting went back: the rule's values are wanted again.
+            if (settings.runStates.value().states[rule.id]?.restoreSince != due.pendingSince) return
+            val handler = handlers.forAction(restore.previous)
+            val current = handler?.current(device, restore.set)
+            val unavailable = handler?.unavailableReason(context, device, restore.previous)
+            when {
+                handler == null -> log(TAG, WARN) { "Rule ${rule.id}: no handler to restore ${restore.previous}" }
+                current != restore.set -> log(TAG, INFO) {
+                    "Rule ${rule.id}: setting changed since ($current), not restoring ${restore.previous}"
+                }
+                unavailable != null -> log(TAG, INFO) { "Rule ${rule.id}: ${restore.previous} not available: $unavailable" }
+                else -> {
+                    log(TAG, INFO) {
+                        "Rule ${rule.id}: restoring ${restore.previous} on ${device.address} (ended at ${due.pendingSince})"
+                    }
+                    val result = handler.execute(device, restore.previous)
+                    log(TAG, if (result is DeviceControls.Result.Failed) WARN else VERBOSE) { "Rule ${rule.id}: restore $result" }
+                    if (result == DeviceControls.Result.Sent) restored += handler.summary(context, restore.previous)
+                }
+            }
         }
+        if (finishRestore(rule.id, due.pendingSince) && restored.isNotEmpty()) {
+            notifyIfWanted(due, device, context.getString(R.string.rules_notification_restored, restored.joinToString(", ")))
+        }
+    }
+
+    /** Ends the restore that started at [restoreSince], whatever came of it; one try only, like a run. */
+    private suspend fun finishRestore(ruleId: RuleId, restoreSince: Instant): Boolean {
+        var finished = false
+        settings.runStates.update { stored ->
+            val state = stored.states[ruleId]
+            if (state?.restoreSince != restoreSince) return@update stored
+            finished = true
+            stored.copy(states = stored.states + (ruleId to state.copy(restore = emptyList(), restoreSince = null)))
+        }
+        return finished
+    }
+
+    private suspend fun notifyIfWanted(due: DueRule, device: PodDevice, actionSummary: String) {
+        if (due.profileId !in repo.notifyProfiles.first()) return
+        notifications.showApplied(
+            profileId = due.profileId,
+            deviceLabel = device.label ?: device.getLabel(context),
+            ruleName = due.rule.name,
+            actionSummary = actionSummary,
+            triggerSummary = handlers.forTrigger(due.rule.trigger)?.summary(context, due.rule.trigger).orEmpty(),
+        )
     }
 
     private suspend fun runAction(
@@ -230,13 +315,15 @@ class DeviceRulesEngine @Inject constructor(
 
     /**
      * Ends the occurrence that started at [pendingSince]. A newer occurrence that began while the
-     * actions ran is left waiting. Returns false if the state moved on.
+     * actions ran is left waiting. Returns false if the state moved on. [restore], if given, replaces
+     * the stored one.
      */
     private suspend fun finish(
         ruleId: RuleId,
         pendingSince: Instant,
         outcome: RuleRunState.Outcome?,
         detail: String? = null,
+        restore: List<RuleRunState.Restore>? = null,
     ): Boolean {
         val now = timeSource.now()
         var finished = false
@@ -249,7 +336,7 @@ class DeviceRulesEngine @Inject constructor(
             } else {
                 state.copy(pendingSince = null, lastOutcome = outcome, lastOutcomeAt = now, lastOutcomeDetail = detail)
             }
-            stored.copy(states = stored.states + (ruleId to updated))
+            stored.copy(states = stored.states + (ruleId to updated.copy(restore = restore ?: state.restore)))
         }
         return finished
     }

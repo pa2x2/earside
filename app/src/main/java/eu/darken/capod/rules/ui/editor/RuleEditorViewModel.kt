@@ -53,6 +53,7 @@ class RuleEditorViewModel @Inject constructor(
         val trigger: RuleTrigger? = null,
         /** The chosen action types; a value is null while that action's settings are incomplete. */
         val actions: Map<KClass<out RuleAction>, RuleAction?> = emptyMap(),
+        val undoWhenEnds: Boolean = false,
         val name: String = "",
     )
 
@@ -79,6 +80,8 @@ class RuleEditorViewModel @Inject constructor(
         val missing: List<RuleRequirement>,
         /** Actions of other rules on the same event that set one of this rule's settings to something else. */
         val conflicts: List<String>,
+        /** Null until the trigger is complete. */
+        val undoText: String?,
         val hasChanges: Boolean,
     ) {
         val canSave: Boolean
@@ -106,6 +109,7 @@ class RuleEditorViewModel @Inject constructor(
                     triggerType = it.trigger::class,
                     trigger = it.trigger,
                     actions = it.actions.associateBy { action -> action::class },
+                    undoWhenEnds = it.undoWhenEnds,
                     name = it.name.orEmpty(),
                 )
             } ?: Draft()
@@ -138,6 +142,7 @@ class RuleEditorViewModel @Inject constructor(
                 },
                 missing = missing,
                 conflicts = conflicts(draft, s.original, entries),
+                undoText = draft.trigger?.let { items.undoText(it) },
                 hasChanges = draft.normalized() != s.initial.normalized(),
             )
         }
@@ -186,6 +191,8 @@ class RuleEditorViewModel @Inject constructor(
         if (type in draft.actions) draft.copy(actions = draft.actions + (type to action)) else draft
     }
 
+    fun setUndoWhenEnds(enabled: Boolean) = updateDraft { it.copy(undoWhenEnds = enabled) }
+
     fun setName(name: String) = updateDraft { it.copy(name = name) }
 
     fun recheckRequirements() = locationAccess.recheck()
@@ -199,9 +206,11 @@ class RuleEditorViewModel @Inject constructor(
         val actions = editors.actions.mapNotNull { s.draft.actions[it.type] }
         val name = s.draft.name.trim().takeIf { it.isNotEmpty() }
         val saved = if (s.original == null) {
-            DeviceRule(name = name, trigger = trigger, actions = actions).also { repo.addRule(s.profileId, it) }
+            DeviceRule(name = name, trigger = trigger, actions = actions, undoWhenEnds = s.draft.undoWhenEnds)
+                .also { repo.addRule(s.profileId, it) }
         } else {
-            s.original.copy(name = name, trigger = trigger, actions = actions).also { repo.updateRule(s.profileId, it) }
+            s.original.copy(name = name, trigger = trigger, actions = actions, undoWhenEnds = s.draft.undoWhenEnds)
+                .also { repo.updateRule(s.profileId, it) }
         }
         results.offer(RuleEditorResults.Result.Saved(s.profileId, saved.id))
         navUp()

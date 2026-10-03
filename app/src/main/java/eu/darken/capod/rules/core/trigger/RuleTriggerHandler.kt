@@ -20,6 +20,9 @@ interface RuleTriggerHandler<T : RuleTrigger> {
     /** E.g. "You're on Home now", offering to apply a rule whose condition already holds. */
     fun holdsNowText(context: Context, trigger: T): String
 
+    /** E.g. "Back to the previous setting when you leave Home", explaining undo for this trigger. */
+    fun undoText(context: Context, trigger: T): String
+
     /** What the phone still has to allow before this trigger can be observed, in the order to ask for it. */
     val missingRequirements: Flow<List<RuleRequirement>>
 

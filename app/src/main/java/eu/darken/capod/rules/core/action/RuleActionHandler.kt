@@ -31,6 +31,12 @@ interface RuleActionHandler<A : RuleAction> {
     fun unavailableReason(context: Context, device: PodDevice, action: A): String?
 
     /**
+     * The device's current value of the setting [action] changes, as the action that sets it; null
+     * while the device hasn't reported it.
+     */
+    fun current(device: PodDevice, action: A): A?
+
+    /**
      * Only called once [isReady] holds for [device]. Device settings must go through [DeviceControls],
      * so a rule changes a setting exactly like the other controls do.
      */

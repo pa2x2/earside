@@ -8,7 +8,7 @@ import java.util.UUID
 typealias RuleId = String
 
 /**
- * One "when [trigger], do [action]" rule, owned by a device profile.
+ * One "when [trigger], do [actions]" rule, owned by a device profile.
  *
  * Rules are pure data. What a trigger or action does lives in its handler, looked up by type, so a
  * new trigger or action is a new subclass plus a handler; the engine, storage and screens don't
@@ -18,10 +18,11 @@ typealias RuleId = String
 data class DeviceRule(
     @SerialName("id") val id: RuleId = UUID.randomUUID().toString(),
     @SerialName("enabled") val enabled: Boolean = true,
-    /** Optional label; without one the rule is described by its trigger and action. */
+    /** Optional label; without one the rule is described by its trigger and actions. */
     @SerialName("name") val name: String? = null,
     @SerialName("trigger") val trigger: RuleTrigger,
-    @SerialName("action") val action: RuleAction,
+    /** Run in this order. Never empty, and at most one of each type, so they never fight each other. */
+    @SerialName("actions") val actions: List<RuleAction>,
 )
 
 @Serializable

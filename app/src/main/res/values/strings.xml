@@ -687,7 +687,7 @@
     <string name="rules_notify_description">Show a notification each time one of this device\'s rules changes a setting</string>
     <string name="rules_section_label">Rules</string>
     <string name="rules_empty_title">No rules yet</string>
-    <string name="rules_empty_description">Rules change a setting when something happens on your phone, like joining your home Wi-Fi. If your AirPods aren\'t connected then, the rule applies when they connect. You can still change the setting yourself afterwards.</string>
+    <string name="rules_empty_description">Rules change settings when something happens on your phone, like joining your home Wi-Fi. If your AirPods aren\'t connected then, the rule applies when they connect. You can still change the settings yourself afterwards.</string>
     <string name="rules_add_action">Add rule</string>
     <string name="rules_delete_action">Delete</string>
     <string name="rules_removed_message">Rule deleted</string>

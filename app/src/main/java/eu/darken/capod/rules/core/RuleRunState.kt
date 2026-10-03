@@ -31,7 +31,7 @@ data class RuleRunState(
     @SerialName("lastOutcome") val lastOutcome: Outcome? = null,
     @SerialName("lastOutcomeAt") @Serializable(with = InstantEpochMillisSerializer::class)
     val lastOutcomeAt: Instant? = null,
-    /** Why the last run didn't apply, as shown to the user. */
+    /** Why the last run didn't apply in full, as shown to the user. */
     @SerialName("lastOutcomeDetail") val lastOutcomeDetail: String? = null,
 ) {
 
@@ -44,7 +44,7 @@ data class RuleRunState(
     @Serializable
     enum class Outcome {
         @SerialName("applied") APPLIED,
-        /** The device couldn't take the action, e.g. the mode isn't in its listening-mode cycle. */
+        /** The device couldn't take an action, e.g. the mode isn't in its listening-mode cycle. */
         @SerialName("not_available") NOT_AVAILABLE,
         @SerialName("failed") FAILED,
     }
@@ -82,3 +82,40 @@ data class DueRule(
  * would have ended up with had they been connected all along. Same moment: list order.
  */
 fun List<DueRule>.inRunOrder(): List<DueRule> = sortedWith(compareBy({ it.pendingSince }, { it.index }))
+
+/** What running one of a rule's actions came to. */
+sealed interface ActionResult {
+    data class Applied(val summary: String) : ActionResult
+
+    /** Someone changed the setting while the rule's request waited; their choice stands. */
+    data object Superseded : ActionResult
+
+    data class NotAvailable(val reason: String) : ActionResult
+
+    /** [summary] is null when the action has no handler. */
+    data class Failed(val summary: String?) : ActionResult
+}
+
+data class RunOutcome(val outcome: RuleRunState.Outcome?, val detail: String?)
+
+/**
+ * A rule counts as applied only if every action it ran was taken; the detail names those that
+ * weren't. A superseded action counts neither way, so a rule whose actions were all superseded keeps
+ * its last outcome.
+ */
+fun List<ActionResult>.outcome(): RunOutcome {
+    val outcome = when {
+        any { it is ActionResult.Failed } -> RuleRunState.Outcome.FAILED
+        any { it is ActionResult.NotAvailable } -> RuleRunState.Outcome.NOT_AVAILABLE
+        any { it is ActionResult.Applied } -> RuleRunState.Outcome.APPLIED
+        else -> null
+    }
+    val detail = mapNotNull {
+        when (it) {
+            is ActionResult.NotAvailable -> it.reason
+            is ActionResult.Failed -> it.summary
+            else -> null
+        }
+    }
+    return RunOutcome(outcome, detail.joinToString(" · ").ifEmpty { null })
+}

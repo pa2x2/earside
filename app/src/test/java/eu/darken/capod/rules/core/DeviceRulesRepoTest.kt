@@ -18,12 +18,12 @@ class DeviceRulesRepoTest : BaseTest() {
     private val json = SerializationModule().json()
 
     private val futureRule =
-        """{"id":"future","enabled":true,"trigger":{"type":"location.arrived","place":"Gym"},"action":{"type":"anc.set","mode":"ON"}}"""
+        """{"id":"future","enabled":true,"trigger":{"type":"location.arrived","place":"Gym"},"actions":[{"type":"anc.set","mode":"ON"}]}"""
 
     // This version's stored format, plus a rule whose trigger only a newer version knows.
     private val stored = """
         {"profiles":{"p1":[
-          {"id":"known","enabled":true,"trigger":{"type":"wifi.connected","ssid":"Home"},"action":{"type":"anc.set","mode":"OFF"}},
+          {"id":"known","enabled":true,"trigger":{"type":"wifi.connected","ssid":"Home"},"actions":[{"type":"anc.set","mode":"OFF"}]},
           $futureRule
         ]}}
     """
@@ -43,7 +43,7 @@ class DeviceRulesRepoTest : BaseTest() {
             DeviceRule(
                 id = "known",
                 trigger = RuleTrigger.WifiConnected("Home"),
-                action = RuleAction.SetAncMode(AapSetting.AncMode.Value.OFF),
+                actions = listOf(RuleAction.SetAncMode(AapSetting.AncMode.Value.OFF)),
             )
         )
         entries[1].shouldBeInstanceOf<RuleEntry.Unsupported>().id shouldBe "future"

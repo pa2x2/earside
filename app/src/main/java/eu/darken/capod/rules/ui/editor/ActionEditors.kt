@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Headphones
 import androidx.compose.material.icons.twotone.Hearing
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -128,5 +129,24 @@ internal fun ChoiceRow(
         onClick = onClick,
         enabled = enabled,
         trailingContent = { RadioButton(selected = selected, onClick = onClick, enabled = enabled) },
+    )
+}
+
+@Composable
+internal fun CheckRow(
+    title: String,
+    icon: ImageVector?,
+    checked: Boolean,
+    onClick: () -> Unit,
+    subtitle: String? = null,
+    enabled: Boolean = true,
+) {
+    SettingsBaseItem(
+        title = title,
+        subtitle = subtitle,
+        icon = icon,
+        onClick = onClick,
+        enabled = enabled,
+        trailingContent = { Checkbox(checked = checked, onCheckedChange = { onClick() }, enabled = enabled) },
     )
 }

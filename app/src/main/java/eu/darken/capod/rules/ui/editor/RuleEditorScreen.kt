@@ -77,8 +77,8 @@ fun RuleEditorScreenHost(
         onDelete = { vm.delete() },
         onTriggerType = { vm.selectTriggerType(it) },
         onTrigger = { vm.setTrigger(it) },
-        onActionType = { vm.selectActionType(it) },
-        onAction = { vm.setAction(it) },
+        onActionType = { vm.toggleActionType(it) },
+        onAction = { type, action -> vm.setAction(type, action) },
         onName = { vm.setName(it) },
         onRequirementReturned = { vm.recheckRequirements() },
         onSave = { vm.save() },
@@ -94,7 +94,7 @@ fun RuleEditorScreen(
     onTriggerType: (KClass<out RuleTrigger>) -> Unit,
     onTrigger: (RuleTrigger?) -> Unit,
     onActionType: (KClass<out RuleAction>) -> Unit,
-    onAction: (RuleAction?) -> Unit,
+    onAction: (KClass<out RuleAction>, RuleAction?) -> Unit,
     onName: (String) -> Unit,
     onRequirementReturned: () -> Unit,
     onSave: () -> Unit,
@@ -206,29 +206,30 @@ private fun WhenSection(
 private fun ThenSection(
     state: RuleEditorViewModel.State,
     onActionType: (KClass<out RuleAction>) -> Unit,
-    onAction: (RuleAction?) -> Unit,
+    onAction: (KClass<out RuleAction>, RuleAction?) -> Unit,
 ) {
     SettingsSection(title = stringResource(R.string.rules_editor_then_section)) {
         state.actionOptions.forEachIndexed { index, option ->
             if (index > 0) HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             val editor = option.editor
-            val selected = state.draft.actionType == editor.type
-            ChoiceRow(
+            val checked = editor.type in state.draft.actions
+            CheckRow(
                 title = stringResource(editor.label),
                 subtitle = if (option.supported) null else stringResource(R.string.rules_action_not_supported, state.model.label),
                 icon = editor.icon,
-                selected = selected,
-                enabled = option.supported,
+                checked = checked,
+                // A rule saved before the model changed can still drop the action it no longer supports.
+                enabled = option.supported || checked,
                 onClick = { onActionType(editor.type) },
             )
-            if (selected) {
+            if (checked) {
                 editor as RuleActionEditor<RuleAction>
                 key(editor.type) {
                     editor.Settings(
-                        current = state.draft.action?.takeIf { editor.type.isInstance(it) },
+                        current = state.draft.actions[editor.type],
                         model = state.model,
                         device = state.device,
-                        onChange = onAction,
+                        onChange = { onAction(editor.type, it) },
                     )
                 }
             }

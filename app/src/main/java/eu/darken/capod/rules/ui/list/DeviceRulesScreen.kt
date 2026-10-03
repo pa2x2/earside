@@ -19,6 +19,7 @@ import androidx.compose.material.icons.twotone.Add
 import androidx.compose.material.icons.twotone.AutoMode
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Headphones
+import androidx.compose.material.icons.twotone.Hearing
 import androidx.compose.material.icons.twotone.Notifications
 import androidx.compose.material.icons.twotone.Upgrade
 import androidx.compose.material.icons.twotone.Wifi
@@ -75,6 +76,7 @@ import eu.darken.capod.rules.core.RuleAction
 import eu.darken.capod.rules.core.RuleId
 import eu.darken.capod.rules.core.RuleTrigger
 import eu.darken.capod.rules.ui.DeviceRuleItem
+import eu.darken.capod.rules.ui.DeviceRuleLine
 import eu.darken.capod.rules.ui.RuleRequirementSteps
 import eu.darken.capod.rules.ui.RuleStatus
 import eu.darken.capod.rules.ui.text
@@ -332,12 +334,14 @@ private fun RuleRow(
                 style = if (rule.name == null) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.bodyMedium,
                 alpha = contentAlpha * if (rule.name == null) 1f else 0.7f,
             )
-            RuleLine(
-                icon = item.thenIcon,
-                text = item.thenText,
-                style = MaterialTheme.typography.bodyMedium,
-                alpha = contentAlpha * 0.7f,
-            )
+            item.thenLines.forEach { line ->
+                RuleLine(
+                    icon = line.icon,
+                    text = line.text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    alpha = contentAlpha * 0.7f,
+                )
+            }
             item.status.text(context, now)?.let {
                 Text(
                     text = it,
@@ -458,11 +462,14 @@ private fun DeviceRulesScreenPreview() = PreviewWrapper {
     val named = DeviceRule(
         name = "At home",
         trigger = RuleTrigger.WifiConnected("Home"),
-        action = RuleAction.SetAncMode(AapSetting.AncMode.Value.OFF),
+        actions = listOf(
+            RuleAction.SetAncMode(AapSetting.AncMode.Value.TRANSPARENCY),
+            RuleAction.SetConversationalAwareness(enabled = true),
+        ),
     )
     val unnamed = DeviceRule(
         trigger = RuleTrigger.WifiDisconnected("Home"),
-        action = RuleAction.SetAncMode(AapSetting.AncMode.Value.ON),
+        actions = listOf(RuleAction.SetAncMode(AapSetting.AncMode.Value.ON)),
     )
     DeviceRulesScreen(
         state = DeviceRulesViewModel.State(
@@ -474,8 +481,10 @@ private fun DeviceRulesScreenPreview() = PreviewWrapper {
                     rule = named,
                     whenText = "When connected to Home",
                     whenIcon = Icons.TwoTone.Wifi,
-                    thenText = "Listening mode: Off",
-                    thenIcon = Icons.TwoTone.Headphones,
+                    thenLines = listOf(
+                        DeviceRuleLine(Icons.TwoTone.Headphones, "Listening mode: Transparency"),
+                        DeviceRuleLine(Icons.TwoTone.Hearing, "Conversation Awareness: On"),
+                    ),
                     status = RuleStatus.Applied(Instant.now().minusSeconds(300)),
                 ),
                 DeviceRuleItem(
@@ -483,8 +492,7 @@ private fun DeviceRulesScreenPreview() = PreviewWrapper {
                     rule = unnamed,
                     whenText = "When disconnected from Home",
                     whenIcon = Icons.TwoTone.WifiOff,
-                    thenText = "Listening mode: ANC",
-                    thenIcon = Icons.TwoTone.Headphones,
+                    thenLines = listOf(DeviceRuleLine(Icons.TwoTone.Headphones, "Listening mode: ANC")),
                     status = RuleStatus.Waiting,
                 ),
             ),

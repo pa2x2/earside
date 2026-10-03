@@ -3,6 +3,7 @@ package eu.darken.capod.rules.core
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import eu.darken.capod.common.TimeSource
+import eu.darken.capod.common.bluetooth.BluetoothAddress
 import eu.darken.capod.common.datastore.value
 import eu.darken.capod.common.debug.logging.Logging.Priority.INFO
 import eu.darken.capod.common.debug.logging.Logging.Priority.VERBOSE
@@ -170,49 +171,68 @@ class DeviceRulesEngine @Inject constructor(
 
     private suspend fun run(due: DueRule, device: PodDevice) {
         val rule = due.rule
-        // An earlier rule in this batch took time; the occurrence may have ended or been handled.
-        if (settings.runStates.value().states[rule.id]?.pendingSince != due.pendingSince) return
-
-        val handler = handlers.forAction(rule.action)
         val address = device.address
-        if (handler == null || address == null) {
-            log(TAG, WARN) { "Rule ${rule.id}: no handler or address for ${rule.action}" }
+        if (address == null) {
+            log(TAG, WARN) { "Rule ${rule.id}: no address for ${device.profileId}" }
             finish(rule.id, due.pendingSince, RuleRunState.Outcome.FAILED)
             return
         }
 
-        val unavailable = handler.unavailableReason(context, device, rule.action)
-        if (unavailable != null) {
-            log(TAG, INFO) { "Rule ${rule.id}: ${rule.action} not available: $unavailable" }
-            finish(rule.id, due.pendingSince, RuleRunState.Outcome.NOT_AVAILABLE, unavailable)
-            return
+        log(TAG, INFO) { "Rule ${rule.id}: running on $address (pending since ${due.pendingSince})" }
+        val results = mutableListOf<ActionResult>()
+        for (action in rule.actions) {
+            // An earlier rule or action took time; the occurrence may have ended or been handled.
+            if (settings.runStates.value().states[rule.id]?.pendingSince != due.pendingSince) return
+            results += runAction(rule.id, action, device, address)
         }
-
-        log(TAG, INFO) { "Rule ${rule.id}: running ${rule.action} on $address (pending since ${due.pendingSince})" }
-        val outcome = when (val result = handler.execute(address, rule.action)) {
-            DeviceControls.Result.Sent -> RuleRunState.Outcome.APPLIED
-            // Someone changed the setting while the rule's request waited; their choice stands.
-            DeviceControls.Result.Superseded -> null
-            is DeviceControls.Result.Failed -> RuleRunState.Outcome.FAILED
-        }
+        val (outcome, detail) = results.outcome()
         log(TAG, if (outcome == RuleRunState.Outcome.FAILED) WARN else VERBOSE) { "Rule ${rule.id}: outcome $outcome" }
 
-        if (!finish(rule.id, due.pendingSince, outcome)) return
-        if (outcome == RuleRunState.Outcome.APPLIED && due.profileId in repo.notifyProfiles.first()) {
+        if (!finish(rule.id, due.pendingSince, outcome, detail)) return
+        val applied = results.filterIsInstance<ActionResult.Applied>()
+        // Also when another action didn't apply: the notice is about the settings that did change.
+        if (applied.isNotEmpty() && due.profileId in repo.notifyProfiles.first()) {
             val triggerSummary = handlers.forTrigger(rule.trigger)?.summary(context, rule.trigger).orEmpty()
             notifications.showApplied(
                 profileId = due.profileId,
                 deviceLabel = device.label ?: device.getLabel(context),
                 ruleName = rule.name,
-                actionSummary = handler.summary(context, rule.action),
+                actionSummary = applied.joinToString(", ") { it.summary },
                 triggerSummary = triggerSummary,
             )
         }
     }
 
+    private suspend fun runAction(
+        ruleId: RuleId,
+        action: RuleAction,
+        device: PodDevice,
+        address: BluetoothAddress,
+    ): ActionResult {
+        val handler = handlers.forAction(action)
+        if (handler == null) {
+            log(TAG, WARN) { "Rule $ruleId: no handler for $action" }
+            return ActionResult.Failed(null)
+        }
+
+        val unavailable = handler.unavailableReason(context, device, action)
+        if (unavailable != null) {
+            log(TAG, INFO) { "Rule $ruleId: $action not available: $unavailable" }
+            return ActionResult.NotAvailable(unavailable)
+        }
+
+        log(TAG, INFO) { "Rule $ruleId: running $action" }
+        val summary = handler.summary(context, action)
+        return when (handler.execute(address, action)) {
+            DeviceControls.Result.Sent -> ActionResult.Applied(summary)
+            DeviceControls.Result.Superseded -> ActionResult.Superseded
+            is DeviceControls.Result.Failed -> ActionResult.Failed(summary)
+        }
+    }
+
     /**
      * Ends the occurrence that started at [pendingSince]. A newer occurrence that began while the
-     * action ran is left waiting. Returns false if the state moved on.
+     * actions ran is left waiting. Returns false if the state moved on.
      */
     private suspend fun finish(
         ruleId: RuleId,

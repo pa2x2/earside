@@ -7,6 +7,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import eu.darken.capod.R
 import eu.darken.capod.profiles.core.ProfileId
 import eu.darken.capod.rules.core.DeviceRule
+import eu.darken.capod.rules.core.RuleAction
 import eu.darken.capod.rules.core.DeviceRulesRepo
 import eu.darken.capod.rules.core.RuleEntry
 import eu.darken.capod.rules.core.RuleHandlers
@@ -68,14 +69,16 @@ fun RuleStatus.text(context: Context, now: Instant): String? = when (this) {
 private fun relative(at: Instant, now: Instant): CharSequence =
     DateUtils.getRelativeTimeSpanString(at.toEpochMilli(), now.toEpochMilli(), DateUtils.MINUTE_IN_MILLIS)
 
+data class DeviceRuleLine(val icon: ImageVector?, val text: String)
+
 data class DeviceRuleItem(
     val id: RuleId,
     /** Null for a rule saved by a newer Earside; it can only be deleted. */
     val rule: DeviceRule?,
     val whenText: String = "",
     val whenIcon: ImageVector? = null,
-    val thenText: String = "",
-    val thenIcon: ImageVector? = null,
+    /** One per action, in run order. */
+    val thenLines: List<DeviceRuleLine> = emptyList(),
     val status: RuleStatus = RuleStatus.None,
     /** What the phone still has to allow for this rule's trigger. */
     val missing: List<RuleRequirement> = emptyList(),
@@ -114,8 +117,7 @@ class DeviceRuleItems @Inject constructor(
                 rule = rule,
                 whenText = triggerSummary(rule),
                 whenIcon = editors.forTrigger(rule.trigger::class)?.icon,
-                thenText = actionSummary(rule),
-                thenIcon = editors.forAction(rule.action::class)?.icon,
+                thenLines = rule.actions.map { DeviceRuleLine(editors.forAction(it::class)?.icon, actionSummary(it)) },
                 status = ruleStatus(rule, states[id], missingHere),
                 missing = missingHere,
             )
@@ -124,7 +126,7 @@ class DeviceRuleItems @Inject constructor(
 
     fun triggerSummary(rule: DeviceRule): String = handlers.forTrigger(rule.trigger)?.summary(context, rule.trigger).orEmpty()
 
-    fun actionSummary(rule: DeviceRule): String = handlers.forAction(rule.action)?.summary(context, rule.action).orEmpty()
+    fun actionSummary(action: RuleAction): String = handlers.forAction(action)?.summary(context, action).orEmpty()
 
     fun holdsNowText(rule: DeviceRule): String = handlers.forTrigger(rule.trigger)?.holdsNowText(context, rule.trigger).orEmpty()
 }

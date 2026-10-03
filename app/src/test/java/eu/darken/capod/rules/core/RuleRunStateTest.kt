@@ -76,7 +76,7 @@ class RuleRunStateTest : BaseTest() {
             rule = DeviceRule(
                 id = "r$index",
                 trigger = home,
-                action = RuleAction.SetAncMode(AapSetting.AncMode.Value.OFF),
+                actions = listOf(RuleAction.SetAncMode(AapSetting.AncMode.Value.OFF)),
             ),
             pendingSince = since,
         )
@@ -84,5 +84,24 @@ class RuleRunStateTest : BaseTest() {
         val order = listOf(due(0, t2), due(1, t1), due(3, t1), due(2, t1)).inRunOrder().map { it.index }
 
         order shouldBe listOf(1, 2, 3, 0)
+    }
+
+    @Test
+    fun `a rule is applied only if each of its actions was taken, and names the ones that were not`() {
+        val mixed = listOf(
+            ActionResult.Applied("Conversation Awareness: On"),
+            ActionResult.NotAvailable("Adaptive isn't enabled in Listening modes"),
+            ActionResult.Failed("Volume: 30%"),
+        ).outcome()
+        mixed shouldBe RunOutcome(
+            RuleRunState.Outcome.FAILED,
+            "Adaptive isn't enabled in Listening modes · Volume: 30%",
+        )
+
+        listOf(ActionResult.Applied("Listening mode: Off"), ActionResult.Superseded).outcome() shouldBe
+            RunOutcome(RuleRunState.Outcome.APPLIED, null)
+
+        // The user changed every setting while the rule waited: no new outcome, the last one stays.
+        listOf(ActionResult.Superseded, ActionResult.Superseded).outcome() shouldBe RunOutcome(null, null)
     }
 }

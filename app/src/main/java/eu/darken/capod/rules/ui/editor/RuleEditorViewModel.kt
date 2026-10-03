@@ -51,8 +51,8 @@ class RuleEditorViewModel @Inject constructor(
         val triggerType: KClass<out RuleTrigger>? = null,
         /** Null while the trigger's settings are incomplete. */
         val trigger: RuleTrigger? = null,
-        val actionType: KClass<out RuleAction>? = null,
-        val action: RuleAction? = null,
+        /** The chosen action types; a value is null while that action's settings are incomplete. */
+        val actions: Map<KClass<out RuleAction>, RuleAction?> = emptyMap(),
         val name: String = "",
     )
 
@@ -77,11 +77,15 @@ class RuleEditorViewModel @Inject constructor(
         val actionOptions: List<ActionOption>,
         /** Still missing for the chosen trigger type. */
         val missing: List<RuleRequirement>,
-        /** Other rules on the same event that set the same setting to something else. */
+        /** Actions of other rules on the same event that set one of this rule's settings to something else. */
         val conflicts: List<String>,
         val hasChanges: Boolean,
     ) {
-        val canSave: Boolean get() = draft.trigger != null && draft.action != null && missing.isEmpty()
+        val canSave: Boolean
+            get() = draft.trigger != null &&
+                draft.actions.isNotEmpty() &&
+                draft.actions.values.none { it == null } &&
+                missing.isEmpty()
     }
 
     private val session = MutableStateFlow<Session?>(null)
@@ -101,8 +105,7 @@ class RuleEditorViewModel @Inject constructor(
                 Draft(
                     triggerType = it.trigger::class,
                     trigger = it.trigger,
-                    actionType = it.action::class,
-                    action = it.action,
+                    actions = it.actions.associateBy { action -> action::class },
                     name = it.name.orEmpty(),
                 )
             } ?: Draft()
@@ -143,12 +146,18 @@ class RuleEditorViewModel @Inject constructor(
     // Rules on different events never run together; on the same event, the same value is harmless.
     private fun conflicts(draft: Draft, original: DeviceRule?, entries: List<RuleEntry>): List<String> {
         val trigger = draft.trigger ?: return emptyList()
-        val action = draft.action ?: return emptyList()
+        val actions = draft.actions.values.filterNotNull()
         return entries
             .mapNotNull { (it as? RuleEntry.Known)?.rule }
             .filter { it.id != original?.id && it.enabled && it.trigger == trigger }
-            .filter { it.action::class == action::class && it.action != action }
-            .map { other -> other.name?.let { "$it: ${items.actionSummary(other)}" } ?: items.actionSummary(other) }
+            .flatMap { other ->
+                other.actions
+                    .filter { theirs -> actions.any { it::class == theirs::class && it != theirs } }
+                    .map { theirs ->
+                        val summary = items.actionSummary(theirs)
+                        other.name?.let { "$it: $summary" } ?: summary
+                    }
+            }
     }
 
     private fun Draft.normalized() = copy(name = name.trim())
@@ -163,14 +172,19 @@ class RuleEditorViewModel @Inject constructor(
 
     fun setTrigger(trigger: RuleTrigger?) = updateDraft { it.copy(trigger = trigger) }
 
-    fun selectActionType(type: KClass<out RuleAction>) = launch {
-        if (session.value?.draft?.actionType == type) return@launch
+    fun toggleActionType(type: KClass<out RuleAction>) = launch {
+        if (session.value?.draft?.actions?.containsKey(type) == true) {
+            updateDraft { it.copy(actions = it.actions - type) }
+            return@launch
+        }
         val current = state.first()
         val initial = editors.forAction(type)?.initial(current.model, current.device)
-        updateDraft { it.copy(actionType = type, action = initial) }
+        updateDraft { it.copy(actions = it.actions + (type to initial)) }
     }
 
-    fun setAction(action: RuleAction?) = updateDraft { it.copy(action = action) }
+    fun setAction(type: KClass<out RuleAction>, action: RuleAction?) = updateDraft { draft ->
+        if (type in draft.actions) draft.copy(actions = draft.actions + (type to action)) else draft
+    }
 
     fun setName(name: String) = updateDraft { it.copy(name = name) }
 
@@ -181,12 +195,13 @@ class RuleEditorViewModel @Inject constructor(
         val current = state.first()
         if (!current.canSave) return@launch
         val trigger = s.draft.trigger ?: return@launch
-        val action = s.draft.action ?: return@launch
+        // In the order the editor lists them.
+        val actions = editors.actions.mapNotNull { s.draft.actions[it.type] }
         val name = s.draft.name.trim().takeIf { it.isNotEmpty() }
         val saved = if (s.original == null) {
-            DeviceRule(name = name, trigger = trigger, action = action).also { repo.addRule(s.profileId, it) }
+            DeviceRule(name = name, trigger = trigger, actions = actions).also { repo.addRule(s.profileId, it) }
         } else {
-            s.original.copy(name = name, trigger = trigger, action = action).also { repo.updateRule(s.profileId, it) }
+            s.original.copy(name = name, trigger = trigger, actions = actions).also { repo.updateRule(s.profileId, it) }
         }
         results.offer(RuleEditorResults.Result.Saved(s.profileId, saved.id))
         navUp()

@@ -18,12 +18,17 @@ import eu.darken.capod.rules.core.RuleTrigger
 import eu.darken.capod.rules.core.trigger.RuleRequirement
 import eu.darken.capod.rules.core.trigger.RuleTriggerHandler
 import eu.darken.capod.rules.core.trigger.TriggerCondition
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import java.time.Duration
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -32,6 +37,8 @@ import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 import java.util.Locale
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.toKotlinDuration
 
 class TimeWindowHandler @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -65,10 +72,13 @@ class TimeWindowHandler @Inject constructor(
 
     /**
      * Checked again whenever the wall clock may have crossed an edge of the window: when the time or
-     * time zone is changed, and on an alarm for the next edge. Not a coroutine delay: that runs on a
-     * clock that stops in deep sleep, so a delay from 14:00 to 22:00 can end hours late. The alarm is
-     * a non-wakeup one on the wall clock, delivered the next time the phone is awake after the edge.
-     * Each collection sets its own listener alarm, so rules can't replace one another's.
+     * time zone is changed, and at the next edge, by two timers. A coroutine delay is on time while
+     * the phone is awake, but runs on a clock that stops in deep sleep, so a delay from 14:00 to
+     * 22:00 can end hours late. A non-wakeup alarm on the wall clock covers that: it's delivered the
+     * next time the phone is awake after the edge. Without exact-alarm access it may come up to
+     * [ALARM_WINDOW] late, and a plain `set()` alarm up to three quarters of its lead time late, which
+     * missed a three-minute window entirely on a Pixel. Each collection sets its own listener alarm,
+     * so rules can't replace one another's.
      */
     override fun condition(profileId: ProfileId, trigger: RuleTrigger.TimeWindow): Flow<TriggerCondition> = flow {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
@@ -85,15 +95,26 @@ class TimeWindowHandler @Inject constructor(
         }
         ContextCompat.registerReceiver(context, clockChanges, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
         try {
-            recheck.trySend(Unit)
-            for (unused in recheck) {
-                val now = ZonedDateTime.ofInstant(timeSource.now(), ZoneId.systemDefault())
-                val condition = trigger.conditionAt(now)
-                val next = trigger.nextEdge(now)
-                log(TAG) { "$trigger at $now: $condition, next check at $next" }
-                // Replaces this listener's previous alarm.
-                next?.let { alarmManager.set(AlarmManager.RTC, it.toInstant().toEpochMilli(), TAG, alarm, null) }
-                emit(condition)
+            coroutineScope {
+                var awakeTimer: Job? = null
+                recheck.trySend(Unit)
+                for (unused in recheck) {
+                    val now = ZonedDateTime.ofInstant(timeSource.now(), ZoneId.systemDefault())
+                    val condition = trigger.conditionAt(now)
+                    val next = trigger.nextEdge(now)?.toInstant()
+                    log(TAG) { "$trigger at $now: $condition, next check at $next" }
+                    awakeTimer?.cancel()
+                    if (next != null) {
+                        // Replaces this listener's previous alarm.
+                        val windowMs = ALARM_WINDOW.inWholeMilliseconds
+                        alarmManager.setWindow(AlarmManager.RTC, next.toEpochMilli(), windowMs, TAG, alarm, null)
+                        awakeTimer = launch {
+                            delay(Duration.between(timeSource.now(), next).toKotlinDuration())
+                            recheck.trySend(Unit)
+                        }
+                    }
+                    emit(condition)
+                }
             }
         } finally {
             alarmManager.cancel(alarm)
@@ -103,6 +124,9 @@ class TimeWindowHandler @Inject constructor(
 
     companion object {
         private val TAG = logTag("Rules", "TimeWindow")
+
+        /** The shortest window Android 12+ grants an alarm without exact-alarm access. */
+        private val ALARM_WINDOW = 10.minutes
     }
 }
 

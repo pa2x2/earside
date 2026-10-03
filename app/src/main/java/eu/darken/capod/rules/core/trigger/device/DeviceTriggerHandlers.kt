@@ -17,8 +17,10 @@ import eu.darken.capod.rules.core.RuleTrigger
 import eu.darken.capod.rules.core.trigger.RuleRequirement
 import eu.darken.capod.rules.core.trigger.RuleTriggerHandler
 import eu.darken.capod.rules.core.trigger.TriggerCondition
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -27,6 +29,7 @@ import javax.inject.Inject
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 class AirPodsConnectedHandler @Inject constructor(
     private val profilesRepo: DeviceProfilesRepo,
@@ -101,11 +104,18 @@ class WearingHandler @Inject constructor(
 
     override val missingRequirements: Flow<List<RuleRequirement>> = flowOf(emptyList())
 
+    // Putting both AirPods in, or taking both out, passes through "one in" for a moment; without
+    // the settle time a "one in" rule ran and was undone again each time.
+    @OptIn(FlowPreview::class)
     override fun condition(profileId: ProfileId, trigger: RuleTrigger.Wearing): Flow<TriggerCondition> = deviceMonitor.devices
         .map { devices -> devices.firstOrNull { it.profileId == profileId }?.wearingState() }
         .distinctUntilChanged()
+        .debounce(WEARING_SETTLE)
         .map { state -> state?.let { TriggerCondition.Known(holds = it == trigger.state) } ?: TriggerCondition.Unknown }
 }
+
+/** How long a wearing state must hold before it counts. */
+private val WEARING_SETTLE = 3.seconds
 
 /**
  * Which [RuleTrigger.Wearing.State] the device is in, or null if that's unknown. AAP only: BLE

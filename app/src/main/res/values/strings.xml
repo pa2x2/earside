@@ -652,4 +652,14 @@
     <string name="updates_error_install_storage">There isn\'t enough storage to install the update.</string>
     <string name="updates_error_install_failed">The install failed.</string>
     <string name="updates_error_unexpected">Something went wrong with the update.</string>
+
+    <!-- Device rules -->
+    <string name="rules_trigger_wifi_connected_summary">When connected to %1$s</string>
+    <string name="rules_trigger_wifi_disconnected_summary">When disconnected from %1$s</string>
+    <string name="rules_action_anc_summary">Listening mode: %1$s</string>
+    <string name="rules_action_ca_summary_on">Conversation Awareness: On</string>
+    <string name="rules_action_ca_summary_off">Conversation Awareness: Off</string>
+    <string name="rules_action_anc_unavailable_mode">%1$s isn\'t enabled in Listening modes</string>
+    <string name="rules_notification_channel_label">Device rules</string>
+    <string name="rules_notification_title">%1$s: rule applied</string>
 </resources>

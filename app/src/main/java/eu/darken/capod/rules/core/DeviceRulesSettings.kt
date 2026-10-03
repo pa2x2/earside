@@ -26,6 +26,11 @@ class DeviceRulesSettings @Inject constructor(
     private val dataStore: DataStore<Preferences> get() = context.dataStore
 
     val rules = dataStore.createValue("rules.data", DeviceRulesStorage(), json, onErrorFallbackToDefault = true)
+
+    val runStates = dataStore.createValue("rules.runstates", RuleRunStates(), json, onErrorFallbackToDefault = true)
+
+    /** Devices whose owner wants a notification each time one of their rules applies. */
+    val notifyProfiles = dataStore.createValue("rules.notify", NotifyProfiles(), json, onErrorFallbackToDefault = true)
 }
 
 /**
@@ -35,4 +40,14 @@ class DeviceRulesSettings @Inject constructor(
 @Serializable
 data class DeviceRulesStorage(
     @SerialName("profiles") val profiles: Map<ProfileId, List<JsonObject>> = emptyMap(),
+)
+
+@Serializable
+data class RuleRunStates(
+    @SerialName("states") val states: Map<RuleId, RuleRunState> = emptyMap(),
+)
+
+@Serializable
+data class NotifyProfiles(
+    @SerialName("profiles") val profiles: Set<ProfileId> = emptySet(),
 )

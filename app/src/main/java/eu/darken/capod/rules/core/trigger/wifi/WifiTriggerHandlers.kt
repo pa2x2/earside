@@ -1,5 +1,7 @@
 package eu.darken.capod.rules.core.trigger.wifi
 
+import android.content.Context
+import eu.darken.capod.R
 import eu.darken.capod.rules.core.RuleTrigger
 import eu.darken.capod.rules.core.trigger.RuleRequirement
 import eu.darken.capod.rules.core.trigger.RuleTriggerHandler
@@ -16,6 +18,9 @@ class WifiConnectedHandler @Inject constructor(
 
     override val type = RuleTrigger.WifiConnected::class
 
+    override fun summary(context: Context, trigger: RuleTrigger.WifiConnected): String =
+        context.getString(R.string.rules_trigger_wifi_connected_summary, trigger.ssid)
+
     override val missingRequirements: Flow<List<RuleRequirement>> = locationAccess.missing
 
     override fun condition(trigger: RuleTrigger.WifiConnected): Flow<TriggerCondition> = wifi.state
@@ -29,6 +34,9 @@ class WifiDisconnectedHandler @Inject constructor(
 ) : RuleTriggerHandler<RuleTrigger.WifiDisconnected> {
 
     override val type = RuleTrigger.WifiDisconnected::class
+
+    override fun summary(context: Context, trigger: RuleTrigger.WifiDisconnected): String =
+        context.getString(R.string.rules_trigger_wifi_disconnected_summary, trigger.ssid)
 
     override val missingRequirements: Flow<List<RuleRequirement>> = locationAccess.missing
 

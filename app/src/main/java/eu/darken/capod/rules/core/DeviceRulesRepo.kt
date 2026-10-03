@@ -87,13 +87,24 @@ class DeviceRulesRepo @Inject constructor(
         raws.toMutableList().apply { add(removed.index.coerceIn(0, size), removed.raw) }
     }
 
+    val notifyProfiles: Flow<Set<ProfileId>> = settings.notifyProfiles.flow.map { it.profiles }.distinctUntilChanged()
+
+    suspend fun setNotify(profileId: ProfileId, enabled: Boolean) {
+        settings.notifyProfiles.update {
+            it.copy(profiles = if (enabled) it.profiles + profileId else it.profiles - profileId)
+        }
+    }
+
+    // Run states of the deleted rules are dropped by DeviceRulesEngine once it sees the rules gone.
     suspend fun deleteAll(profileId: ProfileId) = mutex.withLock {
-        settings.rules.value(settings.rules.value().let { it.copy(profiles = it.profiles - profileId) })
+        settings.rules.update { it.copy(profiles = it.profiles - profileId) }
+        settings.notifyProfiles.update { it.copy(profiles = it.profiles - profileId) }
         log(TAG, VERBOSE) { "deleteAll($profileId)" }
     }
 
     suspend fun clear() = mutex.withLock {
         settings.rules.value(DeviceRulesStorage())
+        settings.notifyProfiles.value(NotifyProfiles())
     }
 
     private suspend fun edit(profileId: ProfileId, transform: (List<JsonObject>) -> List<JsonObject>) = mutex.withLock {

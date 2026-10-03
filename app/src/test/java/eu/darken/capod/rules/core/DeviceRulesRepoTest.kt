@@ -31,7 +31,10 @@ class DeviceRulesRepoTest : BaseTest() {
     @Test
     fun `a rule from a newer version neither breaks the others nor gets lost on save`() = runTest {
         val storage = FakeDataStoreValue(json.decodeFromString<DeviceRulesStorage>(stored))
-        val settings = mockk<DeviceRulesSettings> { every { rules } returns storage.mock }
+        val settings = mockk<DeviceRulesSettings> {
+            every { rules } returns storage.mock
+            every { notifyProfiles } returns FakeDataStoreValue(NotifyProfiles()).mock
+        }
         val repo = DeviceRulesRepo(settings, json)
 
         val entries = repo.rulesFor("p1").first()

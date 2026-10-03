@@ -1,5 +1,6 @@
 package eu.darken.capod.rules.core.trigger
 
+import android.content.Context
 import eu.darken.capod.rules.core.RuleTrigger
 import kotlinx.coroutines.flow.Flow
 import kotlin.reflect.KClass
@@ -11,6 +12,9 @@ import kotlin.reflect.KClass
 interface RuleTriggerHandler<T : RuleTrigger> {
 
     val type: KClass<T>
+
+    /** E.g. "When connected to Home". */
+    fun summary(context: Context, trigger: T): String
 
     /** What the phone still has to allow before this trigger can be observed, in the order to ask for it. */
     val missingRequirements: Flow<List<RuleRequirement>>

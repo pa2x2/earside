@@ -36,7 +36,13 @@ class SetAdaptiveAudioNoiseHandler @Inject constructor(
     override fun current(
         device: PodDevice,
         action: RuleAction.SetAdaptiveAudioNoise,
-    ): RuleAction.SetAdaptiveAudioNoise? = device.adaptiveAudioNoise?.let { RuleAction.SetAdaptiveAudioNoise(it.level) }
+    ): RuleAction.SetAdaptiveAudioNoise? = device.adaptiveAudioNoise?.let { reported ->
+        if (reportsAs(action.level, reported.level)) action else RuleAction.SetAdaptiveAudioNoise(reported.level)
+    }
+
+    // AirPods 5 keep only 0, 50 or 100 and report that back, so a rule's 30 reads back as 50. Without
+    // this, undo would take that for a change by hand and leave the level alone.
+    private fun reportsAs(level: Int, reported: Int): Boolean = reported == level || reported == (level + 25) / 50 * 50
 
     override suspend fun execute(
         device: PodDevice,

@@ -54,6 +54,15 @@ sealed interface RuleTrigger {
         @SerialName("end") @Serializable(with = LocalTimeIsoSerializer::class) val end: LocalTime,
         @SerialName("days") val days: Set<DayOfWeek>,
     ) : RuleTrigger
+    /** While anything silences notifications: Do Not Disturb itself, or a schedule or mode. */
+    @Serializable
+    @SerialName("dnd.on")
+    data object DoNotDisturbOn : RuleTrigger
+
+    /** While a phone or app call is established; ringing doesn't count. */
+    @Serializable
+    @SerialName("call.active")
+    data object InCall : RuleTrigger
 }
 
 @Serializable

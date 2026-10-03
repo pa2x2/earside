@@ -10,6 +10,8 @@ import eu.darken.capod.rules.core.action.SetAncModeHandler
 import eu.darken.capod.rules.core.action.SetConversationalAwarenessHandler
 import eu.darken.capod.rules.core.trigger.RuleTriggerHandler
 import eu.darken.capod.rules.core.trigger.time.TimeWindowHandler
+import eu.darken.capod.rules.core.trigger.phone.DoNotDisturbOnHandler
+import eu.darken.capod.rules.core.trigger.phone.InCallHandler
 import eu.darken.capod.rules.core.trigger.wifi.WifiConnectedHandler
 import eu.darken.capod.rules.core.trigger.wifi.WifiDisconnectedHandler
 import javax.inject.Inject
@@ -49,4 +51,6 @@ abstract class RuleHandlersModule {
     @Binds @IntoSet abstract fun setAncMode(handler: SetAncModeHandler): RuleActionHandler<*>
     @Binds @IntoSet abstract fun setConversationalAwareness(handler: SetConversationalAwarenessHandler): RuleActionHandler<*>
     @Binds @IntoSet abstract fun timeWindow(handler: TimeWindowHandler): RuleTriggerHandler<*>
+    @Binds @IntoSet abstract fun doNotDisturbOn(handler: DoNotDisturbOnHandler): RuleTriggerHandler<*>
+    @Binds @IntoSet abstract fun inCall(handler: InCallHandler): RuleTriggerHandler<*>
 }

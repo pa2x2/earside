@@ -80,4 +80,6 @@ abstract class RuleEditorsModule {
     @Binds @IntoSet abstract fun setAncMode(editor: SetAncModeEditor): RuleActionEditor<*>
     @Binds @IntoSet abstract fun setConversationalAwareness(editor: SetConversationalAwarenessEditor): RuleActionEditor<*>
     @Binds @IntoSet abstract fun timeWindow(editor: TimeWindowEditor): RuleTriggerEditor<*>
+    @Binds @IntoSet abstract fun doNotDisturbOn(editor: DoNotDisturbOnEditor): RuleTriggerEditor<*>
+    @Binds @IntoSet abstract fun inCall(editor: InCallEditor): RuleTriggerEditor<*>
 }

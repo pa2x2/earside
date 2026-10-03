@@ -759,4 +759,14 @@
     <string name="rules_time_window_overnight_hint">Ends the next day. The days are the ones it starts on.</string>
     <string name="rules_time_window_same_time_error">Start and end can\'t be the same time</string>
     <string name="rules_time_window_no_days_error">Pick at least one day</string>
+    <string name="rules_trigger_dnd_label">Do Not Disturb or a mode silences notifications</string>
+    <string name="rules_trigger_dnd_explanation">Counts while Do Not Disturb, a schedule, or a mode like Bedtime or Driving silences notifications. A mode that only changes the screen, like grayscale, doesn\'t count.</string>
+    <string name="rules_trigger_dnd_summary">While notifications are silenced</string>
+    <string name="rules_apply_now_dnd">Notifications are silenced now</string>
+    <string name="rules_undo_dnd">Back to the previous setting when notifications are no longer silenced, unless you changed it since</string>
+    <string name="rules_trigger_call_label">During a call</string>
+    <string name="rules_trigger_call_explanation">Phone calls and calls in apps. An incoming call that only rings doesn\'t count.</string>
+    <string name="rules_trigger_call_summary">During a call</string>
+    <string name="rules_apply_now_call">You\'re in a call now</string>
+    <string name="rules_undo_call">Back to the previous setting when the call ends, unless you changed it since</string>
 </resources>

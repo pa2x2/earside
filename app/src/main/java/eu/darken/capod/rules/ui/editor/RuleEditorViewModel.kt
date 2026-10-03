@@ -138,12 +138,17 @@ class RuleEditorViewModel @Inject constructor(
                 deviceLabel = profile?.label.orEmpty(),
                 model = model,
                 device = device,
-                triggerOptions = editors.triggers.map { editor ->
-                    TriggerOption(editor, handlers.forTriggerType(editor.type)?.isSupported(model.features) == true)
-                },
-                actionOptions = editors.actions.map { editor ->
-                    ActionOption(editor, handlers.forActionType(editor.type)?.isSupported(model.features) == true)
-                },
+                // Unsupported options last, so what this model can do comes first.
+                triggerOptions = editors.triggers
+                    .map { editor ->
+                        TriggerOption(editor, handlers.forTriggerType(editor.type)?.isSupported(model.features) == true)
+                    }
+                    .sortedBy { !it.supported },
+                actionOptions = editors.actions
+                    .map { editor ->
+                        ActionOption(editor, handlers.forActionType(editor.type)?.isSupported(model.features) == true)
+                    }
+                    .sortedBy { !it.supported },
                 missing = missing,
                 conflicts = conflicts(draft, s.original, entries),
                 undoText = draft.trigger?.let { items.undoText(it) },

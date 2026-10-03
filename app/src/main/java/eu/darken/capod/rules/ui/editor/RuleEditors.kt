@@ -63,13 +63,45 @@ class RuleEditors @Inject constructor(
     triggerEditors: Set<@JvmSuppressWildcards RuleTriggerEditor<*>>,
     actionEditors: Set<@JvmSuppressWildcards RuleActionEditor<*>>,
 ) {
-    // Sorted by type so the order doesn't depend on set iteration.
-    val triggers: List<RuleTriggerEditor<*>> = triggerEditors.sortedBy { it.type.qualifiedName }
-    val actions: List<RuleActionEditor<*>> = actionEditors.sortedBy { it.type.qualifiedName }
+    // A rule saves its actions in this order and runs them in it, so the listening mode goes out
+    // before settings that depend on it. Types missing from the lists follow, sorted by type.
+    val triggers: List<RuleTriggerEditor<*>> = triggerEditors.sortedWith(inOrder(TRIGGER_ORDER) { it.type })
+    val actions: List<RuleActionEditor<*>> = actionEditors.sortedWith(inOrder(ACTION_ORDER) { it.type })
 
     fun forTrigger(type: KClass<*>): RuleTriggerEditor<*>? = triggers.firstOrNull { it.type == type }
 
     fun forAction(type: KClass<*>): RuleActionEditor<*>? = actions.firstOrNull { it.type == type }
+
+    private companion object {
+        val TRIGGER_ORDER = listOf(
+            RuleTrigger.AirPodsConnected::class,
+            RuleTrigger.Wearing::class,
+            RuleTrigger.BatteryLow::class,
+            RuleTrigger.WifiConnected::class,
+            RuleTrigger.WifiDisconnected::class,
+            RuleTrigger.TimeWindow::class,
+            RuleTrigger.DoNotDisturbOn::class,
+            RuleTrigger.InCall::class,
+        )
+
+        val ACTION_ORDER = listOf(
+            RuleAction.SetAncMode::class,
+            RuleAction.SetAdaptiveAudioNoise::class,
+            RuleAction.SetConversationalAwareness::class,
+            RuleAction.SetNcWithOneAirPod::class,
+            RuleAction.SetPersonalizedVolume::class,
+            RuleAction.SetMediaVolume::class,
+            RuleAction.SetToneVolume::class,
+            RuleAction.SetVolumeSwipe::class,
+            RuleAction.SetMicrophoneMode::class,
+            RuleAction.SetSleepDetection::class,
+        )
+
+        fun <E> inOrder(order: List<KClass<*>>, type: (E) -> KClass<*>): Comparator<E> = compareBy(
+            { order.indexOf(type(it)).takeIf { i -> i >= 0 } ?: order.size },
+            { type(it).qualifiedName },
+        )
+    }
 }
 
 @InstallIn(SingletonComponent::class)

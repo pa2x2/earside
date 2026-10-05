@@ -21,6 +21,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -137,6 +138,8 @@ internal class AapConnection(
                     disconnect()
                 }
             }
+
+            scope.launch { resendNotificationEnableIfStatusMissing() }
         } catch (e: Exception) {
             log(TAG, Logging.Priority.ERROR) { "Connection failed: $e" }
             cleanupSocket()
@@ -250,6 +253,41 @@ internal class AapConnection(
         }
     }
 
+    /**
+     * When the session comes up in the same moment the phone makes the AirPods its audio device, the
+     * AirPods sometimes treat the phone as idle (0x2E lists it as type 01 rather than 02) and push
+     * only their settings: no battery, ear detection or primary pod for the rest of the session.
+     * Sending the notification enable again once things have settled makes them push all of it.
+     * Seen in 3 of 7 sessions opened from the case on AirPods (Gen 5), A3440 fw 90.3431000025000000.7362;
+     * one resend recovered every one of them. Ear detection is the marker because it's what goes
+     * missing, and the extra packet costs nothing on a model that never reports it.
+     */
+    private suspend fun resendNotificationEnableIfStatusMissing() {
+        val ready = state.first {
+            it.connectionState == AapPodState.ConnectionState.READY ||
+                    it.connectionState == AapPodState.ConnectionState.DISCONNECTED
+        }
+        if (ready.connectionState != AapPodState.ConnectionState.READY) return
+        delay(STATUS_PUSH_GRACE)
+        val current = state.value
+        if (current.connectionState != AapPodState.ConnectionState.READY || current.aapEarDetection != null) return
+
+        log(TAG, Logging.Priority.INFO) { "No ear detection $STATUS_PUSH_GRACE after READY, sending notification enable again" }
+        try {
+            writeMutex.withLock {
+                withContext(Dispatchers.IO) {
+                    val sock = socket ?: return@withContext
+                    for (packet in profile.encodeNotificationEnable()) {
+                        sock.outputStream.write(packet)
+                        sock.outputStream.flush()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            log(TAG, Logging.Priority.WARN) { "Notification enable resend failed: $e" }
+        }
+    }
+
     private fun cleanupSocket() {
         socket?.closeQuietly()
         socket = null
@@ -299,6 +337,9 @@ internal class AapConnection(
          * giving up so the reconnect path can recover instead of wedging in HANDSHAKING forever.
          */
         internal val DEFAULT_HANDSHAKE_TIMEOUT = 10.seconds
+
+        /** The AirPods push their status within ~150 ms of READY when they push it at all. */
+        private val STATUS_PUSH_GRACE = 1.5.seconds
         private val TAG = logTag("AAP", "Connection")
     }
 }

@@ -16,7 +16,7 @@ class SetToneVolumeHandler @Inject constructor(
 
     override fun isSupported(features: PodModel.Features): Boolean = features.hasToneVolume
 
-    override fun isReady(device: PodDevice): Boolean = device.isAapReady && device.address != null
+    override fun isReady(device: PodDevice): Boolean = device.isAapReady && device.address != null && device.toneVolume != null
 
     override fun summary(context: Context, action: RuleAction.SetToneVolume): String = context.getString(
         R.string.rules_action_setting_summary,

@@ -23,8 +23,10 @@ interface RuleActionHandler<A : RuleAction> {
 
     /**
      * Whether the action can run against [device] now. A waiting rule runs as soon as this holds, so
-     * an action that needs an AAP session waits for one, and one on the phone waits for what it needs,
-     * e.g. the AirPods playing the phone's media.
+     * one on the phone waits for what it needs, e.g. the AirPods playing the phone's media. An AirPods
+     * setting waits for the AAP session and for the AirPods to report that setting: they report it
+     * just after the session comes up, without confirming writes, so a value sent earlier shows as
+     * the old one, and undo would have nothing to put back.
      */
     fun isReady(device: PodDevice): Boolean
 

@@ -16,7 +16,7 @@ class SetConversationalAwarenessHandler @Inject constructor(
 
     override fun isSupported(features: PodModel.Features): Boolean = features.hasConversationAwareness
 
-    override fun isReady(device: PodDevice): Boolean = device.isAapReady && device.address != null
+    override fun isReady(device: PodDevice): Boolean = device.isAapReady && device.address != null && device.conversationalAwareness != null
 
     override fun summary(context: Context, action: RuleAction.SetConversationalAwareness): String =
         context.getString(if (action.enabled) R.string.rules_action_ca_summary_on else R.string.rules_action_ca_summary_off)

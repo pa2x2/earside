@@ -25,7 +25,7 @@ abstract class ToggleActionHandler<A : RuleAction> : RuleActionHandler<A> {
 
     protected abstract suspend fun send(address: BluetoothAddress, enabled: Boolean): DeviceControls.Result
 
-    override fun isReady(device: PodDevice): Boolean = device.isAapReady && device.address != null
+    override fun isReady(device: PodDevice): Boolean = device.isAapReady && device.address != null && device.reported() != null
 
     override fun summary(context: Context, action: A): String = context.getString(
         R.string.rules_action_setting_summary,

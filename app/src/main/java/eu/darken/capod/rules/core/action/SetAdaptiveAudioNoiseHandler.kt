@@ -16,7 +16,7 @@ class SetAdaptiveAudioNoiseHandler @Inject constructor(
 
     override fun isSupported(features: PodModel.Features): Boolean = features.hasAdaptiveAudioNoise
 
-    override fun isReady(device: PodDevice): Boolean = device.isAapReady && device.address != null
+    override fun isReady(device: PodDevice): Boolean = device.isAapReady && device.address != null && device.adaptiveAudioNoise != null
 
     override fun summary(context: Context, action: RuleAction.SetAdaptiveAudioNoise): String = context.getString(
         R.string.rules_action_setting_summary,

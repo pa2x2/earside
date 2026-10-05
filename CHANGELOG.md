@@ -2,6 +2,13 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-10-05
+
+### 🐛 Fixed
+
+- A rule that changes an AirPods setting as they connect now waits until the AirPods report that setting. Before, the old value could come back and replace the one the rule set, and the rule had nothing to put back when its condition ended.
+- AirPods taken out of the case sometimes connected without sending their battery levels and ear detection, and didn't send them for the rest of the connection. Earside now asks for them again when they don't arrive.
+
 ## [1.2.0] - 2026-10-03
 
 ### ✨ Added
@@ -47,6 +54,7 @@ Based on [CAPod v5.4.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.
 
 - CAPod's contact form, Discord, issue tracker, wiki, translation project, privacy policy and sponsor links.
 
+[1.2.1]: https://github.com/pa2x2/earside/releases/tag/v1.2.1
 [1.2.0]: https://github.com/pa2x2/earside/releases/tag/v1.2.0
 [1.1.0]: https://github.com/pa2x2/earside/releases/tag/v1.1.0
 [1.0.0]: https://github.com/pa2x2/earside/releases/tag/v1.0.0

@@ -49,6 +49,8 @@ import eu.darken.capod.reaction.core.playpause.PlayPause
 import eu.darken.capod.reaction.core.popup.InEarPopUpReaction
 import eu.darken.capod.reaction.core.popup.PopUpReaction
 import eu.darken.capod.reaction.core.conversation.ConversationReaction
+import eu.darken.capod.reaction.core.caselow.CaseLowReminderNotifications
+import eu.darken.capod.reaction.core.caselow.CaseLowReminderReaction
 import eu.darken.capod.reaction.core.charged.ChargedReaction
 import eu.darken.capod.reaction.core.charged.ChargedReactionNotifications
 import eu.darken.capod.reaction.core.sleep.SleepReaction
@@ -95,6 +97,8 @@ class MonitorService : Service() {
     @Inject lateinit var sleepReaction: SleepReaction
     @Inject lateinit var chargedReaction: ChargedReaction
     @Inject lateinit var chargedReactionNotifications: ChargedReactionNotifications
+    @Inject lateinit var caseLowReminderReaction: CaseLowReminderReaction
+    @Inject lateinit var caseLowReminderNotifications: CaseLowReminderNotifications
     @Inject lateinit var conversationReaction: ConversationReaction
     @Inject lateinit var deviceRulesEngine: DeviceRulesEngine
     @Inject lateinit var popUpWindow: PopUpWindow
@@ -261,6 +265,7 @@ class MonitorService : Service() {
         latestNotificationSettings = NotificationSettings(
             useExtraNotification = generalSettings.useExtraMonitorNotification.flow.first(),
             keepAfterDisconnect = generalSettings.keepConnectedNotificationAfterDisconnect.flow.first(),
+            showBatteryInStatusBar = generalSettings.showBatteryInStatusBar.flow.first(),
         )
 
         val permissionsMissingOnStart = permissionTool.missingScanPermissions.first()
@@ -277,8 +282,13 @@ class MonitorService : Service() {
         val notificationSettingsFlow = combine(
             generalSettings.useExtraMonitorNotification.flow,
             generalSettings.keepConnectedNotificationAfterDisconnect.flow,
-        ) { useExtra, keepAfter ->
-            NotificationSettings(useExtraNotification = useExtra, keepAfterDisconnect = keepAfter)
+            generalSettings.showBatteryInStatusBar.flow,
+        ) { useExtra, keepAfter, batteryIcon ->
+            NotificationSettings(
+                useExtraNotification = useExtra,
+                keepAfterDisconnect = keepAfter,
+                showBatteryInStatusBar = batteryIcon,
+            )
         }
 
         val monitorJob = combine(
@@ -309,13 +319,18 @@ class MonitorService : Service() {
                         currentDevice,
                         estimate = estimate,
                         showHint = settings.useExtraNotification,
+                        showBatteryInStatusBar = settings.showBatteryInStatusBar,
                     )
                 )
 
                 when (val action = decideExtraNotificationAction(currentDevice, settings)) {
                     is ExtraNotificationAction.Post -> notificationManager.notify(
                         MonitorNotifications.NOTIFICATION_ID_CONNECTED,
-                        notifications.getNotificationConnected(action.device, estimate),
+                        notifications.getNotificationConnected(
+                            action.device,
+                            estimate,
+                            showBatteryInStatusBar = settings.showBatteryInStatusBar,
+                        ),
                     )
                     ExtraNotificationAction.Cancel -> notificationManager.cancel(
                         MonitorNotifications.NOTIFICATION_ID_CONNECTED
@@ -419,6 +434,26 @@ class MonitorService : Service() {
             }
             .setupCommonEventHandlers(TAG) { "chargedReaction" }
             .catch { log(TAG, WARN) { "chargedReaction failed:\n${it.asLog()}" } }
+            .launchIn(monitorScope)
+
+        caseLowReminderReaction.monitor()
+            .onEach { event ->
+                when (event) {
+                    is CaseLowReminderReaction.Event.ShowNotification -> caseLowReminderNotifications.show(
+                        profileId = event.profileId,
+                        deviceLabel = event.deviceLabel,
+                        casePercent = event.casePercent,
+                    )
+
+                    is CaseLowReminderReaction.Event.CancelNotification ->
+                        caseLowReminderNotifications.cancel(event.profileId)
+
+                    is CaseLowReminderReaction.Event.Reconcile ->
+                        caseLowReminderNotifications.cancelAllExcept(event.enabledProfileIds)
+                }
+            }
+            .setupCommonEventHandlers(TAG) { "caseLowReminder" }
+            .catch { log(TAG, WARN) { "caseLowReminder failed:\n${it.asLog()}" } }
             .launchIn(monitorScope)
 
         conversationReaction.monitor()
@@ -641,6 +676,7 @@ private fun PodDevice.toNotificationKey(): NotificationDeviceKey = NotificationD
 internal data class NotificationSettings(
     val useExtraNotification: Boolean,
     val keepAfterDisconnect: Boolean,
+    val showBatteryInStatusBar: Boolean = false,
 )
 
 internal sealed interface ExtraNotificationAction {

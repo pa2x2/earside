@@ -187,6 +187,8 @@ fun DeviceSettingsScreenHost(
         onAutoConnectConditionChange = { vm.setAutoConnectCondition(it) },
         onShowPopUpOnCaseOpenChange = { vm.setShowPopUpOnCaseOpen(it) },
         onShowPopUpOnConnectionChange = { vm.setShowPopUpOnConnection(it) },
+        onShowPopUpOnEarInChange = { vm.setShowPopUpOnEarIn(it) },
+        onShowInEarPillChange = { vm.setShowInEarPill(it) },
         onNotifyWhenChargedChange = { vm.setNotifyWhenCharged(it) },
         onChargedThresholdChange = { vm.setChargedThreshold(it) },
         onChargedSlotScopeChange = { vm.setChargedSlotScope(it) },
@@ -231,6 +233,8 @@ fun DeviceSettingsScreen(
     onAutoConnectConditionChange: (AutoConnectCondition) -> Unit = {},
     onShowPopUpOnCaseOpenChange: (Boolean) -> Unit = {},
     onShowPopUpOnConnectionChange: (Boolean) -> Unit = {},
+    onShowPopUpOnEarInChange: (Boolean) -> Unit = {},
+    onShowInEarPillChange: (Boolean) -> Unit = {},
     onNotifyWhenChargedChange: (Boolean) -> Unit = {},
     onChargedThresholdChange: (Int) -> Unit = {},
     onChargedSlotScopeChange: (ChargedSlotScope) -> Unit = {},
@@ -432,6 +436,8 @@ fun DeviceSettingsScreen(
                         onAutoConnectConditionChange = onAutoConnectConditionChange,
                         onShowPopUpOnCaseOpenChange = onShowPopUpOnCaseOpenChange,
                         onShowPopUpOnConnectionChange = onShowPopUpOnConnectionChange,
+                        onShowPopUpOnEarInChange = onShowPopUpOnEarInChange,
+                        onShowInEarPillChange = onShowInEarPillChange,
                     )
                 }
             } else {

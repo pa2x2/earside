@@ -35,18 +35,23 @@ class PermissionTool @Inject constructor(
     private val anyPopupEnabled: Flow<Boolean> = profilesRepo.profiles
         .map { profiles ->
             profiles.any { profile ->
-                profile.toReactionConfig().let { it.showPopUpOnCaseOpen || it.showPopUpOnConnection }
+                profile.toReactionConfig().let { it.showPopUpOnCaseOpen || it.showPopUpOnConnection || it.showPopUpOnEarIn }
             }
         }
+        .distinctUntilChanged()
+
+    private val anyPillEnabled: Flow<Boolean> = profilesRepo.profiles
+        .map { profiles -> profiles.any { it.toReactionConfig().let { r -> r.showPopUpOnEarIn && r.showInEarPill } } }
         .distinctUntilChanged()
 
     val missingPermissions: Flow<Set<Permission>> = combine(
         permissionCheckTrigger,
         monitorModeResolver.effectiveMode,
         anyPopupEnabled,
-    ) { _, monitorMode, showPopUp ->
+        anyPillEnabled,
+    ) { _, monitorMode, showPopUp, showPill ->
         Permission.entries
-            .filter { isApplicable(it, monitorMode, showPopUp) }
+            .filter { isApplicable(it, monitorMode, showPopUp, showPill) }
             .filter { it.isRequired(context) }
             .toSet()
     }
@@ -63,20 +68,23 @@ class PermissionTool @Inject constructor(
 
         /**
          * Whether [permission] is applicable for the user's current configuration.
-         * Three permissions are conditional on monitor mode or popup usage:
+         * Four permissions are conditional on monitor mode or popup usage:
          *  - [Permission.IGNORE_BATTERY_OPTIMIZATION] only when always-on scanning is needed
          *  - [Permission.ACCESS_BACKGROUND_LOCATION] same
          *  - [Permission.SYSTEM_ALERT_WINDOW] only when at least one popup reaction is enabled
+         *  - [Permission.ACCESSIBILITY_SERVICE] only when an in-ear popup keeps the pill
          * Everything else is unconditionally applicable.
          */
         internal fun isApplicable(
             permission: Permission,
             monitorMode: MonitorMode,
             anyPopupEnabled: Boolean,
+            anyPillEnabled: Boolean = false,
         ): Boolean = when (permission) {
             Permission.IGNORE_BATTERY_OPTIMIZATION,
             Permission.ACCESS_BACKGROUND_LOCATION -> monitorMode == MonitorMode.ALWAYS
             Permission.SYSTEM_ALERT_WINDOW -> anyPopupEnabled
+            Permission.ACCESSIBILITY_SERVICE -> anyPillEnabled
             else -> true
         }
     }

@@ -37,6 +37,7 @@ import eu.darken.capod.common.upgrade.UpgradeRepo
 import eu.darken.capod.main.core.GeneralSettings
 import eu.darken.capod.main.core.currentThemeState
 import eu.darken.capod.main.core.themeState
+import eu.darken.capod.reaction.ui.popup.InEarPopUpWindow
 import eu.darken.capod.reaction.ui.popup.PopUpWindow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.take
@@ -51,6 +52,7 @@ class MainActivity : Activity2() {
     @Inject lateinit var navigationEntries: Set<@JvmSuppressWildcards NavigationEntry>
     @Inject lateinit var generalSettings: GeneralSettings
     @Inject lateinit var popUpWindow: PopUpWindow
+    @Inject lateinit var inEarPopUpWindow: InEarPopUpWindow
     @Inject lateinit var upgradeRepo: UpgradeRepo
     @Inject lateinit var updateManager: UpdateManager
 
@@ -142,6 +144,7 @@ class MainActivity : Activity2() {
         super.onResume()
         popUpWindow.isMainActivityVisible = true
         popUpWindow.close()
+        inEarPopUpWindow.isMainActivityVisible = true
         updateManager.onActivityResumed(this)
         // Per-resume, unthrottled entitlement reconciliation. This is what heals a renewal state
         // that changed while the user was away (e.g. cancelling the subscription in Google Play's
@@ -155,6 +158,7 @@ class MainActivity : Activity2() {
 
     override fun onPause() {
         popUpWindow.isMainActivityVisible = false
+        inEarPopUpWindow.isMainActivityVisible = false
         updateManager.onActivityPaused(this)
         super.onPause()
     }

@@ -464,14 +464,18 @@ class DeviceSettingsViewModel @Inject constructor(
 
     /**
      * Keeps the device-side Automatic Ear Detection setting in sync with the
-     * auto-play / auto-pause reaction toggles.  When either reaction is active
-     * the device must report ear-in / ear-out events; when both are off the
-     * setting is disabled to match the user's intent.
+     * auto-play / auto-pause / in-ear popup reaction toggles.  When any of them
+     * is active the device must report ear-in / ear-out events; when all are off
+     * the setting is disabled to match the user's intent.
      *
      * Only sends when the model supports the setting and AAP is ready —
      * silent no-op otherwise (reactions are per-profile and work offline).
      */
-    private suspend fun syncEarDetection(autoPlay: Boolean? = null, autoPause: Boolean? = null) {
+    private suspend fun syncEarDetection(
+        autoPlay: Boolean? = null,
+        autoPause: Boolean? = null,
+        popUpOnEarIn: Boolean? = null,
+    ) {
         val profileId = targetProfileId.value ?: return
         val device = deviceMonitor.getDeviceForProfile(profileId) ?: return
         if (device.model?.features?.hasEarDetectionToggle != true) return
@@ -479,7 +483,8 @@ class DeviceSettingsViewModel @Inject constructor(
         val reactions = device.reactions
         val effectiveAutoPlay = autoPlay ?: reactions.autoPlay
         val effectiveAutoPause = autoPause ?: reactions.autoPause
-        sendInternal(AapCommand.SetEarDetectionEnabled(effectiveAutoPlay || effectiveAutoPause))
+        val effectivePopUp = popUpOnEarIn ?: reactions.showPopUpOnEarIn
+        sendInternal(AapCommand.SetEarDetectionEnabled(effectiveAutoPlay || effectiveAutoPause || effectivePopUp))
     }
 
     fun setAutoConnect(enabled: Boolean) = launch {
@@ -500,6 +505,21 @@ class DeviceSettingsViewModel @Inject constructor(
     fun setShowPopUpOnConnection(enabled: Boolean) {
         log(TAG, INFO) { "setShowPopUpOnConnection($enabled)" }
         proGatedReaction(enabled) { it.copy(showPopUpOnConnection = enabled) }
+    }
+
+    fun setShowPopUpOnEarIn(enabled: Boolean) = launch {
+        log(TAG, INFO) { "setShowPopUpOnEarIn($enabled)" }
+        if (enabled && !upgradeRepo.isProForUi()) {
+            navTo(Nav.Main.Upgrade())
+            return@launch
+        }
+        updateProfileNow { it.copy(showPopUpOnEarIn = enabled) }
+        syncEarDetection(popUpOnEarIn = enabled)
+    }
+
+    fun setShowInEarPill(enabled: Boolean) {
+        log(TAG, INFO) { "setShowInEarPill($enabled)" }
+        proGatedReaction(enabled) { it.copy(showInEarPill = enabled) }
     }
 
     fun setNotifyWhenCharged(enabled: Boolean) {

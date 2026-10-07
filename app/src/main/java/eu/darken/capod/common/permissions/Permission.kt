@@ -8,6 +8,7 @@ import androidx.core.content.PermissionChecker
 import eu.darken.capod.common.BuildConfigWrap
 import eu.darken.capod.R
 import eu.darken.capod.common.withinApiLevel
+import eu.darken.capod.reaction.ui.popup.OverlayAccessibilityService
 
 enum class Permission(
     val minApiLevel: Int,
@@ -74,6 +75,13 @@ enum class Permission(
         isGranted = {
             android.provider.Settings.canDrawOverlays(it)
         },
+    ),
+    ACCESSIBILITY_SERVICE(
+        minApiLevel = Build.VERSION_CODES.BASE,
+        labelRes = R.string.permission_accessibility_service_label,
+        descriptionRes = R.string.permission_accessibility_service_description,
+        permissionId = "android.permission.BIND_ACCESSIBILITY_SERVICE",
+        isGranted = { OverlayAccessibilityService.isEnabled(it) },
     ),
     POST_NOTIFICATIONS(
         minApiLevel = Build.VERSION_CODES.TIRAMISU,

@@ -13,6 +13,9 @@ data class ReactionConfig(
     val autoConnectCondition: AutoConnectCondition = AutoConnectCondition.WHEN_SEEN,
     val showPopUpOnCaseOpen: Boolean = false,
     val showPopUpOnConnection: Boolean = false,
+    val showPopUpOnEarIn: Boolean = false,
+    /** Collapse the in-ear popup into a pill around the camera; needs the accessibility service. */
+    val showInEarPill: Boolean = false,
     val conversationAction: ConversationAction = ConversationAction.NOTHING,
     /** Percentage to lower media volume by when [conversationAction] is LOWER_VOLUME (clamped 10..90 on use). */
     val conversationVolumeReduction: Int = DEFAULT_CONVERSATION_VOLUME_REDUCTION,

@@ -46,11 +46,13 @@ import eu.darken.capod.profiles.core.DeviceProfile
 import eu.darken.capod.profiles.core.DeviceProfilesRepo
 import eu.darken.capod.reaction.core.autoconnect.AutoConnect
 import eu.darken.capod.reaction.core.playpause.PlayPause
+import eu.darken.capod.reaction.core.popup.InEarPopUpReaction
 import eu.darken.capod.reaction.core.popup.PopUpReaction
 import eu.darken.capod.reaction.core.conversation.ConversationReaction
 import eu.darken.capod.reaction.core.charged.ChargedReaction
 import eu.darken.capod.reaction.core.charged.ChargedReactionNotifications
 import eu.darken.capod.reaction.core.sleep.SleepReaction
+import eu.darken.capod.reaction.ui.popup.InEarPopUpWindow
 import eu.darken.capod.reaction.ui.popup.PopUpWindow
 import eu.darken.capod.rules.core.DeviceRulesEngine
 import kotlinx.coroutines.CancellationException
@@ -89,12 +91,14 @@ class MonitorService : Service() {
     @Inject lateinit var playPause: PlayPause
     @Inject lateinit var autoConnect: AutoConnect
     @Inject lateinit var popUpReaction: PopUpReaction
+    @Inject lateinit var inEarPopUpReaction: InEarPopUpReaction
     @Inject lateinit var sleepReaction: SleepReaction
     @Inject lateinit var chargedReaction: ChargedReaction
     @Inject lateinit var chargedReactionNotifications: ChargedReactionNotifications
     @Inject lateinit var conversationReaction: ConversationReaction
     @Inject lateinit var deviceRulesEngine: DeviceRulesEngine
     @Inject lateinit var popUpWindow: PopUpWindow
+    @Inject lateinit var inEarPopUpWindow: InEarPopUpWindow
     @Inject lateinit var profilesRepo: DeviceProfilesRepo
     @Inject lateinit var aapConnectionManager: AapConnectionManager
     @Inject lateinit var monitorModeResolver: MonitorModeResolver
@@ -366,6 +370,23 @@ class MonitorService : Service() {
             }
             .setupCommonEventHandlers(TAG) { "popUpReaction" }
             .catch { log(TAG, WARN) { "popUpReaction failed:\n${it.asLog()}" } }
+            .launchIn(monitorScope)
+
+        inEarPopUpReaction.monitor()
+            .onEach {
+                withContext(dispatcherProvider.Main) {
+                    when (it) {
+                        is InEarPopUpReaction.Event.Show -> {
+                            // The case or connection card would still be up from moments earlier.
+                            popUpWindow.close()
+                            inEarPopUpWindow.show(it.profileId, it.keepPill)
+                        }
+
+                        InEarPopUpReaction.Event.Hide -> inEarPopUpWindow.close()
+                    }
+                }
+            }
+            .catch { log(TAG, WARN) { "inEarPopUpReaction failed:\n${it.asLog()}" } }
             .launchIn(monitorScope)
 
         playPause.monitor()

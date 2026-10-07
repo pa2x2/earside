@@ -64,6 +64,12 @@
     <string name="settings_popup_caseopen_description">Show a popup when the device case is opened (experimental).</string>
     <string name="settings_popup_connected_label">Show connection popup</string>
     <string name="settings_popup_connected_description">Show a popup when the device connects for the first time.</string>
+    <string name="settings_popup_earin_label">Show in-ear popup</string>
+    <string name="settings_popup_earin_description">Show battery and listening mode at the top of the screen when you put them on while they\'re connected to this phone.</string>
+    <string name="settings_popup_earin_pill_label">Keep a pill around the camera</string>
+    <string name="settings_popup_earin_pill_description">When the popup hides, keep a small battery pill around the front camera until you take them off. Tap it to bring the popup back, swipe it up to hide it. Needs Earside\'s accessibility service.</string>
+    <string name="popup_pill_expand_action">Show popup</string>
+    <string name="popup_pill_open_action">Open device settings</string>
     <string name="settings_popup_info_not_in_app">Popups are only shown when you are not in the app.</string>
     <string name="settings_charged_notification_label">Charged notification</string>
     <string name="settings_charged_notification_description">Show a notification once everything that is charging reaches the target charge level.</string>
@@ -237,6 +243,9 @@
     <string name="permission_ignore_battery_optimizations_label">Disable battery optimizations</string>
     <string name="permission_ignore_battery_optimizations_description">Battery optimizations prevent this app from reliably receiving Bluetooth data while the app is in the background.</string>
     <string name="permission_system_alert_window_label">System Alert Window</string>
+    <string name="permission_accessibility_service_label">Accessibility service</string>
+    <string name="permission_accessibility_service_description">Turn on Earside in Accessibility settings so the in-ear pill can sit around the camera, above the status bar. If the switch there is greyed out, open Earside\'s app info, tap ⋮ and allow restricted settings first.</string>
+    <string name="accessibility_service_description">Lets Earside draw the in-ear pill around the front camera, above the status bar. Earside doesn\'t read your screen or see what you do.</string>
     <string name="permission_system_alert_window_description">Allow Earside to draw over other apps to make the feature \"Show PopUp\" possible.</string>
 
 

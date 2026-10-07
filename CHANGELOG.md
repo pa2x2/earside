@@ -2,6 +2,28 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-10-07
+
+Based on [CAPod v5.5.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.5.0-rc0)
+
+### ✨ Added
+
+- A popup at the top of the screen when you put your AirPods in, showing their battery and listening mode. You can switch the listening mode from it, or tap the AirPods to open their settings. It only appears while they're connected to this phone. Turn it on under Reactions in the device's settings.
+- The in-ear popup can shrink into a small battery pill around the front camera that stays until you take the AirPods out. Tap the pill to bring the popup back, swipe it up to hide it, or long-press it to open the device's settings. The pill needs Earside's accessibility service, which doesn't read your screen.
+- A reminder to charge the case when you put the AirPods away and the case battery is at or below a level you pick, from 10% to 50%. It goes away once the case charges. Turn it on in the Battery section of the device's settings.
+- The status bar can show the battery percentage in place of Earside's icon. For earbuds it shows the lower pod, skipping one that's charging. Turn it on in General settings.
+
+### 🧩 Improved
+
+- The info card in a device's settings shows the battery levels, the time left on each pod, and how long a charging pod needs to fill up. Below that it shows how much of the rated listening time each pod still gets.
+- Lock screens that hide notification content now show the battery levels in Earside's notification.
+- AirPods 4 and AirPods 5 show pictures of their own models. Before, AirPods 4 showed AirPods 3, and AirPods 4 with ANC and AirPods 5 showed AirPods Pro.
+
+### 🐛 Fixed
+
+- AirPods 5 set up as a different model now switch to AirPods 5 once Earside connects to them.
+- AirPods 5 no longer show 1 January 1970 as the date each pod was first paired.
+
 ## [1.2.1] - 2026-10-05
 
 ### 🐛 Fixed
@@ -54,6 +76,7 @@ Based on [CAPod v5.4.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.
 
 - CAPod's contact form, Discord, issue tracker, wiki, translation project, privacy policy and sponsor links.
 
+[1.3.0]: https://github.com/pa2x2/earside/releases/tag/v1.3.0
 [1.2.1]: https://github.com/pa2x2/earside/releases/tag/v1.2.1
 [1.2.0]: https://github.com/pa2x2/earside/releases/tag/v1.2.0
 [1.1.0]: https://github.com/pa2x2/earside/releases/tag/v1.1.0

@@ -160,6 +160,7 @@ enum class PodModel(
         ),
         batterySpec = BatterySpec(listeningHoursAncOn = 4f, listeningHoursAncOff = 6f, chargeFractionPerHour = 2.0f),
         caseSpec = CaseSpec(fullPairRecharges = 4.0f),
+        modelNumbers = setOf("A3531", "A3532", "A3533"), // earphones
         leftPodIconRes = R.drawable.device_airpods_gen4anc_left,
         rightPodIconRes = R.drawable.device_airpods_gen4anc_right,
         caseIconRes = R.drawable.device_airpods_gen4anc_case,
@@ -187,6 +188,7 @@ enum class PodModel(
         ),
         batterySpec = BatterySpec(listeningHoursAncOn = 4f, listeningHoursAncOff = 6f, chargeFractionPerHour = 2.0f),
         caseSpec = CaseSpec(fullPairRecharges = 4.0f),
+        modelNumbers = setOf("A3439", "A3440", "A3441"), // earphones
         leftPodIconRes = R.drawable.device_airpods_gen4anc_left,
         rightPodIconRes = R.drawable.device_airpods_gen4anc_right,
         caseIconRes = R.drawable.device_airpods_gen4anc_case,

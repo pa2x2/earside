@@ -85,7 +85,7 @@ enum class PodModel(
     @SerialName("airpods.gen4")
     AIRPODS_GEN4(
         "AirPods (Gen 4)",
-        R.drawable.device_airpods_gen3_both,
+        R.drawable.device_airpods_gen4anc_both,
         Features(
             hasDualPods = true,
             hasCase = true,
@@ -101,9 +101,9 @@ enum class PodModel(
         batterySpec = BatterySpec(listeningHoursAncOff = 5f, chargeFractionPerHour = 2.4f),
         caseSpec = CaseSpec(fullPairRecharges = 5.0f),
         modelNumbers = setOf("A3050", "A3053", "A3054"), // earphones
-        leftPodIconRes = R.drawable.device_airpods_gen3_left,
-        rightPodIconRes = R.drawable.device_airpods_gen3_right,
-        caseIconRes = R.drawable.device_airpods_gen3_case,
+        leftPodIconRes = R.drawable.device_airpods_gen4anc_left,
+        rightPodIconRes = R.drawable.device_airpods_gen4anc_right,
+        caseIconRes = R.drawable.device_airpods_gen4anc_case,
     ),
 
     /** Case charges: 4 h listening, 20 h with the case, ANC on. */
@@ -160,6 +160,7 @@ enum class PodModel(
         ),
         batterySpec = BatterySpec(listeningHoursAncOn = 4f, listeningHoursAncOff = 6f, chargeFractionPerHour = 2.0f),
         caseSpec = CaseSpec(fullPairRecharges = 4.0f),
+        modelNumbers = setOf("A3531", "A3532", "A3533"), // earphones
         leftPodIconRes = R.drawable.device_airpods_gen4anc_left,
         rightPodIconRes = R.drawable.device_airpods_gen4anc_right,
         caseIconRes = R.drawable.device_airpods_gen4anc_case,
@@ -187,6 +188,7 @@ enum class PodModel(
         ),
         batterySpec = BatterySpec(listeningHoursAncOn = 4f, listeningHoursAncOff = 6f, chargeFractionPerHour = 2.0f),
         caseSpec = CaseSpec(fullPairRecharges = 4.0f),
+        modelNumbers = setOf("A3439", "A3440", "A3441"), // earphones
         leftPodIconRes = R.drawable.device_airpods_gen4anc_left,
         rightPodIconRes = R.drawable.device_airpods_gen4anc_right,
         caseIconRes = R.drawable.device_airpods_gen4anc_case,

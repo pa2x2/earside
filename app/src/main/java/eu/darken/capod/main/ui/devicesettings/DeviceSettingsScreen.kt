@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.ArrowBack
 import androidx.compose.material3.Icon
@@ -23,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -44,7 +46,7 @@ import eu.darken.capod.common.settings.SettingsInfoBox
 import eu.darken.capod.common.settings.SettingsSection
 import eu.darken.capod.main.ui.devicesettings.cards.AapUnavailableCard
 import eu.darken.capod.main.ui.devicesettings.cards.BatteryCard
-import eu.darken.capod.main.ui.devicesettings.cards.BatteryHealthTexts
+import eu.darken.capod.main.ui.devicesettings.cards.InfoCardBattery
 import eu.darken.capod.main.ui.devicesettings.cards.BatteryRuntimeWarningBanner
 import eu.darken.capod.main.ui.devicesettings.cards.ControlsCard
 import eu.darken.capod.main.ui.devicesettings.cards.DeviceInfoBottomSheet
@@ -56,6 +58,7 @@ import eu.darken.capod.main.ui.overview.cards.components.MissingPairedDeviceBann
 import eu.darken.capod.main.ui.devicesettings.cards.SoundCard
 import eu.darken.capod.main.ui.devicesettings.cards.buildDeviceInfoDetailItems
 import eu.darken.capod.main.ui.devicesettings.cards.buildModelLabel
+import eu.darken.capod.main.ui.devicesettings.cards.hasKnownBattery
 import eu.darken.capod.main.ui.devicesettings.cards.rememberDeviceInfoDetailLabels
 import eu.darken.capod.main.ui.devicesettings.components.ConnectedDevicesList
 import eu.darken.capod.main.ui.devicesettings.components.EqBarsChart
@@ -71,6 +74,7 @@ import eu.darken.capod.reaction.core.autoconnect.AutoConnectCondition
 import eu.darken.capod.reaction.core.charged.ChargedSlotScope
 import eu.darken.capod.reaction.core.conversation.ConversationAction
 import eu.darken.capod.rules.ui.DeviceRulesRow
+import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -187,9 +191,13 @@ fun DeviceSettingsScreenHost(
         onAutoConnectConditionChange = { vm.setAutoConnectCondition(it) },
         onShowPopUpOnCaseOpenChange = { vm.setShowPopUpOnCaseOpen(it) },
         onShowPopUpOnConnectionChange = { vm.setShowPopUpOnConnection(it) },
+        onShowPopUpOnEarInChange = { vm.setShowPopUpOnEarIn(it) },
+        onShowInEarPillChange = { vm.setShowInEarPill(it) },
         onNotifyWhenChargedChange = { vm.setNotifyWhenCharged(it) },
         onChargedThresholdChange = { vm.setChargedThreshold(it) },
         onChargedSlotScopeChange = { vm.setChargedSlotScope(it) },
+        onNotifyWhenCaseLowChange = { vm.setNotifyWhenCaseLow(it) },
+        onCaseLowThresholdChange = { vm.setCaseLowThreshold(it) },
         onBatteryEstimateEnabledChange = { vm.setBatteryEstimateEnabled(it) },
         onResetBatteryEstimate = { vm.resetBatteryEstimate() },
     )
@@ -231,9 +239,13 @@ fun DeviceSettingsScreen(
     onAutoConnectConditionChange: (AutoConnectCondition) -> Unit = {},
     onShowPopUpOnCaseOpenChange: (Boolean) -> Unit = {},
     onShowPopUpOnConnectionChange: (Boolean) -> Unit = {},
+    onShowPopUpOnEarInChange: (Boolean) -> Unit = {},
+    onShowInEarPillChange: (Boolean) -> Unit = {},
     onNotifyWhenChargedChange: (Boolean) -> Unit = {},
     onChargedThresholdChange: (Int) -> Unit = {},
     onChargedSlotScopeChange: (ChargedSlotScope) -> Unit = {},
+    onNotifyWhenCaseLowChange: (Boolean) -> Unit = {},
+    onCaseLowThresholdChange: (Int) -> Unit = {},
     onBatteryEstimateEnabledChange: (Boolean) -> Unit = {},
     onResetBatteryEstimate: () -> Unit = {},
 ) {
@@ -241,9 +253,9 @@ fun DeviceSettingsScreen(
     val features = device?.model?.features
     val enabled = device?.isAapReady == true
     val isPro = state.isPro
-    // Hoisted out of DeviceInfoCard: the runtime warning banner opens the same detail sheet as the
-    // card's info icon, and both entry points can be scrolled out of composition independently.
     var showDeviceDetails by rememberSaveable { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
     val context = LocalContext.current
     val stateDetection = device?.ble as? HasStateDetection
@@ -262,29 +274,11 @@ fun DeviceSettingsScreen(
             .withZone(zoneId)
     }
     val detailLabels = rememberDeviceInfoDetailLabels()
-    val batteryHealthTexts = when {
-        state.batteryHealth != null -> BatteryHealthTexts(
-            left = state.batteryHealth.left?.let {
-                stringResource(R.string.device_settings_info_battery_health_value, it.percent)
-            },
-            right = state.batteryHealth.right?.let {
-                stringResource(R.string.device_settings_info_battery_health_value, it.percent)
-            },
-            headset = state.batteryHealth.headset?.let {
-                stringResource(R.string.device_settings_info_battery_health_value, it.percent)
-            },
-        )
-        state.batteryHealthPending -> BatteryHealthTexts(
-            pending = stringResource(R.string.device_settings_info_battery_health_pending),
-        )
-        else -> null
-    }
     val detailItems = if (device != null) {
         buildDeviceInfoDetailItems(
             info = device.deviceInfo,
             labels = detailLabels,
             formatDate = { instant -> dateFormatter.format(instant) },
-            batteryHealth = batteryHealthTexts,
         )
     } else {
         emptyList()
@@ -337,6 +331,7 @@ fun DeviceSettingsScreen(
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = paddingValues,
         ) {
             // Device Info
@@ -353,6 +348,18 @@ fun DeviceSettingsScreen(
                         canRename = device.isAapReady,
                         onRename = onDeviceNameChange,
                         onShowDetails = { showDeviceDetails = true },
+                        // Live only: out of range the levels and estimates would be stale.
+                        battery = if (device.isLive && device.hasKnownBattery) {
+                            {
+                                InfoCardBattery(
+                                    device = device,
+                                    estimate = state.batteryEstimate,
+                                    health = state.batteryHealth,
+                                    healthPending = state.batteryHealthPending,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                )
+                            }
+                        } else null,
                     )
                 }
             }
@@ -367,14 +374,15 @@ fun DeviceSettingsScreen(
                 }
             }
 
-            // Listening time has dropped far below the model's rating — details live in the sheet
+            // Listening time has dropped far below the model's rating. The per-pod figures sit in the
+            // info card's battery block, which only shows while the device is live.
             val runtimeWarning = state.batteryRuntimeWarning
-            if (device != null && device.hasSelectedPairedDevice && runtimeWarning != null) {
+            if (device != null && device.hasSelectedPairedDevice && device.isLive && runtimeWarning != null) {
                 item("battery_runtime_warning") {
                     BatteryRuntimeWarningBanner(
                         slot = runtimeWarning.slot,
                         percent = runtimeWarning.reading.percent,
-                        onClick = { showDeviceDetails = true },
+                        onClick = { scope.launch { listState.animateScrollToItem(0) } },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     )
                 }
@@ -432,6 +440,8 @@ fun DeviceSettingsScreen(
                         onAutoConnectConditionChange = onAutoConnectConditionChange,
                         onShowPopUpOnCaseOpenChange = onShowPopUpOnCaseOpenChange,
                         onShowPopUpOnConnectionChange = onShowPopUpOnConnectionChange,
+                        onShowPopUpOnEarInChange = onShowPopUpOnEarInChange,
+                        onShowInEarPillChange = onShowInEarPillChange,
                     )
                 }
             } else {
@@ -455,6 +465,8 @@ fun DeviceSettingsScreen(
                         onNotifyWhenChargedChange = onNotifyWhenChargedChange,
                         onChargedThresholdChange = onChargedThresholdChange,
                         onChargedSlotScopeChange = onChargedSlotScopeChange,
+                        onNotifyWhenCaseLowChange = onNotifyWhenCaseLowChange,
+                        onCaseLowThresholdChange = onCaseLowThresholdChange,
                         onEstimateEnabledChange = onBatteryEstimateEnabledChange,
                         onResetEstimate = onResetBatteryEstimate,
                     )

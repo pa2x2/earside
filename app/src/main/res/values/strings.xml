@@ -36,6 +36,8 @@
     <string name="settings_monitor_connected_notification_description">Shows a second notification that only appears while a device is connected. With this on, you can hide the permanent \"No devices\" notification: turn off the \"Device status\" category in Android\'s notification settings for Earside.</string>
     <string name="settings_keep_notification_after_disconnect_label">Keep notification after disconnect</string>
     <string name="settings_keep_notification_after_disconnect_description">Continue showing the last known battery levels even after your AirPods disconnect</string>
+    <string name="settings_monitor_statusbar_battery_label">Battery level in status bar</string>
+    <string name="settings_monitor_statusbar_battery_description">Shows the battery percentage as the notification icon in the status bar. For earbuds, the lower of the two is shown, skipping one that is charging.</string>
     <string name="settings_autopause_label">Auto pause</string>
     <string name="settings_autopause_description">Pause audio when removing the device from your ear.</string>
     <string name="settings_autopplay_label">Auto play</string>
@@ -64,6 +66,12 @@
     <string name="settings_popup_caseopen_description">Show a popup when the device case is opened (experimental).</string>
     <string name="settings_popup_connected_label">Show connection popup</string>
     <string name="settings_popup_connected_description">Show a popup when the device connects for the first time.</string>
+    <string name="settings_popup_earin_label">Show in-ear popup</string>
+    <string name="settings_popup_earin_description">Show battery and listening mode at the top of the screen when you put them on while they\'re connected to this phone.</string>
+    <string name="settings_popup_earin_pill_label">Keep a pill around the camera</string>
+    <string name="settings_popup_earin_pill_description">When the popup hides, keep a small battery pill around the front camera until you take them off. Tap it to bring the popup back, swipe it up to hide it. Needs Earside\'s accessibility service.</string>
+    <string name="popup_pill_expand_action">Show popup</string>
+    <string name="popup_pill_open_action">Open device settings</string>
     <string name="settings_popup_info_not_in_app">Popups are only shown when you are not in the app.</string>
     <string name="settings_charged_notification_label">Charged notification</string>
     <string name="settings_charged_notification_description">Show a notification once everything that is charging reaches the target charge level.</string>
@@ -72,6 +80,9 @@
     <string name="settings_charged_scope_pods_label">Pods only</string>
     <string name="settings_charged_scope_case_label">Case only</string>
     <string name="settings_charged_scope_both_label">Pods and case</string>
+    <string name="settings_caselow_reminder_label">Case battery reminder</string>
+    <string name="settings_caselow_reminder_description">Remind me to charge the case when I put the pods back and the case battery is low.</string>
+    <string name="settings_caselow_threshold_label">Reminder level</string>
 
     <string name="device_settings_experimental_title">Experimental feature</string>
     <string name="device_settings_experimental_description">This feature hasn\'t been tested on all devices yet.</string>
@@ -237,6 +248,9 @@
     <string name="permission_ignore_battery_optimizations_label">Disable battery optimizations</string>
     <string name="permission_ignore_battery_optimizations_description">Battery optimizations prevent this app from reliably receiving Bluetooth data while the app is in the background.</string>
     <string name="permission_system_alert_window_label">System Alert Window</string>
+    <string name="permission_accessibility_service_label">Accessibility service</string>
+    <string name="permission_accessibility_service_description">Turn on Earside in Accessibility settings so the in-ear pill can sit around the camera, above the status bar. If the switch there is greyed out, open Earside\'s app info, tap ⋮ and allow restricted settings first.</string>
+    <string name="accessibility_service_description">Lets Earside draw the in-ear pill around the front camera, above the status bar. Earside doesn\'t read your screen or see what you do.</string>
     <string name="permission_system_alert_window_description">Allow Earside to draw over other apps to make the feature \"Show PopUp\" possible.</string>
 
 
@@ -463,11 +477,19 @@
     <string name="device_settings_info_right_serial_label">Right Pod Serial</string>
     <string name="device_settings_info_left_bonded_label">Left Bonded</string>
     <string name="device_settings_info_right_bonded_label">Right Bonded</string>
-    <string name="device_settings_info_battery_health_label">Estimated listening time</string>
-    <string name="device_settings_info_battery_health_left_label">Left pod listening time</string>
-    <string name="device_settings_info_battery_health_right_label">Right pod listening time</string>
-    <string name="device_settings_info_battery_health_value">~%1$d%% of rated</string>
-    <string name="device_settings_info_battery_health_pending">Still determining, check back later</string>
+    <!-- Lines under the battery levels in the Device Settings info card. Approximate value, e.g. "~2h 41m" or "~92%". -->
+    <string name="device_settings_battery_approx">~%1$s</string>
+    <!-- %1$s: one or more approximate durations joined by " · ", one per pod in the order the battery row shows them -->
+    <string name="device_settings_battery_time_left">%1$s left</string>
+    <!-- Lower case: usually follows another pod's figure on the same line -->
+    <string name="device_settings_battery_time_until_full">full in %1$s</string>
+    <!-- Appended while a time-left figure still comes from Apple's published battery life, before any drain has been measured -->
+    <string name="device_settings_battery_time_rated">%1$s (rated)</string>
+    <!-- How much of the model's rated listening time the pods still reach. %1$s: one or more approximate percentages joined by " · " -->
+    <string name="device_settings_battery_listening_time">Listening time %1$s of rated</string>
+    <string name="device_settings_battery_listening_time_left">Left pod listening time ~%1$d%% of rated</string>
+    <string name="device_settings_battery_listening_time_right">Right pod listening time ~%1$d%% of rated</string>
+    <string name="device_settings_battery_listening_time_pending">Listening time: still determining</string>
     <string name="device_settings_battery_runtime_warning_title">Listening time is much shorter than rated</string>
     <string name="device_settings_battery_runtime_warning_description">%1$s: about %2$d%% of the rated listening time. Tap for details.</string>
     <string name="device_settings_battery_runtime_warning_headset_label">These headphones</string>
@@ -557,6 +579,9 @@
     <string name="reaction_charged_notification_title">Charging complete</string>
     <string name="reaction_charged_notification_text_full">%1$s is fully charged.</string>
     <string name="reaction_charged_notification_text_partial">%1$s has been charged to %2$d%%.</string>
+    <string name="reaction_caselow_channel_label">Case battery reminder</string>
+    <string name="reaction_caselow_notification_title">Charge your case</string>
+    <string name="reaction_caselow_notification_text">%1$s: case battery is at %2$d%%.</string>
     <string name="device_settings_rename_label">Rename</string>
     <string name="device_settings_rename_hint">Device name</string>
     <string name="device_settings_rename_confirm">Rename</string>

@@ -33,11 +33,15 @@ data class AppleDeviceProfile(
     @SerialName("reactionAutoConnectCondition") val autoConnectCondition: AutoConnectCondition = AutoConnectCondition.WHEN_SEEN,
     @SerialName("reactionShowPopUpOnCaseOpen") val showPopUpOnCaseOpen: Boolean = false,
     @SerialName("reactionShowPopUpOnConnection") val showPopUpOnConnection: Boolean = false,
+    @SerialName("reactionShowPopUpOnEarIn") val showPopUpOnEarIn: Boolean = false,
+    @SerialName("reactionShowInEarPill") val showInEarPill: Boolean = false,
     @SerialName("reactionConversationAction") val conversationAction: ConversationAction = ConversationAction.NOTHING,
     @SerialName("reactionConversationVolumeReduction") val conversationVolumeReduction: Int = ReactionConfig.DEFAULT_CONVERSATION_VOLUME_REDUCTION,
     @SerialName("reactionNotifyWhenCharged") val notifyWhenCharged: Boolean = false,
     @SerialName("reactionChargedThreshold") val chargedThreshold: Int = ReactionConfig.DEFAULT_CHARGED_THRESHOLD,
     @SerialName("reactionChargedSlotScope") val chargedSlotScope: ChargedSlotScope = ChargedSlotScope.PODS_AND_CASE,
+    @SerialName("reactionNotifyWhenCaseLow") val notifyWhenCaseLow: Boolean = false,
+    @SerialName("reactionCaseLowThreshold") val caseLowThreshold: Int = ReactionConfig.DEFAULT_CASE_LOW_THRESHOLD,
     /** Whether the dashboard battery time-remaining estimate is shown for this device. */
     @SerialName("batteryEstimateEnabled") val batteryEstimateEnabled: Boolean = true,
     /**
@@ -65,11 +69,15 @@ data class AppleDeviceProfile(
             autoConnectCondition = autoConnectCondition,
             showPopUpOnCaseOpen = showPopUpOnCaseOpen,
             showPopUpOnConnection = showPopUpOnConnection,
+            showPopUpOnEarIn = showPopUpOnEarIn,
+            showInEarPill = showInEarPill,
             conversationAction = conversationAction,
             conversationVolumeReduction = conversationVolumeReduction,
             notifyWhenCharged = notifyWhenCharged,
             chargedThreshold = chargedThreshold,
             chargedSlotScope = chargedSlotScope,
+            notifyWhenCaseLow = notifyWhenCaseLow,
+            caseLowThreshold = caseLowThreshold,
         )
 
     override fun toString(): String = "AppleDeviceProfile(" +
@@ -83,11 +91,15 @@ data class AppleDeviceProfile(
         "autoConnectCondition=$autoConnectCondition, " +
         "showPopUpOnCaseOpen=$showPopUpOnCaseOpen, " +
         "showPopUpOnConnection=$showPopUpOnConnection, " +
+        "showPopUpOnEarIn=$showPopUpOnEarIn, " +
+        "showInEarPill=$showInEarPill, " +
         "conversationAction=$conversationAction, " +
         "conversationVolumeReduction=$conversationVolumeReduction, " +
         "notifyWhenCharged=$notifyWhenCharged, " +
         "chargedThreshold=$chargedThreshold, " +
         "chargedSlotScope=$chargedSlotScope, " +
+        "notifyWhenCaseLow=$notifyWhenCaseLow, " +
+        "caseLowThreshold=$caseLowThreshold, " +
         "batteryEstimateEnabled=$batteryEstimateEnabled, " +
         "learnedAllowOffEnabled=$learnedAllowOffEnabled, " +
         "lastRequestedListeningModeCycleMask=$lastRequestedListeningModeCycleMask, " +

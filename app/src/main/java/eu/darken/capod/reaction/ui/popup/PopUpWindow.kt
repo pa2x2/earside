@@ -126,27 +126,27 @@ class PopUpWindow @Inject constructor(
         deviceState = null
     }
 
-    /**
-     * Minimal [SavedStateRegistryOwner] for hosting a [ComposeView] inside a WindowManager overlay,
-     * where no Activity or Fragment lifecycle is available.
-     */
-    private class OverlayLifecycleOwner : SavedStateRegistryOwner {
-        private val lifecycleRegistry = LifecycleRegistry(this)
-        private val savedStateRegistryController = SavedStateRegistryController.create(this)
-
-        init {
-            savedStateRegistryController.performRestore(null)
-        }
-
-        override val lifecycle: Lifecycle get() = lifecycleRegistry
-        override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
-
-        fun handleLifecycleEvent(event: Lifecycle.Event) {
-            lifecycleRegistry.handleLifecycleEvent(event)
-        }
-    }
-
     companion object {
         private val TAG = logTag("Reaction", "PopUp", "Window")
+    }
+}
+
+/**
+ * Minimal [SavedStateRegistryOwner] for hosting a [ComposeView] inside a WindowManager overlay,
+ * where no Activity or Fragment lifecycle is available.
+ */
+internal class OverlayLifecycleOwner : SavedStateRegistryOwner {
+    private val lifecycleRegistry = LifecycleRegistry(this)
+    private val savedStateRegistryController = SavedStateRegistryController.create(this)
+
+    init {
+        savedStateRegistryController.performRestore(null)
+    }
+
+    override val lifecycle: Lifecycle get() = lifecycleRegistry
+    override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
+
+    fun handleLifecycleEvent(event: Lifecycle.Event) {
+        lifecycleRegistry.handleLifecycleEvent(event)
     }
 }

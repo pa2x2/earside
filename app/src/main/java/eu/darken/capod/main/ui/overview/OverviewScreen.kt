@@ -158,6 +158,11 @@ fun OverviewScreenHost(vm: OverviewViewModel = hiltViewModel()) {
                     )
                 }
 
+                Permission.ACCESSIBILITY_SERVICE -> {
+                    awaitingPermission = true
+                    context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                }
+
                 else -> {
                     permissionLauncher.launch(permission.permissionId)
                 }

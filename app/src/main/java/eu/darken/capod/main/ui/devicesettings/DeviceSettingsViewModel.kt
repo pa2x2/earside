@@ -22,9 +22,11 @@ import eu.darken.capod.monitor.core.DeviceMonitor
 import eu.darken.capod.monitor.core.MonitorModeResolver
 import eu.darken.capod.monitor.core.PodDevice
 import eu.darken.capod.monitor.core.battery.BatteryDrainStore
+import eu.darken.capod.monitor.core.battery.BatteryEstimate
 import eu.darken.capod.monitor.core.battery.BatteryEstimator
 import eu.darken.capod.monitor.core.battery.BatteryHealth
 import eu.darken.capod.monitor.core.battery.DrainProfile
+import eu.darken.capod.monitor.core.battery.estimateFor
 import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.monitor.core.resolvedAncCycleMask
 import eu.darken.capod.pods.core.apple.aap.AapConnectionManager
@@ -138,6 +140,7 @@ class DeviceSettingsViewModel @Inject constructor(
             nudgeCapabilityStore.availability,
             drainStore.profiles,
             deviceRuleItems.observe(profileId),
+            batteryEstimator.estimates,
         ) { args ->
             val device = args[1] as PodDevice?
             val upgrade = args[2] as UpgradeRepo.Info
@@ -156,6 +159,9 @@ class DeviceSettingsViewModel @Inject constructor(
 
             @Suppress("UNCHECKED_CAST")
             val rules = args[9] as List<DeviceRuleItem>
+
+            @Suppress("UNCHECKED_CAST")
+            val estimates = args[10] as Map<ProfileId, BatteryEstimate>
             val appleProfile = profiles.filterIsInstance<AppleDeviceProfile>()
                 .firstOrNull { it.id == profileId }
             val stemActions = appleProfile?.stemActions
@@ -198,6 +204,7 @@ class DeviceSettingsViewModel @Inject constructor(
                     device.model.batterySpec != null &&
                     device.hasSelectedPairedDevice,
                 rules = rules,
+                batteryEstimate = device?.let { estimates.estimateFor(it) },
             )
         }
     }.asLiveState()
@@ -234,6 +241,7 @@ class DeviceSettingsViewModel @Inject constructor(
          * shows the "still determining" placeholder while [batteryHealth] is null. */
         val batteryHealthPending: Boolean = false,
         val rules: List<DeviceRuleItem> = emptyList(),
+        val batteryEstimate: BatteryEstimate? = null,
     ) {
         val reactions: ReactionConfig get() = device?.reactions ?: ReactionConfig()
     }
@@ -464,14 +472,18 @@ class DeviceSettingsViewModel @Inject constructor(
 
     /**
      * Keeps the device-side Automatic Ear Detection setting in sync with the
-     * auto-play / auto-pause reaction toggles.  When either reaction is active
-     * the device must report ear-in / ear-out events; when both are off the
-     * setting is disabled to match the user's intent.
+     * auto-play / auto-pause / in-ear popup reaction toggles.  When any of them
+     * is active the device must report ear-in / ear-out events; when all are off
+     * the setting is disabled to match the user's intent.
      *
      * Only sends when the model supports the setting and AAP is ready —
      * silent no-op otherwise (reactions are per-profile and work offline).
      */
-    private suspend fun syncEarDetection(autoPlay: Boolean? = null, autoPause: Boolean? = null) {
+    private suspend fun syncEarDetection(
+        autoPlay: Boolean? = null,
+        autoPause: Boolean? = null,
+        popUpOnEarIn: Boolean? = null,
+    ) {
         val profileId = targetProfileId.value ?: return
         val device = deviceMonitor.getDeviceForProfile(profileId) ?: return
         if (device.model?.features?.hasEarDetectionToggle != true) return
@@ -479,7 +491,8 @@ class DeviceSettingsViewModel @Inject constructor(
         val reactions = device.reactions
         val effectiveAutoPlay = autoPlay ?: reactions.autoPlay
         val effectiveAutoPause = autoPause ?: reactions.autoPause
-        sendInternal(AapCommand.SetEarDetectionEnabled(effectiveAutoPlay || effectiveAutoPause))
+        val effectivePopUp = popUpOnEarIn ?: reactions.showPopUpOnEarIn
+        sendInternal(AapCommand.SetEarDetectionEnabled(effectiveAutoPlay || effectiveAutoPause || effectivePopUp))
     }
 
     fun setAutoConnect(enabled: Boolean) = launch {
@@ -502,6 +515,21 @@ class DeviceSettingsViewModel @Inject constructor(
         proGatedReaction(enabled) { it.copy(showPopUpOnConnection = enabled) }
     }
 
+    fun setShowPopUpOnEarIn(enabled: Boolean) = launch {
+        log(TAG, INFO) { "setShowPopUpOnEarIn($enabled)" }
+        if (enabled && !upgradeRepo.isProForUi()) {
+            navTo(Nav.Main.Upgrade())
+            return@launch
+        }
+        updateProfileNow { it.copy(showPopUpOnEarIn = enabled) }
+        syncEarDetection(popUpOnEarIn = enabled)
+    }
+
+    fun setShowInEarPill(enabled: Boolean) {
+        log(TAG, INFO) { "setShowInEarPill($enabled)" }
+        proGatedReaction(enabled) { it.copy(showInEarPill = enabled) }
+    }
+
     fun setNotifyWhenCharged(enabled: Boolean) {
         log(TAG, INFO) { "setNotifyWhenCharged($enabled)" }
         proGatedReaction(enabled) { it.copy(notifyWhenCharged = enabled) }
@@ -518,6 +546,19 @@ class DeviceSettingsViewModel @Inject constructor(
             .let { Math.round(it) * ReactionConfig.CHARGED_THRESHOLD_STEP }
             .coerceIn(ReactionConfig.MIN_CHARGED_THRESHOLD, ReactionConfig.MAX_CHARGED_THRESHOLD)
         updateProfileNow { it.copy(chargedThreshold = snapped) }
+    }
+
+    fun setNotifyWhenCaseLow(enabled: Boolean) {
+        log(TAG, INFO) { "setNotifyWhenCaseLow($enabled)" }
+        proGatedReaction(enabled) { it.copy(notifyWhenCaseLow = enabled) }
+    }
+
+    fun setCaseLowThreshold(percent: Int) = launch {
+        log(TAG, INFO) { "setCaseLowThreshold($percent)" }
+        val snapped = (percent.toFloat() / ReactionConfig.CASE_LOW_THRESHOLD_STEP)
+            .let { Math.round(it) * ReactionConfig.CASE_LOW_THRESHOLD_STEP }
+            .coerceIn(ReactionConfig.MIN_CASE_LOW_THRESHOLD, ReactionConfig.MAX_CASE_LOW_THRESHOLD)
+        updateProfileNow { it.copy(caseLowThreshold = snapped) }
     }
 
     fun setConversationAction(action: ConversationAction) = launch {

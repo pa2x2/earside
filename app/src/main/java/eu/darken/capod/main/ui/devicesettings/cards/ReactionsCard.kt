@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.Message
 import androidx.compose.material.icons.automirrored.twotone.VolumeDown
 import androidx.compose.material.icons.twotone.BluetoothConnected
+import androidx.compose.material.icons.twotone.CameraFront
 import androidx.compose.material.icons.twotone.Hearing
 import androidx.compose.material.icons.twotone.LooksOne
 import androidx.compose.material.icons.twotone.Nightlight
@@ -63,6 +64,8 @@ internal fun ReactionsCard(
     onAutoConnectConditionChange: (AutoConnectCondition) -> Unit = {},
     onShowPopUpOnCaseOpenChange: (Boolean) -> Unit = {},
     onShowPopUpOnConnectionChange: (Boolean) -> Unit = {},
+    onShowPopUpOnEarInChange: (Boolean) -> Unit = {},
+    onShowInEarPillChange: (Boolean) -> Unit = {},
     deviceRules: @Composable () -> Unit = {},
 ) {
     val reactions = device.reactions
@@ -233,6 +236,26 @@ internal fun ReactionsCard(
                 requiresUpgrade = !isPro,
             )
         }
+        if (features.hasEarDetection) {
+            SettingsSwitchItem(
+                icon = Icons.AutoMirrored.TwoTone.Message,
+                title = stringResource(R.string.settings_popup_earin_label),
+                subtitle = stringResource(R.string.settings_popup_earin_description),
+                checked = reactions.showPopUpOnEarIn,
+                onCheckedChange = onShowPopUpOnEarInChange,
+                requiresUpgrade = !isPro,
+            )
+            if (reactions.showPopUpOnEarIn) {
+                SettingsSwitchItem(
+                    icon = Icons.TwoTone.CameraFront,
+                    title = stringResource(R.string.settings_popup_earin_pill_label),
+                    subtitle = stringResource(R.string.settings_popup_earin_pill_description),
+                    checked = reactions.showInEarPill,
+                    onCheckedChange = onShowInEarPillChange,
+                    requiresUpgrade = !isPro,
+                )
+            }
+        }
         SettingsSwitchItem(
             icon = Icons.AutoMirrored.TwoTone.Message,
             title = stringResource(R.string.settings_popup_connected_label),
@@ -241,7 +264,9 @@ internal fun ReactionsCard(
             onCheckedChange = onShowPopUpOnConnectionChange,
             requiresUpgrade = !isPro,
         )
-        val anyPopupEnabled = reactions.showPopUpOnCaseOpen || reactions.showPopUpOnConnection
+        val anyPopupEnabled = reactions.showPopUpOnCaseOpen ||
+            reactions.showPopUpOnConnection ||
+            reactions.showPopUpOnEarIn
         if (anyPopupEnabled) {
             SettingsInfoBox(
                 text = stringResource(R.string.settings_popup_info_not_in_app),

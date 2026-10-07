@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.BluetoothSearching
+import androidx.compose.material.icons.twotone.AccessibilityNew
 import androidx.compose.material.icons.twotone.BatterySaver
 import androidx.compose.material.icons.twotone.Bluetooth
 import androidx.compose.material.icons.twotone.BluetoothConnected
@@ -103,5 +104,6 @@ private fun Permission.iconVector(): ImageVector = when (this) {
     Permission.ACCESS_BACKGROUND_LOCATION -> Icons.TwoTone.ShareLocation
     Permission.IGNORE_BATTERY_OPTIMIZATION -> Icons.TwoTone.BatterySaver
     Permission.SYSTEM_ALERT_WINDOW -> Icons.TwoTone.Layers
+    Permission.ACCESSIBILITY_SERVICE -> Icons.TwoTone.AccessibilityNew
     Permission.POST_NOTIFICATIONS -> Icons.TwoTone.Notifications
 }

@@ -644,6 +644,8 @@ class DefaultAapDeviceProfile(
     private fun String?.parseEpochSecondsOrNull(): java.time.Instant? {
         if (this.isNullOrBlank()) return null
         val seconds = this.toLongOrNull() ?: return null
+        // Pods without a recorded pairing date (seen on AirPods 5) send 0.
+        if (seconds <= 0L) return null
         return runCatching { java.time.Instant.ofEpochSecond(seconds) }.getOrNull()
     }
 

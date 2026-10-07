@@ -22,9 +22,11 @@ import eu.darken.capod.monitor.core.DeviceMonitor
 import eu.darken.capod.monitor.core.MonitorModeResolver
 import eu.darken.capod.monitor.core.PodDevice
 import eu.darken.capod.monitor.core.battery.BatteryDrainStore
+import eu.darken.capod.monitor.core.battery.BatteryEstimate
 import eu.darken.capod.monitor.core.battery.BatteryEstimator
 import eu.darken.capod.monitor.core.battery.BatteryHealth
 import eu.darken.capod.monitor.core.battery.DrainProfile
+import eu.darken.capod.monitor.core.battery.estimateFor
 import eu.darken.capod.monitor.core.controls.DeviceControls
 import eu.darken.capod.monitor.core.resolvedAncCycleMask
 import eu.darken.capod.pods.core.apple.aap.AapConnectionManager
@@ -138,6 +140,7 @@ class DeviceSettingsViewModel @Inject constructor(
             nudgeCapabilityStore.availability,
             drainStore.profiles,
             deviceRuleItems.observe(profileId),
+            batteryEstimator.estimates,
         ) { args ->
             val device = args[1] as PodDevice?
             val upgrade = args[2] as UpgradeRepo.Info
@@ -156,6 +159,9 @@ class DeviceSettingsViewModel @Inject constructor(
 
             @Suppress("UNCHECKED_CAST")
             val rules = args[9] as List<DeviceRuleItem>
+
+            @Suppress("UNCHECKED_CAST")
+            val estimates = args[10] as Map<ProfileId, BatteryEstimate>
             val appleProfile = profiles.filterIsInstance<AppleDeviceProfile>()
                 .firstOrNull { it.id == profileId }
             val stemActions = appleProfile?.stemActions
@@ -198,6 +204,7 @@ class DeviceSettingsViewModel @Inject constructor(
                     device.model.batterySpec != null &&
                     device.hasSelectedPairedDevice,
                 rules = rules,
+                batteryEstimate = device?.let { estimates.estimateFor(it) },
             )
         }
     }.asLiveState()
@@ -234,6 +241,7 @@ class DeviceSettingsViewModel @Inject constructor(
          * shows the "still determining" placeholder while [batteryHealth] is null. */
         val batteryHealthPending: Boolean = false,
         val rules: List<DeviceRuleItem> = emptyList(),
+        val batteryEstimate: BatteryEstimate? = null,
     ) {
         val reactions: ReactionConfig get() = device?.reactions ?: ReactionConfig()
     }

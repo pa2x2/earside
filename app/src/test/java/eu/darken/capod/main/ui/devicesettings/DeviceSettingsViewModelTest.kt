@@ -133,7 +133,9 @@ class DeviceSettingsViewModelTest : BaseTest() {
         profilesRepo = mockk(relaxed = true) {
             every { profiles } returns profilesFlow
         }
-        batteryEstimator = mockk(relaxed = true)
+        batteryEstimator = mockk<BatteryEstimator>(relaxed = true).also {
+            every { it.estimates } returns MutableStateFlow(emptyMap())
+        }
         drainProfilesFlow = MutableStateFlow(emptyMap())
         drainStore = mockk<BatteryDrainStore>().also {
             every { it.profiles } returns drainProfilesFlow

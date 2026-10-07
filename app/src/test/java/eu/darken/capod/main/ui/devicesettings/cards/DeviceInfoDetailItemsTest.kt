@@ -20,9 +20,6 @@ class DeviceInfoDetailItemsTest : BaseTest() {
         rightSerial = "Right Pod Serial",
         leftBonded = "Left Bonded",
         rightBonded = "Right Bonded",
-        batteryHealth = "Battery Health",
-        leftBatteryHealth = "Left Battery Health",
-        rightBatteryHealth = "Right Battery Health",
     )
 
     private val formatter: (Instant) -> String = { "fmt:${it.epochSecond}" }
@@ -56,95 +53,6 @@ class DeviceInfoDetailItemsTest : BaseTest() {
     @Test
     fun `null AapDeviceInfo yields empty list`() {
         buildDeviceInfoDetailItems(null, labels, formatDate = formatter) shouldBe emptyList()
-    }
-
-    @Test
-    fun `battery health shows without AapDeviceInfo`() {
-        // BLE-only devices never produce an AAP info response but can still have learned health.
-        val result = buildDeviceInfoDetailItems(
-            null,
-            labels,
-            batteryHealth = BatteryHealthTexts(left = "~85%", right = "~78%"),
-            formatDate = formatter,
-        )
-        result shouldContainExactly listOf(
-            DeviceDetailItem.Paired(
-                start = DeviceDetailItem.Single("Left Battery Health", "~85%"),
-                end = DeviceDetailItem.Single("Right Battery Health", "~78%"),
-            ),
-        )
-    }
-
-    @Test
-    fun `battery health is appended after the info rows`() {
-        val result = buildDeviceInfoDetailItems(
-            info(manufacturer = "Apple", serialNumber = "ABC123", firmwareVersion = "7A305"),
-            labels,
-            batteryHealth = BatteryHealthTexts(left = "~72%", right = "~90%"),
-            formatDate = formatter,
-        )
-        result shouldContainExactly listOf(
-            DeviceDetailItem.Single("Manufacturer", "Apple"),
-            DeviceDetailItem.Single("Serial Number", "ABC123"),
-            DeviceDetailItem.Single("Firmware", "7A305"),
-            DeviceDetailItem.Paired(
-                start = DeviceDetailItem.Single("Left Battery Health", "~72%"),
-                end = DeviceDetailItem.Single("Right Battery Health", "~90%"),
-            ),
-        )
-    }
-
-    @Test
-    fun `single-sided battery health yields a Single row`() {
-        val result = buildDeviceInfoDetailItems(
-            null,
-            labels,
-            batteryHealth = BatteryHealthTexts(left = "~85%"),
-            formatDate = formatter,
-        )
-        result shouldContainExactly listOf(
-            DeviceDetailItem.Single("Left Battery Health", "~85%"),
-        )
-    }
-
-    @Test
-    fun `pending placeholder shows while no health value exists`() {
-        // The feature stays discoverable before enough listening data has accumulated.
-        val result = buildDeviceInfoDetailItems(
-            null,
-            labels,
-            batteryHealth = BatteryHealthTexts(pending = "Still determining"),
-            formatDate = formatter,
-        )
-        result shouldContainExactly listOf(
-            DeviceDetailItem.Single("Battery Health", "Still determining"),
-        )
-    }
-
-    @Test
-    fun `pending placeholder is ignored once a health value exists`() {
-        val result = buildDeviceInfoDetailItems(
-            null,
-            labels,
-            batteryHealth = BatteryHealthTexts(left = "~85%", pending = "Still determining"),
-            formatDate = formatter,
-        )
-        result shouldContainExactly listOf(
-            DeviceDetailItem.Single("Left Battery Health", "~85%"),
-        )
-    }
-
-    @Test
-    fun `headset battery health yields a Single row with the generic label`() {
-        val result = buildDeviceInfoDetailItems(
-            null,
-            labels,
-            batteryHealth = BatteryHealthTexts(headset = "~64%"),
-            formatDate = formatter,
-        )
-        result shouldContainExactly listOf(
-            DeviceDetailItem.Single("Battery Health", "~64%"),
-        )
     }
 
     @Test

@@ -477,11 +477,19 @@
     <string name="device_settings_info_right_serial_label">Right Pod Serial</string>
     <string name="device_settings_info_left_bonded_label">Left Bonded</string>
     <string name="device_settings_info_right_bonded_label">Right Bonded</string>
-    <string name="device_settings_info_battery_health_label">Estimated listening time</string>
-    <string name="device_settings_info_battery_health_left_label">Left pod listening time</string>
-    <string name="device_settings_info_battery_health_right_label">Right pod listening time</string>
-    <string name="device_settings_info_battery_health_value">~%1$d%% of rated</string>
-    <string name="device_settings_info_battery_health_pending">Still determining, check back later</string>
+    <!-- Lines under the battery levels in the Device Settings info card. Approximate value, e.g. "~2h 41m" or "~92%". -->
+    <string name="device_settings_battery_approx">~%1$s</string>
+    <!-- %1$s: one or more approximate durations joined by " · ", one per pod in the order the battery row shows them -->
+    <string name="device_settings_battery_time_left">%1$s left</string>
+    <!-- Lower case: usually follows another pod's figure on the same line -->
+    <string name="device_settings_battery_time_until_full">full in %1$s</string>
+    <!-- Appended while a time-left figure still comes from Apple's published battery life, before any drain has been measured -->
+    <string name="device_settings_battery_time_rated">%1$s (rated)</string>
+    <!-- How much of the model's rated listening time the pods still reach. %1$s: one or more approximate percentages joined by " · " -->
+    <string name="device_settings_battery_listening_time">Listening time %1$s of rated</string>
+    <string name="device_settings_battery_listening_time_left">Left pod listening time ~%1$d%% of rated</string>
+    <string name="device_settings_battery_listening_time_right">Right pod listening time ~%1$d%% of rated</string>
+    <string name="device_settings_battery_listening_time_pending">Listening time: still determining</string>
     <string name="device_settings_battery_runtime_warning_title">Listening time is much shorter than rated</string>
     <string name="device_settings_battery_runtime_warning_description">%1$s: about %2$d%% of the rated listening time. Tap for details.</string>
     <string name="device_settings_battery_runtime_warning_headset_label">These headphones</string>

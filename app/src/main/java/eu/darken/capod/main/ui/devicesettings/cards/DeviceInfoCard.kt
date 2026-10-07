@@ -53,6 +53,7 @@ internal fun DeviceInfoCard(
     canRename: Boolean = false,
     onRename: (String) -> Unit = {},
     onShowDetails: () -> Unit = {},
+    battery: (@Composable () -> Unit)? = null,
 ) {
     var showRenameDialog by remember { mutableStateOf(false) }
 
@@ -182,6 +183,7 @@ internal fun DeviceInfoCard(
                     value = lastSeen,
                 )
             }
+            battery?.invoke()
         }
     }
 }

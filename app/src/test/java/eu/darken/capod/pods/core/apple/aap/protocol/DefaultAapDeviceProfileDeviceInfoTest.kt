@@ -149,6 +149,23 @@ class DefaultAapDeviceProfileDeviceInfoTest : BaseAapSessionTest() {
     }
 
     @Test
+    fun `zero first-paired timestamps mean no date`() {
+        // AirPods 5 (A3440) send "0" for both pods; shown as a date it reads Jan 1, 1970.
+        val uuid = "11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF 00 01"
+        val msg = infoMessage(
+            "41 00", "41 00", "41 00", "53 00",
+            "46 00", "46 00", "48 00", "65 00",
+            "4C 00", "52 00", "4D 00",
+            uuid, uuid,
+            "30 00",                          // "0\0"
+            "30 00",
+        )
+        val info = profile.decodeDeviceInfo(msg)!!
+        info.leftEarbudFirstPaired.shouldBeNull()
+        info.rightEarbudFirstPaired.shouldBeNull()
+    }
+
+    @Test
     fun `decodeDeviceInfo returns null for non-Information messages`() {
         val msg = aapMessage("04 00 04 00 09 00 0D 02 00 00 00") // Control message, not 0x1D
         profile.decodeDeviceInfo(msg).shouldBeNull()

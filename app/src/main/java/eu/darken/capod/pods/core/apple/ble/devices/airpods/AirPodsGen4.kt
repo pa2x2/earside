@@ -35,15 +35,15 @@ data class AirPodsGen4(
 
     @get:DrawableRes
     override val leftPodIcon: Int
-        get() = R.drawable.device_airpods_gen3_left
+        get() = R.drawable.device_airpods_gen4anc_left
 
     @get:DrawableRes
     override val rightPodIcon: Int
-        get() = R.drawable.device_airpods_gen3_right
+        get() = R.drawable.device_airpods_gen4anc_right
 
     @get:DrawableRes
     override val caseIcon: Int
-        get() = R.drawable.device_airpods_gen3_case
+        get() = R.drawable.device_airpods_gen4anc_case
 
     override val batteryCasePercent: Float?
         get() = super.batteryCasePercent ?: cachedBatteryPercentage

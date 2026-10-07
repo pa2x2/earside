@@ -36,6 +36,8 @@
     <string name="settings_monitor_connected_notification_description">Shows a second notification that only appears while a device is connected. With this on, you can hide the permanent \"No devices\" notification: turn off the \"Device status\" category in Android\'s notification settings for Earside.</string>
     <string name="settings_keep_notification_after_disconnect_label">Keep notification after disconnect</string>
     <string name="settings_keep_notification_after_disconnect_description">Continue showing the last known battery levels even after your AirPods disconnect</string>
+    <string name="settings_monitor_statusbar_battery_label">Battery level in status bar</string>
+    <string name="settings_monitor_statusbar_battery_description">Shows the battery percentage as the notification icon in the status bar. For earbuds, the lower of the two is shown, skipping one that is charging.</string>
     <string name="settings_autopause_label">Auto pause</string>
     <string name="settings_autopause_description">Pause audio when removing the device from your ear.</string>
     <string name="settings_autopplay_label">Auto play</string>
@@ -78,6 +80,9 @@
     <string name="settings_charged_scope_pods_label">Pods only</string>
     <string name="settings_charged_scope_case_label">Case only</string>
     <string name="settings_charged_scope_both_label">Pods and case</string>
+    <string name="settings_caselow_reminder_label">Case battery reminder</string>
+    <string name="settings_caselow_reminder_description">Remind me to charge the case when I put the pods back and the case battery is low.</string>
+    <string name="settings_caselow_threshold_label">Reminder level</string>
 
     <string name="device_settings_experimental_title">Experimental feature</string>
     <string name="device_settings_experimental_description">This feature hasn\'t been tested on all devices yet.</string>
@@ -566,6 +571,9 @@
     <string name="reaction_charged_notification_title">Charging complete</string>
     <string name="reaction_charged_notification_text_full">%1$s is fully charged.</string>
     <string name="reaction_charged_notification_text_partial">%1$s has been charged to %2$d%%.</string>
+    <string name="reaction_caselow_channel_label">Case battery reminder</string>
+    <string name="reaction_caselow_notification_title">Charge your case</string>
+    <string name="reaction_caselow_notification_text">%1$s: case battery is at %2$d%%.</string>
     <string name="device_settings_rename_label">Rename</string>
     <string name="device_settings_rename_hint">Device name</string>
     <string name="device_settings_rename_confirm">Rename</string>

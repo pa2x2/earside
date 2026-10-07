@@ -192,6 +192,8 @@ fun DeviceSettingsScreenHost(
         onNotifyWhenChargedChange = { vm.setNotifyWhenCharged(it) },
         onChargedThresholdChange = { vm.setChargedThreshold(it) },
         onChargedSlotScopeChange = { vm.setChargedSlotScope(it) },
+        onNotifyWhenCaseLowChange = { vm.setNotifyWhenCaseLow(it) },
+        onCaseLowThresholdChange = { vm.setCaseLowThreshold(it) },
         onBatteryEstimateEnabledChange = { vm.setBatteryEstimateEnabled(it) },
         onResetBatteryEstimate = { vm.resetBatteryEstimate() },
     )
@@ -238,6 +240,8 @@ fun DeviceSettingsScreen(
     onNotifyWhenChargedChange: (Boolean) -> Unit = {},
     onChargedThresholdChange: (Int) -> Unit = {},
     onChargedSlotScopeChange: (ChargedSlotScope) -> Unit = {},
+    onNotifyWhenCaseLowChange: (Boolean) -> Unit = {},
+    onCaseLowThresholdChange: (Int) -> Unit = {},
     onBatteryEstimateEnabledChange: (Boolean) -> Unit = {},
     onResetBatteryEstimate: () -> Unit = {},
 ) {
@@ -461,6 +465,8 @@ fun DeviceSettingsScreen(
                         onNotifyWhenChargedChange = onNotifyWhenChargedChange,
                         onChargedThresholdChange = onChargedThresholdChange,
                         onChargedSlotScopeChange = onChargedSlotScopeChange,
+                        onNotifyWhenCaseLowChange = onNotifyWhenCaseLowChange,
+                        onCaseLowThresholdChange = onCaseLowThresholdChange,
                         onEstimateEnabledChange = onBatteryEstimateEnabledChange,
                         onResetEstimate = onResetBatteryEstimate,
                     )

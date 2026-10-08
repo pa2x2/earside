@@ -127,6 +127,12 @@ class InEarPopUpReaction @Inject constructor(
             if (!current.eligible || current.profileId == null) return Decision.NONE to "not eligible"
 
             val wasInEar = if (sameDevice) previous?.inEar else null
+            // The cached device stays in the flow after it disconnects, so nothing else would ever
+            // take the pill down. An AAP drop alone doesn't count: it reconnects under live audio.
+            val wasConnected = sameDevice && (previous?.inEar != null || previous?.connectedAt != null)
+            if (wasConnected && current.inEar == null && current.connectedAt == null) {
+                return Decision.HIDE to "disconnected"
+            }
             return when {
                 current.inEar == true && wasInEar == false -> {
                     if (lastTakenOffAt != null && Duration.between(lastTakenOffAt, now) < TAKEN_OFF_COOLDOWN) {

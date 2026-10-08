@@ -75,6 +75,7 @@ import eu.darken.capod.monitor.core.DeviceMonitor
 import eu.darken.capod.monitor.core.PodDevice
 import eu.darken.capod.pods.core.apple.ble.formatBatteryPercent
 import eu.darken.capod.profiles.core.ProfileId
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -115,10 +116,15 @@ class InEarPillWindow @Inject constructor(
         val onDismiss: () -> Unit,
     )
 
-    private class PillState(val profileId: ProfileId, placement: PillPlacement, val actions: Actions) {
+    private class PillState(
+        val profileId: ProfileId,
+        placement: PillPlacement,
+        val actions: Actions,
+        statusBarVisible: Boolean,
+    ) {
         var placement by mutableStateOf(placement)
         var requested by mutableStateOf(true)
-        var statusBarVisible by mutableStateOf(true)
+        var statusBarVisible by mutableStateOf(statusBarVisible)
         val visibility = MutableTransitionState(false)
     }
 
@@ -174,7 +180,7 @@ class InEarPillWindow @Inject constructor(
 
             val placement = measurePlacement(service)
             log(TAG) { "Placing the pill at $placement" }
-            val state = PillState(profileId, placement, actions)
+            val state = PillState(profileId, placement, actions, isStatusBarVisible(service))
             pillState = state
 
             val owner = OverlayLifecycleOwner()
@@ -190,24 +196,25 @@ class InEarPillWindow @Inject constructor(
                     }
                 }
             }
-            if (hasApiLevel(Build.VERSION_CODES.R)) {
-                view.setOnApplyWindowInsetsListener { v, insets ->
-                    onStatusBarVisibilityChanged(state, insets.isVisible(WindowInsets.Type.statusBars()))
-                    v.onApplyWindowInsets(insets)
-                }
-            }
             composeView = view
 
             owner.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
             owner.handleLifecycleEvent(Lifecycle.Event.ON_START)
             owner.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
-            service.windowManager.addView(view, createLayoutParams(placement, touchable = true))
+            service.windowManager.addView(view, createLayoutParams(placement, touchable = state.statusBarVisible))
             service.getSystemService(DisplayManager::class.java)
                 ?.registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
         } catch (e: Exception) {
             log(TAG, ERROR) { "show() failed: ${e.asLog()}" }
         }
+    }
+
+    // The pill's window sits above the status bar, so Android leaves the bar out of that window's
+    // insets. The window metrics still report whether it's showing.
+    private fun isStatusBarVisible(context: Context): Boolean {
+        if (!hasApiLevel(Build.VERSION_CODES.R)) return true
+        return context.windowManager.currentWindowMetrics.windowInsets.isVisible(WindowInsets.Type.statusBars())
     }
 
     private fun onStatusBarVisibilityChanged(state: PillState, visible: Boolean) {
@@ -309,6 +316,17 @@ class InEarPillWindow @Inject constructor(
             state.visibility.targetState = state.requested && device != null && state.statusBarVisible
         }
 
+        // Nothing calls back when another app hides or shows the status bar, so check it while the
+        // pill is up.
+        LaunchedEffect(state) {
+            if (!hasApiLevel(Build.VERSION_CODES.R)) return@LaunchedEffect
+            while (true) {
+                delay(STATUS_BAR_POLL_MS)
+                val service = service ?: return@LaunchedEffect
+                onStatusBarVisibilityChanged(state, isStatusBarVisible(service))
+            }
+        }
+
         LaunchedEffect(state) {
             snapshotFlow {
                 !state.requested && state.visibility.isIdle && !state.visibility.currentState
@@ -385,6 +403,7 @@ class InEarPillWindow @Inject constructor(
         private val TAG = logTag("Reaction", "PopUp", "InEar", "Pill")
         private const val GROW_MS = 350
         private const val DRAG_DP = 12
+        private const val STATUS_BAR_POLL_MS = 1000L
     }
 }
 

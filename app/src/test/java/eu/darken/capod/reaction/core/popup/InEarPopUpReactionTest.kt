@@ -62,4 +62,19 @@ class InEarPopUpReactionTest : BaseTest() {
         decide(previous = off, current = on, lastTakenOffAt = now.minusSeconds(1)) shouldBe Decision.NONE
         decide(previous = off, current = on, lastTakenOffAt = now.minusSeconds(10)) shouldBe Decision.SHOW
     }
+
+    // Pods that disconnect never report "taken off": the AAP session just goes away, and the cached
+    // device keeps the pill up. A session drop under a live audio connection must not hide it.
+    @Test
+    fun `disconnecting hides, an AAP drop alone doesn't`() {
+        val connection = now.minusSeconds(600)
+        val worn = observation(inEar = true, connectedAt = connection)
+
+        decide(previous = worn, current = observation(inEar = null, connectedAt = null)) shouldBe Decision.HIDE
+        decide(
+            previous = observation(inEar = true, connectedAt = null),
+            current = observation(inEar = null, connectedAt = null),
+        ) shouldBe Decision.HIDE
+        decide(previous = worn, current = observation(inEar = null, connectedAt = connection)) shouldBe Decision.NONE
+    }
 }

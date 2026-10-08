@@ -89,6 +89,9 @@ import kotlin.math.roundToInt
  *
  * The window is exactly the pill's size, since all of it takes touches away from the status bar
  * underneath. The pill grows out of the camera hole and shrinks back into it.
+ *
+ * While an app hides the status bar, as fullscreen video does, the pill would cover that app instead
+ * of sitting in the bar, so it shrinks away and lets touches through until the bar is back.
  */
 @Singleton
 class InEarPillWindow @Inject constructor(
@@ -115,6 +118,7 @@ class InEarPillWindow @Inject constructor(
     private class PillState(val profileId: ProfileId, placement: PillPlacement, val actions: Actions) {
         var placement by mutableStateOf(placement)
         var requested by mutableStateOf(true)
+        var statusBarVisible by mutableStateOf(true)
         val visibility = MutableTransitionState(false)
     }
 
@@ -141,7 +145,7 @@ class InEarPillWindow @Inject constructor(
             log(TAG) { "Display changed, moving the pill to $placement" }
             state.placement = placement
             try {
-                service.windowManager.updateViewLayout(view, createLayoutParams(placement))
+                service.windowManager.updateViewLayout(view, createLayoutParams(placement, touchable = state.statusBarVisible))
             } catch (e: Exception) {
                 log(TAG, ERROR) { "Moving the pill failed: ${e.asLog()}" }
             }
@@ -186,17 +190,35 @@ class InEarPillWindow @Inject constructor(
                     }
                 }
             }
+            if (hasApiLevel(Build.VERSION_CODES.R)) {
+                view.setOnApplyWindowInsetsListener { v, insets ->
+                    onStatusBarVisibilityChanged(state, insets.isVisible(WindowInsets.Type.statusBars()))
+                    v.onApplyWindowInsets(insets)
+                }
+            }
             composeView = view
 
             owner.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
             owner.handleLifecycleEvent(Lifecycle.Event.ON_START)
             owner.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
-            service.windowManager.addView(view, createLayoutParams(placement))
+            service.windowManager.addView(view, createLayoutParams(placement, touchable = true))
             service.getSystemService(DisplayManager::class.java)
                 ?.registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
         } catch (e: Exception) {
             log(TAG, ERROR) { "show() failed: ${e.asLog()}" }
+        }
+    }
+
+    private fun onStatusBarVisibilityChanged(state: PillState, visible: Boolean) {
+        if (pillState !== state || state.statusBarVisible == visible) return
+        log(TAG) { "Status bar visible: $visible" }
+        state.statusBarVisible = visible
+        val view = composeView?.takeIf { it.parent != null } ?: return
+        try {
+            service?.windowManager?.updateViewLayout(view, createLayoutParams(state.placement, touchable = visible))
+        } catch (e: Exception) {
+            log(TAG, ERROR) { "Updating the pill's touchability failed: ${e.asLog()}" }
         }
     }
 
@@ -249,13 +271,14 @@ class InEarPillWindow @Inject constructor(
 
     // Gravity.LEFT on purpose: x is a display coordinate taken from the cutout, not a start offset.
     @SuppressLint("RtlHardcoded")
-    private fun createLayoutParams(placement: PillPlacement) = WindowManager.LayoutParams(
+    private fun createLayoutParams(placement: PillPlacement, touchable: Boolean) = WindowManager.LayoutParams(
         placement.width,
         placement.height,
         WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
         WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+            (if (touchable) 0 else WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE),
         PixelFormat.TRANSLUCENT,
     ).apply {
         gravity = Gravity.TOP or Gravity.LEFT
@@ -282,8 +305,8 @@ class InEarPillWindow @Inject constructor(
             state.actions.onDismiss()
         }
 
-        LaunchedEffect(state.requested, device != null) {
-            state.visibility.targetState = state.requested && device != null
+        LaunchedEffect(state.requested, device != null, state.statusBarVisible) {
+            state.visibility.targetState = state.requested && device != null && state.statusBarVisible
         }
 
         LaunchedEffect(state) {

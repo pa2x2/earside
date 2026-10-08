@@ -2,6 +2,12 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-10-08
+
+### 🐛 Fixed
+
+- The battery pill no longer covers fullscreen video and other apps that hide the status bar. It disappears while the status bar is hidden and comes back with it.
+
 ## [1.3.1] - 2026-10-08
 
 ### 🐛 Fixed
@@ -82,6 +88,7 @@ Based on [CAPod v5.4.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.
 
 - CAPod's contact form, Discord, issue tracker, wiki, translation project, privacy policy and sponsor links.
 
+[1.3.2]: https://github.com/pa2x2/earside/releases/tag/v1.3.2
 [1.3.1]: https://github.com/pa2x2/earside/releases/tag/v1.3.1
 [1.3.0]: https://github.com/pa2x2/earside/releases/tag/v1.3.0
 [1.2.1]: https://github.com/pa2x2/earside/releases/tag/v1.2.1

@@ -2,6 +2,12 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-10-16
+
+### ✨ Added
+
+- An equalizer for your AirPods, under Sound in the device's settings.
+
 ## [1.3.3] - 2026-10-08
 
 ### 🐛 Fixed

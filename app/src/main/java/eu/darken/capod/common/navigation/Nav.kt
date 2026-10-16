@@ -29,6 +29,9 @@ object Nav {
         data class PressControls(val profileId: String) : Main
 
         @Serializable
+        data class Equalizer(val profileId: String) : Main
+
+        @Serializable
         data class DeviceRules(val profileId: String) : Main
 
         /** [ruleId] null adds a rule. */

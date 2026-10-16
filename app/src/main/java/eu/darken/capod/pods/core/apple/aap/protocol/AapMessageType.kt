@@ -125,6 +125,14 @@ enum class AapMessageType(val value: Int, val wiresharkName: String) {
     UNKNOWN_0X58(0x0058, "Unknown"),
     DYNAMIC_END_OF_CHARGE(0x0059, "Dynamic End Of Charge"),
     PERSONAL_TRANSLATION(0x0060, "Personal Translation"),
+
+    /**
+     * The 3-band equalizer that came with the iOS 27 AirPods firmware. Same frame in both
+     * directions, payload `05 00 01 [state] [low] [mid] [high]`: a little-endian length of 5, a
+     * constant 0x01 nobody has explained, state 1 = Recommended / 2 = Custom, bands 0..100 with 50
+     * as flat. Layout from LibrePods (2026-06), not yet confirmed against our own captures.
+     */
+    CUSTOM_EQ(0x0063, "Custom EQ"),
     ;
 
     companion object {

@@ -42,6 +42,9 @@ class DefaultAapDeviceProfile(
         const val ANC_WIRE_TRANSPARENCY = 0x03
         const val ANC_WIRE_ADAPTIVE = 0x04
 
+        private const val CUSTOM_EQ_STATE_RECOMMENDED = 0x01
+        private const val CUSTOM_EQ_STATE_CUSTOM = 0x02
+
         /** Fixed length of each earbud UUID segment in the Information payload (segments 11 & 12). */
         private const val UUID_LEN = 17
 
@@ -100,6 +103,7 @@ class DefaultAapDeviceProfile(
         is AapCommand.SetSleepDetection -> buildSettingsMessage(AapControlId.SLEEP_DETECTION.value, encodeAppleBool(command.enabled))
         is AapCommand.SetDynamicEndOfCharge -> buildSettingsMessage(AapControlId.DYNAMIC_END_OF_CHARGE.value, encodeAppleBool(command.enabled))
         is AapCommand.SetDeviceName -> buildRenameMessage(command.name)
+        is AapCommand.SetCustomEq -> buildCustomEqMessage(command.eq)
     }
 
     override fun decodeSetting(message: AapMessage): Pair<KClass<out AapSetting>, AapSetting>? {
@@ -181,6 +185,26 @@ class DefaultAapDeviceProfile(
                 sets.add(bands)
             }
             return AapSetting.PmeConfig::class to AapSetting.PmeConfig(sets)
+        }
+
+        if (message.commandType == AapMessageType.CUSTOM_EQ.value) {
+            val p = message.payload
+            // Strict on the shape we know: anything else stays unhandled and gets logged with its
+            // bytes, which is what we want while the layout is still unconfirmed on our side.
+            if (p.size < 7 || p[0] != 0x05.toByte() || p[1] != 0x00.toByte()) return null
+            val custom = when (p[3].toInt() and 0xFF) {
+                CUSTOM_EQ_STATE_RECOMMENDED -> false
+                CUSTOM_EQ_STATE_CUSTOM -> true
+                else -> return null
+            }
+            val bands = (4..6).map { p[it].toInt() and 0xFF }
+            if (bands.any { it !in AapSetting.CustomEq.BAND_RANGE }) return null
+            return AapSetting.CustomEq::class to AapSetting.CustomEq(
+                custom = custom,
+                low = bands[0],
+                mid = bands[1],
+                high = bands[2],
+            )
         }
 
         // Conversation Awareness State is a separate command type (push-only). Two payload shapes
@@ -545,6 +569,14 @@ class DefaultAapDeviceProfile(
         if (message.commandType != AapMessageType.DYNAMIC_END_OF_CHARGE.value) return null
         return AapDynamicEndOfChargeEvent(rawPayload = message.payload.copyOf())
     }
+
+    private fun buildCustomEqMessage(eq: AapSetting.CustomEq): ByteArray = byteArrayOf(
+        0x04, 0x00, 0x04, 0x00,
+        0x63, 0x00,
+        0x05, 0x00, 0x01,
+        (if (eq.custom) CUSTOM_EQ_STATE_CUSTOM else CUSTOM_EQ_STATE_RECOMMENDED).toByte(),
+        eq.low.toByte(), eq.mid.toByte(), eq.high.toByte(),
+    )
 
     private fun buildRenameMessage(name: String): ByteArray {
         // Uses the opcode 0x1A format from the LibrePods AAP docs + Linux implementation.

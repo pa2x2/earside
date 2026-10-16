@@ -202,6 +202,25 @@ sealed class AapSetting {
             get() = sets.all { set -> set.all { it == 0f } }
     }
 
+    /**
+     * Custom EQ (message 0x63). Bands carry the wire value 0..100, where [FLAT] leaves a band
+     * untouched. The pods keep the bands while [custom] is false (Apple's "Recommended" tuning),
+     * so switching back to Custom restores them.
+     */
+    data class CustomEq(
+        val custom: Boolean,
+        val low: Int,
+        val mid: Int,
+        val high: Int,
+    ) : AapSetting() {
+        val isFlat: Boolean get() = low == FLAT && mid == FLAT && high == FLAT
+
+        companion object {
+            const val FLAT = 50
+            val BAND_RANGE = 0..100
+        }
+    }
+
     /** Per-pod placement reported by the device (command 0x06). */
     data class EarDetection(
         val primaryPod: PodPlacement,

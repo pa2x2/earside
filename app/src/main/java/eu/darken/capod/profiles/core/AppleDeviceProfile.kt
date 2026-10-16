@@ -1,7 +1,9 @@
 package eu.darken.capod.profiles.core
 
+import android.os.Parcelable
 import eu.darken.capod.common.serialization.ByteArrayBase64Serializer
 import eu.darken.capod.pods.core.apple.PodModel
+import eu.darken.capod.pods.core.apple.aap.protocol.AapSetting
 import eu.darken.capod.pods.core.apple.ble.protocol.IdentityResolvingKey
 import eu.darken.capod.pods.core.apple.ble.protocol.ProximityEncryptionKey
 import eu.darken.capod.reaction.core.autoconnect.AutoConnectCondition
@@ -57,6 +59,11 @@ data class AppleDeviceProfile(
      */
     @SerialName("learnedListeningModeCycleMask") val lastRequestedListeningModeCycleMask: Int? = null,
     @SerialName("stemActions") val stemActions: StemActionsConfig = StemActionsConfig(),
+    /**
+     * Last-known Custom EQ (AAP 0x63). Non-null means these pods have reported the equalizer, so
+     * Device Settings can offer it right after a reconnect, before the pods push it again.
+     */
+    @SerialName("learnedCustomEq") val learnedCustomEq: LearnedCustomEq? = null,
 ) : DeviceProfile, HasReactionConfig {
 
     override val reactionConfig: ReactionConfig
@@ -103,6 +110,22 @@ data class AppleDeviceProfile(
         "batteryEstimateEnabled=$batteryEstimateEnabled, " +
         "learnedAllowOffEnabled=$learnedAllowOffEnabled, " +
         "lastRequestedListeningModeCycleMask=$lastRequestedListeningModeCycleMask, " +
-        "stemActions=$stemActions" +
+        "stemActions=$stemActions, " +
+        "learnedCustomEq=$learnedCustomEq" +
         ")"
+}
+
+@Parcelize
+@Serializable
+data class LearnedCustomEq(
+    @SerialName("custom") val custom: Boolean,
+    @SerialName("low") val low: Int,
+    @SerialName("mid") val mid: Int,
+    @SerialName("high") val high: Int,
+) : Parcelable {
+    fun toSetting(): AapSetting.CustomEq = AapSetting.CustomEq(custom = custom, low = low, mid = mid, high = high)
+
+    companion object {
+        fun from(eq: AapSetting.CustomEq) = LearnedCustomEq(custom = eq.custom, low = eq.low, mid = eq.mid, high = eq.high)
+    }
 }

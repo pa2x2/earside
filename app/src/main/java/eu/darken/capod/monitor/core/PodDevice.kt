@@ -58,6 +58,11 @@ data class PodDevice(
      * the live AAP state has no ListeningModeCycle setting (device never echoes 0x1A back).
      */
     internal val profileLastRequestedListeningModeCycleMask: Int? = null,
+    /**
+     * Last-known Custom EQ persisted on the profile. Used as a fallback until the pods push 0x63
+     * in a fresh session.
+     */
+    internal val profileLearnedCustomEq: AapSetting.CustomEq? = null,
     /** Reaction toggle snapshot from the profile. Defaults to all-off when no profile is matched. */
     val reactions: ReactionConfig = ReactionConfig(),
     /** Whether the dashboard battery time-remaining estimate is enabled for this device (per-profile). */
@@ -408,6 +413,10 @@ data class PodDevice(
 
     val pmeConfig: AapSetting.PmeConfig?
         get() = aap?.setting()
+
+    /** Non-null only for pods that have reported the equalizer, now or in an earlier session. */
+    val customEq: AapSetting.CustomEq?
+        get() = aap?.setting() ?: profileLearnedCustomEq
 
     val deviceInfo: AapDeviceInfo?
         get() = aap?.deviceInfo ?: cached?.deviceInfo

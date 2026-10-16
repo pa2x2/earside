@@ -176,6 +176,10 @@ internal class AapSettingsCoordinator(
                 AapSetting.DynamicEndOfCharge::class to AapSetting.DynamicEndOfCharge(enabled = command.enabled)
             }
 
+            is AapCommand.SetCustomEq -> {
+                AapSetting.CustomEq::class to command.eq
+            }
+
             is AapCommand.SetDeviceName -> {
                 val currentInfo = baseState.deviceInfo ?: return null
                 return baseState.copy(
@@ -210,6 +214,7 @@ internal class AapSettingsCoordinator(
         is AapCommand.SetStemConfig -> { s -> s.setting<AapSetting.StemConfig>()?.claimedPressMask == command.claimedPressMask }
         is AapCommand.SetSleepDetection -> { s -> s.setting<AapSetting.SleepDetection>()?.enabled == command.enabled }
         is AapCommand.SetDynamicEndOfCharge -> { s -> s.setting<AapSetting.DynamicEndOfCharge>()?.enabled == command.enabled }
+        is AapCommand.SetCustomEq -> { s -> s.setting<AapSetting.CustomEq>() == command.eq }
         is AapCommand.SetDeviceName -> null
     }
 }

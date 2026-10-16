@@ -2,6 +2,7 @@ package eu.darken.capod.main.ui.devicesettings.cards
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.twotone.VolumeUp
+import androidx.compose.material.icons.twotone.Equalizer
 import androidx.compose.material.icons.twotone.Mic
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +17,7 @@ import eu.darken.capod.common.compose.PreviewWrapper
 import eu.darken.capod.common.settings.InfoBoxType
 import eu.darken.capod.common.settings.SettingsBaseItem
 import eu.darken.capod.common.settings.SettingsInfoBox
+import eu.darken.capod.common.settings.SettingsPreferenceItem
 import eu.darken.capod.common.settings.SettingsSection
 import eu.darken.capod.common.settings.SettingsSliderItem
 import eu.darken.capod.common.settings.SettingsSwitchItem
@@ -34,12 +36,24 @@ internal fun SoundCard(
     onPersonalizedVolumeChange: (Boolean) -> Unit = {},
     onToneVolumeChange: (Int) -> Unit = {},
     onMicrophoneModeChange: (AapSetting.MicrophoneMode.Mode) -> Unit = {},
+    onEqualizerClick: () -> Unit = {},
     onUpgrade: () -> Unit = {},
 ) {
     val personalizedVol = device.personalizedVolume
     val toneVol = device.toneVolume
 
     SettingsSection(title = stringResource(R.string.device_settings_category_sound_label)) {
+        device.customEq?.let { eq ->
+            SettingsPreferenceItem(
+                icon = Icons.TwoTone.Equalizer,
+                title = stringResource(R.string.device_settings_eq_label),
+                subtitle = stringResource(
+                    if (eq.custom) R.string.equalizer_mode_custom else R.string.equalizer_mode_recommended,
+                ),
+                onClick = onEqualizerClick,
+                enabled = enabled,
+            )
+        }
         if (features.hasPersonalizedVolume && personalizedVol != null) {
             SettingsSwitchItem(
                 icon = Icons.AutoMirrored.TwoTone.VolumeUp,

@@ -179,6 +179,7 @@ fun DeviceSettingsScreenHost(
         onDynamicEndOfChargeChange = { vm.setDynamicEndOfCharge(it) },
         onDeviceNameChange = { vm.setDeviceName(it) },
         onPressControlsClick = { vm.navToPressControls() },
+        onEqualizerClick = { vm.navToEqualizer() },
         onDeviceRulesClick = { vm.navToDeviceRules() },
         onEditProfile = { vm.navToEditProfile() },
         onForceConnect = { vm.forceConnect() },
@@ -227,6 +228,7 @@ fun DeviceSettingsScreen(
     onDynamicEndOfChargeChange: (Boolean) -> Unit = {},
     onDeviceNameChange: (String) -> Unit = {},
     onPressControlsClick: () -> Unit = {},
+    onEqualizerClick: () -> Unit = {},
     onDeviceRulesClick: () -> Unit = {},
     onEditProfile: () -> Unit = {},
     onForceConnect: () -> Unit = {},
@@ -501,7 +503,8 @@ fun DeviceSettingsScreen(
                 // ── Sound ────────────────────────────────────
                 val personalizedVol = device.personalizedVolume
                 val toneVol = device.toneVolume
-                val showSoundSection =
+                // No feature flag for the equalizer: it depends on firmware, so it shows once the pods report it.
+                val showSoundSection = device.customEq != null ||
                     (features.hasPersonalizedVolume && personalizedVol != null) ||
                             (features.hasToneVolume && toneVol != null) ||
                             (features.hasMicrophoneMode && device.microphoneMode != null)
@@ -515,6 +518,7 @@ fun DeviceSettingsScreen(
                             onPersonalizedVolumeChange = onPersonalizedVolumeChange,
                             onToneVolumeChange = onToneVolumeChange,
                             onMicrophoneModeChange = onMicrophoneModeChange,
+                            onEqualizerClick = onEqualizerClick,
                             onUpgrade = onUpgrade,
                         )
                     }
@@ -566,7 +570,7 @@ fun DeviceSettingsScreen(
                     !pmeConfig.isAllZero
                 ) {
                     item("eq_section") {
-                        SettingsSection(title = stringResource(R.string.device_settings_eq_label)) {
+                        SettingsSection(title = stringResource(R.string.device_settings_pme_debug_label)) {
                             EqBarsChart(
                                 sets = pmeConfig.sets,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),

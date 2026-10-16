@@ -36,4 +36,10 @@ sealed class AapCommand {
     data class SetSleepDetection(val enabled: Boolean) : AapCommand()
     data class SetDynamicEndOfCharge(val enabled: Boolean) : AapCommand()
     data class SetDeviceName(val name: String) : AapCommand()
+    data class SetCustomEq(val eq: AapSetting.CustomEq) : AapCommand() {
+        init {
+            val range = AapSetting.CustomEq.BAND_RANGE
+            require(eq.low in range && eq.mid in range && eq.high in range) { "EQ bands must be in $range: $eq" }
+        }
+    }
 }

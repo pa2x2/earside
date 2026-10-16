@@ -604,6 +604,16 @@
 
     <string name="device_settings_noise_control_label">Noise Control</string>
     <string name="device_settings_eq_label">Equalizer</string>
+    <string name="device_settings_pme_debug_label">Hearing profile (debug)</string>
+    <string name="equalizer_description">Recommended is Apple\'s tuning for your AirPods. Custom lets you raise or lower the low, mid and high frequencies.</string>
+    <string name="equalizer_mode_recommended">Recommended</string>
+    <string name="equalizer_mode_custom">Custom</string>
+    <string name="equalizer_band_low">Low</string>
+    <string name="equalizer_band_mid">Mid</string>
+    <string name="equalizer_band_high">High</string>
+    <string name="equalizer_reset_action">Reset</string>
+    <string name="equalizer_waiting_for_ear">Changes apply when you put your AirPods in.</string>
+    <string name="equalizer_not_confirmed_message">The AirPods didn\'t confirm the equalizer change.</string>
 
     <!-- Press Controls -->
     <string name="press_controls_title">Press Controls</string>

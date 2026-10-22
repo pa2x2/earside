@@ -251,7 +251,7 @@
     <string name="permission_accessibility_service_label">Accessibility service</string>
     <string name="permission_accessibility_service_description">Turn on Earside in Accessibility settings so the in-ear pill can sit around the camera, above the status bar. If the switch there is greyed out, open Earside\'s app info, tap ⋮ and allow restricted settings first.</string>
     <string name="accessibility_service_description">Lets Earside draw the in-ear pill around the front camera, above the status bar. Earside doesn\'t read your screen or see what you do.</string>
-    <string name="permission_system_alert_window_description">Allow Earside to draw over other apps to make the feature \"Show PopUp\" possible.</string>
+    <string name="permission_system_alert_window_description">Allow Earside to draw over other apps. Needed for the \"Show PopUp\" feature and to open the voice assistant from a press on your AirPods.</string>
 
 
     <string name="settings_reaction_autoconnect_whenseen_label">When seen</string>
@@ -537,7 +537,7 @@
     <string name="device_settings_volume_swipe_length_longer">Longer</string>
     <string name="device_settings_volume_swipe_length_longest">Longest</string>
     <string name="device_settings_end_call_mute_mic_label">Call Controls</string>
-    <string name="device_settings_end_call_mute_mic_description">Choose what pressing the stem does during calls</string>
+    <string name="device_settings_end_call_mute_mic_description">Choose what presses do during calls</string>
     <string name="device_settings_end_call_mute_mic_option_a_title">Single press to end call</string>
     <string name="device_settings_end_call_mute_mic_option_a_subtitle">Double press to mute microphone</string>
     <string name="device_settings_end_call_mute_mic_option_b_title">Single press to mute microphone</string>
@@ -618,7 +618,7 @@
     <!-- Press Controls -->
     <string name="press_controls_title">Press Controls</string>
     <string name="press_controls_nav_description">Tune press behaviour and map presses to actions</string>
-    <string name="press_controls_description">Tune how presses are detected, choose call-button behaviour, and map presses to actions. Mapped actions apply to this device only and let the app intercept the press instead of the AirPods handling it natively.</string>
+    <string name="press_controls_description">Tune how presses are detected, choose call-button behaviour, and map presses to actions. Mapped actions apply to this device only and let the app intercept the press instead of the headphones handling it natively.</string>
     <string name="press_controls_single_press">Single Press</string>
     <string name="press_controls_double_press">Double Press</string>
     <string name="press_controls_triple_press">Triple Press</string>
@@ -640,8 +640,12 @@
     <string name="press_action_rewind">Rewind</string>
     <string name="press_action_cycle_anc">Cycle Noise Control</string>
     <string name="press_action_toggle_anc_transparency">Toggle Transparency</string>
+    <string name="press_action_voice_assistant">Voice Assistant</string>
+    <string name="press_action_voice_assistant_unavailable">No voice assistant found</string>
     <string name="press_controls_reset_label">Reset to defaults</string>
     <string name="press_controls_reset_confirm_message">Reset all press mappings to defaults?</string>
+    <string name="press_controls_voice_assistant_permission_hint">Voice Assistant needs permission to display over other apps, otherwise pressing your AirPods won\'t open it.</string>
+    <string name="press_controls_voice_assistant_permission_action">Grant</string>
     <string name="device_settings_noise_control_open_press_controls_action">Open Press Controls</string>
 
     <string name="general_navigate_up_action">Navigate up</string>

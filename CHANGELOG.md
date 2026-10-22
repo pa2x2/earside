@@ -2,6 +2,21 @@
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-10-22
+
+Based on [CAPod v5.6.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.6.0-rc0)
+
+### ✨ Added
+
+- A press on your AirPods can open the phone's voice assistant. Pick Voice Assistant for a press in Press Controls. Earside needs permission to display over other apps to open it, and Press Controls shows a button to grant it.
+- When the AirPods aren't nearby, the battery widget shows when it last received their battery levels.
+- Beats 360 settings now include tone volume and call controls, once the headphones report them.
+
+### 🐛 Fixed
+
+- A home screen widget now updates as soon as you save its configuration. Before, it could keep showing "No device configured" and the default colors.
+- Home screen widgets have the same rounded corners as their preview on Android 12 and newer.
+
 ## [1.4.0] - 2026-10-16
 
 ### ✨ Added
@@ -100,6 +115,8 @@ Based on [CAPod v5.4.0-rc0](https://github.com/d4rken-org/capod/releases/tag/v5.
 
 - CAPod's contact form, Discord, issue tracker, wiki, translation project, privacy policy and sponsor links.
 
+[1.5.0]: https://github.com/pa2x2/earside/releases/tag/v1.5.0
+[1.4.0]: https://github.com/pa2x2/earside/releases/tag/v1.4.0
 [1.3.3]: https://github.com/pa2x2/earside/releases/tag/v1.3.3
 [1.3.2]: https://github.com/pa2x2/earside/releases/tag/v1.3.2
 [1.3.1]: https://github.com/pa2x2/earside/releases/tag/v1.3.1

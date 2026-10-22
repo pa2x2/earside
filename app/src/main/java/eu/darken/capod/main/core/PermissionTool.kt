@@ -7,8 +7,11 @@ import eu.darken.capod.common.debug.logging.logTag
 import eu.darken.capod.common.permissions.Permission
 import eu.darken.capod.common.permissions.isRequired
 import eu.darken.capod.monitor.core.MonitorModeResolver
+import eu.darken.capod.profiles.core.AppleDeviceProfile
+import eu.darken.capod.profiles.core.DeviceProfile
 import eu.darken.capod.profiles.core.toReactionConfig
 import eu.darken.capod.profiles.core.DeviceProfilesRepo
+import eu.darken.capod.reaction.core.stem.StemAction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -32,12 +35,8 @@ class PermissionTool @Inject constructor(
         permissionCheckTrigger.value = UUID.randomUUID()
     }
 
-    private val anyPopupEnabled: Flow<Boolean> = profilesRepo.profiles
-        .map { profiles ->
-            profiles.any { profile ->
-                profile.toReactionConfig().let { it.showPopUpOnCaseOpen || it.showPopUpOnConnection || it.showPopUpOnEarIn }
-            }
-        }
+    private val overlayNeeded: Flow<Boolean> = profilesRepo.profiles
+        .map { needsOverlay(it) }
         .distinctUntilChanged()
 
     private val anyPillEnabled: Flow<Boolean> = profilesRepo.profiles
@@ -47,11 +46,11 @@ class PermissionTool @Inject constructor(
     val missingPermissions: Flow<Set<Permission>> = combine(
         permissionCheckTrigger,
         monitorModeResolver.effectiveMode,
-        anyPopupEnabled,
+        overlayNeeded,
         anyPillEnabled,
-    ) { _, monitorMode, showPopUp, showPill ->
+    ) { _, monitorMode, overlay, showPill ->
         Permission.entries
-            .filter { isApplicable(it, monitorMode, showPopUp, showPill) }
+            .filter { isApplicable(it, monitorMode, overlay, showPill) }
             .filter { it.isRequired(context) }
             .toSet()
     }
@@ -68,24 +67,32 @@ class PermissionTool @Inject constructor(
 
         /**
          * Whether [permission] is applicable for the user's current configuration.
-         * Four permissions are conditional on monitor mode or popup usage:
+         * Four permissions are conditional on monitor mode, overlay or pill usage:
          *  - [Permission.IGNORE_BATTERY_OPTIMIZATION] only when always-on scanning is needed
          *  - [Permission.ACCESS_BACKGROUND_LOCATION] same
-         *  - [Permission.SYSTEM_ALERT_WINDOW] only when at least one popup reaction is enabled
+         *  - [Permission.SYSTEM_ALERT_WINDOW] only when [needsOverlay] is true for the profiles
          *  - [Permission.ACCESSIBILITY_SERVICE] only when an in-ear popup keeps the pill
          * Everything else is unconditionally applicable.
          */
         internal fun isApplicable(
             permission: Permission,
             monitorMode: MonitorMode,
-            anyPopupEnabled: Boolean,
+            overlayNeeded: Boolean,
             anyPillEnabled: Boolean = false,
         ): Boolean = when (permission) {
             Permission.IGNORE_BATTERY_OPTIMIZATION,
             Permission.ACCESS_BACKGROUND_LOCATION -> monitorMode == MonitorMode.ALWAYS
-            Permission.SYSTEM_ALERT_WINDOW -> anyPopupEnabled
+            Permission.SYSTEM_ALERT_WINDOW -> overlayNeeded
             Permission.ACCESSIBILITY_SERVICE -> anyPillEnabled
             else -> true
+        }
+
+        /** A popup reaction is enabled, or a press is mapped to [StemAction.VoiceAssistant]. */
+        internal fun needsOverlay(profiles: List<DeviceProfile>): Boolean = profiles.any { profile ->
+            val popup = profile.toReactionConfig().let {
+                it.showPopUpOnCaseOpen || it.showPopUpOnConnection || it.showPopUpOnEarIn
+            }
+            popup || (profile is AppleDeviceProfile && profile.stemActions.uses(StemAction.VoiceAssistant))
         }
     }
 }

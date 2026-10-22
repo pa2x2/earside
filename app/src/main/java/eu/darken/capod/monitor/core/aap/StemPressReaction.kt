@@ -2,6 +2,7 @@ package eu.darken.capod.monitor.core.aap
 
 import android.view.KeyEvent
 import eu.darken.capod.common.MediaControl
+import eu.darken.capod.common.VoiceAssistantLauncher
 import eu.darken.capod.common.debug.logging.log
 import eu.darken.capod.common.debug.logging.logTag
 import eu.darken.capod.common.flow.setupCommonEventHandlers
@@ -26,6 +27,7 @@ class StemPressReaction @Inject constructor(
     private val profilesRepo: DeviceProfilesRepo,
     private val mediaControl: MediaControl,
     private val deviceControls: DeviceControls,
+    private val voiceAssistantLauncher: VoiceAssistantLauncher,
 ) {
     fun monitor(): Flow<Unit> = aapManager.stemPressEvents
         .onEach { (address, event) ->
@@ -72,6 +74,7 @@ class StemPressReaction @Inject constructor(
             is StemAction.MuteToggle -> mediaControl.toggleMuteMusic()
             is StemAction.CycleAnc -> cycleAnc(address)
             is StemAction.ToggleAncTransparency -> toggleAncTransparency(address)
+            is StemAction.VoiceAssistant -> voiceAssistantLauncher.launch()
         }
     }
 

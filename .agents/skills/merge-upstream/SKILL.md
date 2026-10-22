@@ -16,6 +16,22 @@ Upstream tags are fetched into `refs/upstream-tags/`, not `refs/tags/`: the clon
 upstream's `v1.0.0` and later tags would collide with Earside's own release tags. Never fetch upstream
 tags into `refs/tags/` and never push them to `origin`.
 
+## Fork
+
+- These are removed on purpose. An upstream merge can bring them back, so delete them again:
+  `app/src/gplay/`, `app/src/testGplay/`, `app-e2e/`, `tools/`, every `values-<lang>/` translation
+  directory (resource qualifiers such as `values-night/` and `values-v31/` stay), `fastlane/`,
+  `crowdin*`, the Pages site (`_config.yml`, `_layouts/`, `CNAME`, `PRIVACY_POLICY.md`), `.assets/`,
+  `.pi/`, `.github/FUNDING.yml`, `.github/release.yml`, `.github/actions/`, the workflows
+  `code-checks.yml`, `emulator.yml`, `pages.yml`, `release-prepare.yml`, `release-tag.yml` and
+  `thumbnail-images.yml`, `version.properties`, `VERSION`, CAPod's Play Store icon
+  (`app/src/main/ic_launcher-playstore.png`), and the support contact form
+  (`main/ui/settings/support/contactform/`, `SupportLinks.kt`).
+- The launcher icon, monochrome icon, splash screen and in-app logo are Earside's own
+  (`drawable/ic_launcher_*.xml`, `drawable/splash_graphic2.xml`, `values*/earside_colors.xml`,
+  `.github/assets/earside.svg`). Keep them when upstream changes its artwork, and don't bring back
+  `mipmap-*dpi/ic_launcher*.png` or `drawable/splash_graphic.xml`.
+
 ## Inspect and plan
 
 Remain in Plan mode when the active surface supports it. Keep the worktree and branches unchanged.
@@ -37,7 +53,7 @@ Fetching from `upstream` is the permitted metadata-only exception.
    `merge-base(<fork-base>, <target>)..<fork-base>` as the fork divergence. Inspect commits, full
    diffs, renamed or deleted files, overlapping paths, and likely conflicts. Use `git merge-tree` for
    conflict forecasting when useful, without starting a merge.
-4. Read the "Fork" section of `AGENTS.md`. It lists what Earside removed on purpose and how it differs.
+4. Read the "Fork" section above. It lists what Earside removed on purpose and how it differs.
 5. Review cleanly mergeable changes as carefully as textual conflicts. Pay particular attention to:
    - files under removed paths: upstream edits to them conflict (modify/delete), and new upstream files
      there merge in silently without any conflict;
@@ -103,8 +119,8 @@ resolved, and the active mode permits mutations.
    git diff --cached --name-only --diff-filter=A HEAD
    ```
 
-   Check the result against the removed-paths list in `AGENTS.md`, including any new `values-<lang>/`
-   directory.
+   Check the result against the removed-paths list in the "Fork" section, including any new
+   `values-<lang>/` directory.
 6. Inspect the complete staged and unstaged result, including files Git merged without conflicts.
    Confirm that skipped or replaced upstream behavior is intentional and documented in the final
    report.
